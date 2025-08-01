@@ -80,7 +80,7 @@
         .player-info {
             position: absolute;
             text-align: center;
-            transform: translateX(-50%);
+            /* **MODIFIED** Transform is now set dynamically in JS */
             transition: all 0.3s ease;
             width: 90px; /* Mobile Style */
             z-index: 20;
@@ -433,7 +433,6 @@
         let turnTimerInterval = null;
         const TURN_DURATION = 40; 
         
-        // --- AVATAR CUSTOMIZATION DATA (EXPANDED) ---
         const avatarOptions = {
             shirts: ['#ff5733', '#33ff57', '#3357ff', '#ff33a1', '#a133ff', '#ffffff', '#f0e68c', '#add8e6'],
             heads: ['#f2d2b2', '#d1a377', '#a07c5b', '#6e513d', '#3c2a21'],
@@ -449,7 +448,6 @@
             eyePatch: 0
         };
 
-        // --- UI ELEMENTS ---
         const loadingOverlay = document.getElementById('loading-overlay');
         const lobbyEl = document.getElementById('lobby');
         const gameIdInput = document.getElementById('game-id-input');
@@ -465,7 +463,6 @@
         const turnTimerEl = document.getElementById('turn-timer');
         const avatarPreview = document.getElementById('avatar-preview');
         
-        // --- AVATAR LOGIC (EXPANDED) ---
         function generateAvatarSVG({ shirt, head, eyebrows, facialHair, eyePatch }) {
             const shirtColor = avatarOptions.shirts[shirt];
             const headColor = avatarOptions.heads[head];
@@ -500,7 +497,6 @@
         document.getElementById('prev-shirt-btn').onclick = () => { currentAvatar.shirt = (currentAvatar.shirt - 1 + avatarOptions.shirts.length) % avatarOptions.shirts.length; updateAvatarPreview(); };
         document.getElementById('next-head-btn').onclick = () => { currentAvatar.head = (currentAvatar.head + 1) % avatarOptions.heads.length; updateAvatarPreview(); };
         document.getElementById('prev-head-btn').onclick = () => { currentAvatar.head = (currentAvatar.head - 1 + avatarOptions.heads.length) % avatarOptions.heads.length; updateAvatarPreview(); };
-        // NEW LISTENERS
         document.getElementById('next-eyebrows-btn').onclick = () => { currentAvatar.eyebrows = (currentAvatar.eyebrows + 1) % avatarOptions.eyebrows.length; updateAvatarPreview(); };
         document.getElementById('prev-eyebrows-btn').onclick = () => { currentAvatar.eyebrows = (currentAvatar.eyebrows - 1 + avatarOptions.eyebrows.length) % avatarOptions.eyebrows.length; updateAvatarPreview(); };
         document.getElementById('next-facialhair-btn').onclick = () => { currentAvatar.facialHair = (currentAvatar.facialHair + 1) % avatarOptions.facialHairs.length; updateAvatarPreview(); };
@@ -511,7 +507,6 @@
         updateAvatarPreview();
 
 
-        // --- AUTH ---
         onAuthStateChanged(auth, user => {
             if (user) {
                 currentUserId = user.uid;
@@ -530,7 +525,6 @@
             }
         });
 
-        // --- LOBBY LOGIC ---
         createGameBtn.addEventListener('click', async () => {
             if (!validateLobbyInput()) return;
             const newGameId = doc(collection(db, 'games')).id.substring(0, 5).toUpperCase();
@@ -596,7 +590,7 @@
                             pendingAction: null,
                             playerUpdates: {},
                             turnStartTime: null,
-                            justUsedForeignAid: null, // **NEW** For Foreign Aid logic
+                            justUsedForeignAid: null,
                         };
                         transaction.set(gameRef, newGameData);
                     } else {
@@ -722,8 +716,6 @@
             });
         }
 
-
-        // --- 3D SCENE (MODIFIED FOR MOBILE LAYOUT) ---
         function initThreeJS() {
             if (scene) return;
             const container = document.getElementById('game-container');
@@ -733,9 +725,8 @@
             scene.background = new THREE.Color(0x1a1a1a);
             scene.fog = new THREE.Fog(0x1a1a1a, 25, 50);
 
-            // **MODIFIED:** Camera setup for a better mobile view
             camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 16, 19); // Pulled back and up slightly
+            camera.position.set(0, 16, 19);
             camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -751,7 +742,6 @@
             pointLight.castShadow = true;
             scene.add(pointLight);
 
-            // **MODIFIED:** Smaller table for a more compact view
             const tableGeometry = new THREE.CylinderGeometry(6, 6.5, 0.5, 64);
             const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x3d291a });
             const table = new THREE.Mesh(tableGeometry, tableMaterial);
@@ -792,7 +782,6 @@
         }
         
         function createCardMesh(cardType, isFaceUp = false) {
-             // **MODIFIED:** Slightly smaller cards
              const cardGeometry = new THREE.BoxGeometry(3.0, 4.15, 0.1);
              const materials = [
                    new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
@@ -818,7 +807,7 @@
             if(renderer) renderer.render(scene, camera);
         }
         
-        // --- GAME STATE RENDERING ---
+        // --- GAME STATE RENDERING (MODIFIED) ---
         function renderGameState(gameData) {
             if (!scene) return;
 
@@ -854,9 +843,8 @@
                 const relativeIndex = (index - myIndex + turnOrder.length) % turnOrder.length;
                 const isMe = (relativeIndex === 0);
                 
-                // **MODIFIED:** Unified layout logic with adjusted radius for mobile
                 const angle = (relativeIndex / turnOrder.length) * Math.PI * 2;
-                const radius = isMe ? 8 : 9.5; // Reduced radius to bring players closer
+                const radius = isMe ? 8 : 9.5;
                 const yPos = isMe ? 2.5 : 3.5;
                 const x = Math.sin(angle) * radius;
                 const z = Math.cos(angle) * radius;
@@ -884,6 +872,27 @@
 
                 infoDiv.style.left = `${screenPos.x}px`;
                 infoDiv.style.top = `${screenPos.y}px`;
+                
+                // **NEW LOGIC**
+                // Default transform for centering the player's own UI
+                let transformStyle = 'translate(-50%, 0)';
+
+                // Apply a positional offset for opponents to make cards underneath more visible
+                if (!isMe) {
+                    const shiftAmount = 25; // Shift amount in pixels
+                    const offsetX = Math.sin(angle) * shiftAmount;
+                    // Vertical shift: -cos(angle) is -1 at bottom (shift UP), +1 at top (shift DOWN)
+                    // We want to shift away from the center.
+                    const offsetY = -Math.cos(angle) * (shiftAmount * 0.9);
+                    
+                    transformStyle = `translate(calc(-50% + ${offsetX}px), ${offsetY}px)`;
+                }
+                
+                // Apply the new transform style
+                if (infoDiv.style.transform !== transformStyle) {
+                    infoDiv.style.transform = transformStyle;
+                }
+                // **END NEW LOGIC**
 
                 const avatarDiv = document.createElement('div');
                 avatarDiv.className = 'avatar';
@@ -893,13 +902,22 @@
                     avatarDiv.textContent = player.name.charAt(0);
                 }
 
+                // **NEW LOGIC**: Add card count to UI
+                const cardCount = player.cards.length;
                 const contentDiv = document.createElement('div');
                 contentDiv.appendChild(avatarDiv);
-                contentDiv.innerHTML += `<div class="font-bold">${player.name}</div><div>💰 ${player.coins}</div>`;
+                contentDiv.innerHTML += `
+                    <div class="font-bold" style="line-height: 1.2;">${player.name}</div>
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 2px;">
+                        <div style="font-size: 0.9em;">💰 ${player.coins}</div>
+                        <div style="font-size: 0.9em;">&#x1F0CF; ${cardCount}</div>
+                    </div>
+                `;
                 
                 if (infoDiv.innerHTML !== contentDiv.innerHTML) {
                     infoDiv.innerHTML = contentDiv.innerHTML;
                 }
+                // **END NEW LOGIC**
             });
         
             updateActionButtons(gameData);
@@ -930,7 +948,6 @@
                 }
         
                 let targetPos, targetRot;
-                // **MODIFIED:** Adjusted card offset for smaller cards
                 const cardOffsetMultiplier = 3.5;
                 
                 if (cardGroupType === 'active') {
@@ -949,7 +966,6 @@
                         targetPos.z += Math.cos(offsetAngle) * cardOffset * 0.3;
                     }
                 } else { 
-                    // **MODIFIED:** Adjusted revealed card positioning for the smaller table
                     const tableRadius = 4;
                     const tablePos = new THREE.Vector3(basePos.x, 0.2, basePos.z).normalize().multiplyScalar(tableRadius);
                     const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier;
@@ -986,7 +1002,6 @@
             actionsContainer.innerHTML = '';
             const myCoins = me.coins;
             
-            // **NEW** Check for Foreign Aid restriction
             const justUsedFA = gameData.justUsedForeignAid === currentUserId;
 
             if (myCoins >= 10) {
@@ -995,7 +1010,6 @@
             }
             
             addActionBtn('دخل (1💰)', () => initiateAction('Income'));
-            // **MODIFIED** Disable Foreign Aid button if just used
             addActionBtn('مساعدة أجنبية (2💰)', () => initiateAction('Foreign Aid'), justUsedFA);
             if (myCoins >= 7) addActionBtn('انقلاب (7💰)', () => showTargetSelection('Coup'));
             addActionBtn('اغتيال (3💰)', () => showTargetSelection('Assassinate'), myCoins < 3);
@@ -1004,7 +1018,6 @@
             addActionBtn('تبديل (السفير)', () => initiateAction('Exchange'));
         }
         
-        // --- CORE GAME FLOW & TIMER ---
         async function forceEndTurn() {
             const gameRef = doc(db, 'games', currentGameId);
             await runTransaction(db, async (transaction) => {
@@ -1021,7 +1034,7 @@
                 updates.log = arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> نفذ الوقت وأخذ 'دخل' تلقائيًا.`);
                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
                 updates.turnStartTime = serverTimestamp();
-                updates.justUsedForeignAid = null; // Reset flag on forced turn end
+                updates.justUsedForeignAid = null;
                 transaction.update(gameRef, updates);
             });
         }
@@ -1064,14 +1077,12 @@
             let logMessage = `<strong>${actorName}</strong> ينوي القيام بـ: <strong>${actionType}</strong>`;
             if (targetId) logMessage += ` ضد <strong>${gameData.players[targetId].name}</strong>.`;
             
-            // **MODIFIED** Reset Foreign Aid flag at the start of any new action
             const updates = { log: arrayUnion(logMessage), justUsedForeignAid: null };
 
             const unchallengable = ['Income', 'Coup'];
             if (unchallengable.includes(actionType)) {
                 if (actionType === 'Coup') {
                     const target = gameData.players[targetId];
-                    // Rule adjustment for Coup on rich player
                     if (target.cards.length > 1 && gameData.players[currentUserId].coins >= 10) {
                          updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
                          updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
@@ -1083,7 +1094,7 @@
                         updates.turnStartTime = serverTimestamp();
                         await updateDoc(gameRef, updates);
                         return;
-                    } else { // Normal Coup
+                    } else {
                          updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
                          updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
                     }
@@ -1106,7 +1117,6 @@
             await updateDoc(gameRef, updates);
         }
         
-        // --- UTILITY & UI FUNCTIONS ---
         function hideModal(modalId) {
             const modal = document.getElementById(modalId);
             if(modal) modal.style.display = 'none';
@@ -1249,11 +1259,10 @@
                             updates.log = arrayUnion(`الجميع تجاهل. <strong>${players[pendingAction.actorId].name}</strong> نجح في حركة <strong>${CARD_TRANSLATIONS[pendingAction.actionType] || pendingAction.actionType}</strong>.`);
                             Object.assign(updates, getActionEffects(gameData, pendingAction));
                             
-                            // **MODIFIED** Handle Foreign Aid bonus turn
                             if (pendingAction.actionType === 'Foreign Aid') {
                                 updates.log = arrayUnion(`<strong>${players[pendingAction.actorId].name}</strong> يلعب مرة أخرى.`);
                                 updates.turnStartTime = serverTimestamp();
-                                updates.justUsedForeignAid = pendingAction.actorId; // Set flag
+                                updates.justUsedForeignAid = pendingAction.actorId;
                             } else if (pendingAction.actionType !== 'Exchange' && pendingAction.actionType !== 'Assassinate') {
                                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
                                 updates.turnStartTime = serverTimestamp();
