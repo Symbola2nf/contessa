@@ -713,7 +713,7 @@
         }
         
         function createCardMesh(cardType, isFaceUp = false) {
-             const cardGeometry = new THREE.BoxGeometry(2.5, 3.5, 0.1);
+             const cardGeometry = new THREE.BoxGeometry(2.7, 3.8, 0.1);
              const materials = [
                  new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
                  new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
@@ -786,7 +786,7 @@
                 
                 player.cards.forEach((cardType, i) => {
                     const cardMesh = createCardMesh(cardType, isMe);
-                    const cardOffset = (i - (player.cards.length - 1) / 2) * 3.0;
+                    const cardOffset = (i - (player.cards.length - 1) / 2) * 3.2;
                     
                     let targetPos, targetRot;
                     if (isMe) {
@@ -811,7 +811,7 @@
                 player.revealedCards.forEach((cardType, i) => {
                     const cardMesh = createCardMesh(cardType, true);
                     const tablePos = new THREE.Vector3(x, 0.2, z).normalize().multiplyScalar(8);
-                    const cardOffset = (i - (player.revealedCards.length - 1) / 2) * 3.0;
+                    const cardOffset = (i - (player.revealedCards.length - 1) / 2) * 3.2;
                     const finalPos = tablePos.add(new THREE.Vector3(Math.cos(angle) * cardOffset, 0, -Math.sin(angle) * cardOffset));
 
                     gsap.to(cardMesh.position, { duration: 0.5, x: finalPos.x, y: 0.3, z: finalPos.z });
@@ -880,14 +880,12 @@
         // --- CORE GAME FLOW & TIMER ---
         
         async function forceEndTurn() {
-            console.log("Turn timer expired. Forcing 'Income' action.");
             const gameRef = doc(db, 'games', currentGameId);
             await runTransaction(db, async (transaction) => {
                 const gameSnap = await transaction.get(gameRef);
                 if (!gameSnap.exists()) return;
                 const gameData = gameSnap.data();
                 
-                // Only force end if it's still my turn and there's no pending action
                 if (gameData.turnOrder[gameData.currentPlayerIndex] !== currentUserId || gameData.pendingAction) {
                     return;
                 }
@@ -905,7 +903,7 @@
             if (turnTimerInterval) clearInterval(turnTimerInterval);
             
             const isMyTurn = gameData.turnOrder[gameData.currentPlayerIndex] === currentUserId;
-            const noPendingActions = !gameData.pendingAction && (!gameData.playerUpdates || !gameData.playerUpdates[currentUserId]);
+            const noPendingActions = !gameData.pendingAction && (!gameData.playerUpdates || !Object.keys(gameData.playerUpdates).length);
 
             if (gameData.gameState === 'active' && isMyTurn && noPendingActions && gameData.turnStartTime) {
                 turnTimerEl.style.display = 'block';
