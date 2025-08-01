@@ -182,7 +182,7 @@
             border-radius: 10px;
             padding: 10px;
             overflow-y: auto;
-            display: flex; /* Changed */
+            display: flex; 
             flex-direction: column-reverse;
             font-size: 14px;
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -410,7 +410,7 @@
         let textureLoader = new THREE.TextureLoader();
         let texturesPreloaded = false;
         let turnTimerInterval = null;
-        const TURN_DURATION = 40; // 40 seconds
+        const TURN_DURATION = 40; 
 
         // --- UI ELEMENTS ---
         const loadingOverlay = document.getElementById('loading-overlay');
@@ -641,7 +641,7 @@
             
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x1a1a1a);
-            scene.fog = new THREE.Fog(0x1a1a1a, 25, 50);
+            scene.fog = new THREE.Fog(0x1a1a1a, 28, 55);
 
             camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.set(0, 15, 22);
@@ -675,7 +675,7 @@
             scene.add(deckMesh);
 
             window.addEventListener('resize', onWindowResize, false);
-            onWindowResize(); // Call once to set initial camera properties
+            onWindowResize();
             animate();
         }
         
@@ -713,7 +713,7 @@
         }
         
         function createCardMesh(cardType, isFaceUp = false) {
-             const cardGeometry = new THREE.BoxGeometry(2.8, 3.9, 0.1); // CHANGE: Increased card size
+             const cardGeometry = new THREE.BoxGeometry(3.2, 4.4, 0.1); // CHANGE: Increased card size again
              const materials = [
                  new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
                  new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
@@ -722,7 +722,7 @@
              ];
              const cardMesh = new THREE.Mesh(cardGeometry, materials);
              cardMesh.castShadow = true;
-             cardMesh.userData = { type: cardType, isFaceUp: isFaceUp }; // Store type and state
+             cardMesh.userData = { type: cardType, isFaceUp: isFaceUp };
              return cardMesh;
         }
 
@@ -730,8 +730,9 @@
             if (!camera || !renderer) return;
             camera.aspect = window.innerWidth / window.innerHeight;
             if (window.innerWidth < 768) {
-                camera.fov = 75;
-                camera.position.set(0, 18, 15);
+                // CHANGE: New camera position for mobile for better visibility
+                camera.fov = 70;
+                camera.position.set(0, 16, 18); 
             } else {
                 camera.fov = 50;
                 camera.position.set(0, 15, 22);
@@ -746,51 +747,65 @@
             if(renderer) renderer.render(scene, camera);
         }
         
-        // --- GAME STATE RENDERING (REFACTORED) ---
+        // --- GAME STATE RENDERING ---
         function renderGameState(gameData) {
             if (!scene) return;
         
             const { players, turnOrder, currentPlayerIndex } = gameData;
             const myIndex = turnOrder.indexOf(currentUserId);
             
-            // Cleanup UI for players who might have left
             document.getElementById('player-infos').innerHTML = '';
         
             turnOrder.forEach((pid, index) => {
                 const player = players[pid];
                 if (!player) return;
         
-                // Ensure player object container exists
                 if (!playerObjects[pid]) {
                     playerObjects[pid] = { cards: [], revealedCards: [], infoDiv: null };
                 }
         
                 const relativeIndex = (index - myIndex + turnOrder.length) % turnOrder.length;
-                const angle = (relativeIndex / turnOrder.length) * Math.PI * 2;
                 
-                const isMe = pid === currentUserId;
-                const radius = isMe ? (window.innerWidth < 768 ? 10 : 15) : (window.innerWidth < 768 ? 12 : 16);
-                const yPos = isMe ? 2 : 4;
-                const x = Math.sin(angle) * radius;
-                const z = Math.cos(angle) * radius;
+                let x, z, yPos, angle;
+                let isMe = (relativeIndex === 0);
+
+                // CHANGE: Completely new layout logic for mobile vs desktop
+                if (window.innerWidth < 768) {
+                    const mobilePositions = [
+                        { x: 0, z: 12, y: 2 },    // Player 0 (me, at the bottom)
+                        { x: 0, z: -12, y: 4 },   // Player 1 (opposite, top-center)
+                        { x: -10, z: -3, y: 4 },  // Player 2 (left)
+                        { x: 10, z: -3, y: 4 },   // Player 3 (right)
+                        { x: -7, z: -9, y: 4 },   // Player 4 (top-left)
+                        { x: 7, z: -9, y: 4 }    // Player 5 (top-right)
+                    ];
+                    const pos = mobilePositions[relativeIndex];
+                    x = pos.x;
+                    z = pos.z;
+                    yPos = pos.y;
+                    angle = Math.atan2(x, z);
+                } else {
+                    // Original desktop circle layout
+                    const radius = isMe ? 15 : 16;
+                    yPos = isMe ? 2 : 4;
+                    angle = (relativeIndex / turnOrder.length) * Math.PI * 2;
+                    x = Math.sin(angle) * radius;
+                    z = Math.cos(angle) * radius;
+                }
         
-                // Sync active cards
                 updateCardGroup(playerObjects[pid].cards, player.cards, pid, 'active', { x, y: yPos, z }, angle, isMe);
-        
-                // Sync revealed cards
                 updateCardGroup(playerObjects[pid].revealedCards, player.revealedCards, pid, 'revealed', { x, y: yPos, z }, angle, isMe);
         
-                // Update or create player info div
-                const screenPos = toScreenPosition(new THREE.Vector3(x, yPos + (isMe ? 3.0 : 4.5), z), camera); // CHANGE: Increased Y-offset
+                // CHANGE: Increased Y-offset for infoDiv
+                const screenPos = toScreenPosition(new THREE.Vector3(x, yPos + (isMe ? 4.5 : 5.5), z), camera);
                 let infoDiv = playerObjects[pid].infoDiv;
                 if (!infoDiv) {
                     infoDiv = document.createElement('div');
-                    infoDiv.className = 'player-info ui-element';
                     document.getElementById('player-infos').appendChild(infoDiv);
                     playerObjects[pid].infoDiv = infoDiv;
                 }
         
-                infoDiv.className = 'player-info ui-element'; // Reset classes
+                infoDiv.className = 'player-info ui-element';
                 if (!player.isAlive) infoDiv.classList.add('eliminated');
                 if (turnOrder[currentPlayerIndex] === pid && player.isAlive) {
                     infoDiv.classList.add('current-turn');
@@ -805,27 +820,22 @@
             updateTurnTimer(gameData);
         }
         
-        // Helper function for the refactored renderGameState
         function updateCardGroup(meshArray, dataArray, pid, cardGroupType, basePos, angle, isMe) {
-            // Remove extra meshes if data array is smaller
             while (meshArray.length > dataArray.length) {
                 scene.remove(meshArray.pop());
             }
         
-            // Add new meshes if data array is larger
             while (meshArray.length < dataArray.length) {
                 const newMesh = createCardMesh(null, cardGroupType === 'revealed');
-                newMesh.position.set(basePos.x, basePos.y, basePos.z); // Start at player position
+                newMesh.position.set(basePos.x, basePos.y, basePos.z);
                 scene.add(newMesh);
                 meshArray.push(newMesh);
             }
         
-            // Update all meshes in the array
             dataArray.forEach((cardType, i) => {
                 const cardMesh = meshArray[i];
                 const isFaceUp = (isMe && cardGroupType === 'active') || cardGroupType === 'revealed';
         
-                // Update texture if necessary
                 if (cardMesh.userData.type !== cardType || cardMesh.userData.isFaceUp !== isFaceUp) {
                     cardMesh.material[4].map = isFaceUp ? cardTextures[cardType] : cardTextures.BACK;
                     cardMesh.material[4].needsUpdate = true;
@@ -834,8 +844,10 @@
                 }
         
                 let targetPos, targetRot;
+                const cardOffsetMultiplier = 3.8; // CHANGE: Accommodate larger cards
+                
                 if (cardGroupType === 'active') {
-                    const cardOffset = (i - (dataArray.length - 1) / 2) * 3.4; // CHANGE: Increased offset
+                    const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier;
                     if (isMe) {
                         targetPos = new THREE.Vector3(cardOffset, basePos.y, basePos.z);
                         targetRot = new THREE.Euler(-Math.PI / 8, 0, 0);
@@ -847,11 +859,17 @@
                         targetRot = tempLookAt.rotation.clone();
                     }
                 } else { // Revealed cards
-                    const tablePos = new THREE.Vector3(basePos.x, 0.2, basePos.z).normalize().multiplyScalar(8);
-                    const cardOffset = (i - (dataArray.length - 1) / 2) * 3.4; // CHANGE: Increased offset
-                    targetPos = tablePos.add(new THREE.Vector3(Math.cos(angle) * cardOffset, 0, -Math.sin(angle) * cardOffset));
+                    const tableRadius = isMe ? 8 : 7;
+                    const tablePos = new THREE.Vector3(basePos.x, 0.2, basePos.z).normalize().multiplyScalar(tableRadius);
+                    const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier;
+                    
+                    const perpendicularAngle = angle - Math.PI / 2;
+                    const offsetVec = new THREE.Vector3(Math.sin(perpendicularAngle), 0, Math.cos(perpendicularAngle)).multiplyScalar(cardOffset);
+
+                    targetPos = tablePos.add(offsetVec);
                     targetPos.y = 0.3;
-                    targetRot = new THREE.Euler(-Math.PI / 2, 0, -angle);
+                    // CHANGE: Tilted revealed cards for better visibility
+                    targetRot = new THREE.Euler(-Math.PI / 2.3, 0, -angle);
                 }
         
                 gsap.to(cardMesh.position, { duration: 0.5, x: targetPos.x, y: targetPos.y, z: targetPos.z });
@@ -861,14 +879,22 @@
         
         function updateActionButtons(gameData) {
             const actionsContainer = document.getElementById('action-buttons');
+            const playerInfoContainer = document.getElementById('player-infos');
             actionsContainer.innerHTML = '';
             
             const myTurn = gameData.turnOrder[gameData.currentPlayerIndex] === currentUserId;
             const me = gameData.players[currentUserId];
             
-            if (gameData.gameState !== 'active' || !myTurn || !me?.isAlive || gameData.pendingAction || (gameData.playerUpdates && gameData.playerUpdates[currentUserId])) {
-                return;
+            const shouldShow = gameData.gameState === 'active' && myTurn && me?.isAlive && !gameData.pendingAction && (!gameData.playerUpdates || !gameData.playerUpdates[currentUserId]);
+
+            if (shouldShow) {
+                playerInfoContainer.style.pointerEvents = 'none'; // Hide player names when actions are available
+            } else {
+                 playerInfoContainer.style.pointerEvents = 'auto';
             }
+
+
+            if (!shouldShow) return;
 
             const myCoins = me.coins;
             
@@ -890,7 +916,6 @@
             const messageLog = document.getElementById('message-log');
             messageLog.innerHTML = '';
             if(!gameData.log) return;
-            // Make sure the log is visible
             messageLog.style.display = 'flex';
             gameData.log.slice(-15).reverse().forEach(msg => {
                 const p = document.createElement('p');
@@ -900,7 +925,6 @@
         }
 
         // --- CORE GAME FLOW & TIMER ---
-        
         async function forceEndTurn() {
             console.log("Turn timer expired. Forcing 'Income' action.");
             const gameRef = doc(db, 'games', currentGameId);
@@ -909,7 +933,6 @@
                 if (!gameSnap.exists()) return;
                 const gameData = gameSnap.data();
                 
-                // Only force end if it's still my turn and there's no pending action
                 if (gameData.turnOrder[gameData.currentPlayerIndex] !== currentUserId || gameData.pendingAction) {
                     return;
                 }
@@ -965,7 +988,6 @@
 
             const unchallengable = ['Income', 'Coup'];
             if (unchallengable.includes(actionType)) {
-                 // CHANGE: Handle special Coup case for players with 10+ coins
                 if (actionType === 'Coup') {
                     const target = gameData.players[targetId];
                     if (target && target.coins >= 10) {
@@ -975,12 +997,12 @@
                         updates.currentPlayerIndex = getNextPlayerIndex(gameData);
                         updates.turnStartTime = serverTimestamp();
                         await updateDoc(gameRef, updates);
-                        return; // Exit early as this action resolves instantly
+                        return;
                     }
                 }
                 
                 Object.assign(updates, getActionEffects(gameData, { actorId: currentUserId, actionType, targetId }));
-                if (actionType !== 'Coup') { // Normal Coup waits for reveal
+                if (actionType !== 'Coup') {
                     updates.currentPlayerIndex = getNextPlayerIndex(gameData);
                     updates.turnStartTime = serverTimestamp();
                 }
@@ -1067,10 +1089,10 @@
                             updates.log = arrayUnion(`الجميع تجاهل. <strong>${players[pendingAction.actorId].name}</strong> نجح في حركة <strong>${pendingAction.actionType}</strong>.`);
                             Object.assign(updates, getActionEffects(gameData, pendingAction));
                             
-                            // CHANGE: Logic for Foreign Aid double play
                             if (pendingAction.actionType === 'Foreign Aid') {
                                 updates.log = arrayUnion(`<strong>${players[pendingAction.actorId].name}</strong> يلعب مرة أخرى.`);
-                                // Do not advance turn, let the player play again
+                                // CHANGE: Reset turn timer for the extra move
+                                updates.turnStartTime = serverTimestamp();
                             } else if (pendingAction.actionType !== 'Exchange' && pendingAction.actionType !== 'Assassinate') {
                                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
                                 updates.turnStartTime = serverTimestamp();
@@ -1136,7 +1158,6 @@
                 updates.log = arrayUnion(`تحدي ناجح! <strong>${actor.name}</strong> كان يكذب ويخسر نفوذًا.`);
                 updates[`playerUpdates.${action.actorId}`] = { type: 'mustReveal', reason: 'تم كشف كذبتك.' };
                 updates.pendingAction = null; 
-                // Since the action failed, we advance the turn
                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
                 updates.turnStartTime = serverTimestamp();
             }
@@ -1146,7 +1167,7 @@
         async function resolveBlockChallenge(transaction, gameData, action, challengerId) {
             const { players, deck } = gameData;
             const blocker = players[action.blockerId];
-            const challenger = players[challengerId]; // This is the original action actor
+            const challenger = players[challengerId]; 
             const updates = {};
             const blockClaim = action.blockCard;
 
@@ -1163,7 +1184,6 @@
                 updates.deck = shuffle(newDeck);
                 updates.log = arrayUnion(`${blocker.name} أظهر بطاقة ${CARD_TRANSLATIONS[revealedCard]} وسحب واحدة جديدة.`);
                 
-                // Block was successful, action fails, advance turn
                 updates.pendingAction = null;
                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
                 updates.turnStartTime = serverTimestamp();
@@ -1171,7 +1191,6 @@
                 updates.log = arrayUnion(`تحدي ناجح! <strong>${blocker.name}</strong> كان يكذب ويخسر نفوذًا.`);
                 updates[`playerUpdates.${action.blockerId}`] = { type: 'mustReveal', reason: 'تم كشف كذبة المنع.' };
                 
-                // Block fails, so original action goes through
                 Object.assign(updates, getActionEffects(gameData, action));
                 updates.pendingAction = null; 
             }
@@ -1188,7 +1207,6 @@
                 case 'Foreign Aid': updates[`players.${actorId}.coins`] = actorCoins + 2; break;
                 case 'Tax': updates[`players.${actorId}.coins`] = actorCoins + 3; break;
                 case 'Coup':
-                    // This is now only for regular coups, 10+ coin case is handled in initiateAction
                     updates[`players.${actorId}.coins`] = actorCoins - 7;
                     updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
                     break;
