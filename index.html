@@ -104,14 +104,27 @@
             opacity: 0.4;
             filter: grayscale(1);
         }
+        .bottom-ui-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
+            pointer-events: none;
+        }
         .action-buttons {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             max-width: 95%;
             width: 100%;
+            pointer-events: auto;
         }
         .action-btn {
             background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
@@ -163,11 +176,8 @@
             font-weight: bold;
         }
         .message-log {
-            position: absolute;
-            bottom: 140px;
-            left: 20px;
             width: 300px;
-            height: 150px;
+            height: 120px;
             background-color: rgba(0,0,0,0.5);
             border-radius: 10px;
             padding: 10px;
@@ -176,6 +186,8 @@
             flex-direction: column-reverse;
             font-size: 14px;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: auto;
+            margin-bottom: 10px;
         }
         .message-log p { margin: 3px 0; line-height: 1.4; }
         .modal {
@@ -220,24 +232,33 @@
             border-color: var(--yellow-glow);
             box-shadow: 0 0 20px var(--yellow-glow);
         }
+        #turn-timer {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--yellow-glow);
+            text-shadow: 0 0 10px var(--yellow-glow);
+            display: none;
+        }
 
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
             .action-btn {
                 padding: 12px;
                 font-size: 13px;
-                min-width: 90px;
+                min-width: 80px;
             }
             .action-buttons {
                 gap: 5px;
-                margin-bottom: 10px;
             }
             .message-log {
                 width: 90vw;
-                height: 120px;
-                bottom: 120px;
-                left: 5vw;
+                height: 100px;
                 font-size: 12px;
+                margin-bottom: 5px;
             }
             .player-info {
                 width: 90px;
@@ -294,11 +315,14 @@
 
     <div id="ui-overlay" class="ui-overlay" style="display: none;">
         <div id="player-infos" class="w-full h-full absolute"></div>
+        <div id="turn-timer" class="ui-element"></div>
         <div class="absolute top-4 right-4 ui-element top-right-ui">
             <p>رمز اللعبة: <strong id="game-id-ingame"></strong></p>
         </div>
-        <div id="message-log" class="message-log ui-element"></div>
-        <div id="action-buttons" class="action-buttons"></div>
+        <div class="bottom-ui-container">
+            <div id="message-log" class="message-log"></div>
+            <div id="action-buttons" class="action-buttons"></div>
+        </div>
     </div>
     
     <div id="interaction-modal" class="modal">
@@ -347,7 +371,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc, collection, serverTimestamp, runTransaction, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc, collection, serverTimestamp, runTransaction, arrayUnion, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBQLIKtueG954OYiWz-YDBl_LyUxc_VRT8",
@@ -371,12 +395,12 @@
         };
 
         const CARD_IMAGES = {
-            [CARD_TYPES.DUKE]: 'https://i.imgur.com/sT4h11E.png',
-            [CARD_TYPES.CONTESSA]: 'https://i.imgur.com/a7T4M5L.png',
-            [CARD_TYPES.ASSASSIN]: 'https://i.imgur.com/sZaV3ot.png',
-            [CARD_TYPES.CAPTAIN]: 'https://i.imgur.com/tZ2w4Sj.png',
-            [CARD_TYPES.AMBASSADOR]: 'https://i.imgur.com/U83Vv5b.png',
-            BACK: 'https://i.imgur.com/3hZSW4O.png'
+            [CARD_TYPES.DUKE]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020278/duke_nsvvuc.webp',
+            [CARD_TYPES.CONTESSA]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020277/contessa_luhbsn.webp',
+            [CARD_TYPES.ASSASSIN]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020272/assasin_muhtsm.webp',
+            [CARD_TYPES.CAPTAIN]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020277/captain_xqmeav.webp',
+            [CARD_TYPES.AMBASSADOR]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020278/ambassador_k44ipg.webp',
+            BACK: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020272/back_i5ar84.webp'
         };
 
         let currentUserId = null, currentGameId = null, gameUnsubscribe = null;
@@ -385,6 +409,8 @@
         let cardTextures = {};
         let textureLoader = new THREE.TextureLoader();
         let texturesPreloaded = false;
+        let turnTimerInterval = null;
+        const TURN_DURATION = 40; // 40 seconds
 
         // --- UI ELEMENTS ---
         const loadingOverlay = document.getElementById('loading-overlay');
@@ -399,6 +425,7 @@
         const gameIdDisplay = document.getElementById('game-id-display');
         const gameIdIngame = document.getElementById('game-id-ingame');
         const playAgainBtn = document.getElementById('play-again-btn');
+        const turnTimerEl = document.getElementById('turn-timer');
         
         // --- AUTH ---
         onAuthStateChanged(auth, user => {
@@ -478,7 +505,8 @@
                             createdAt: serverTimestamp(),
                             creatorId: currentUserId,
                             pendingAction: null,
-                            playerUpdates: {} // Used for forcing reveals, etc.
+                            playerUpdates: {},
+                            turnStartTime: null,
                         };
                         transaction.set(gameRef, newGameData);
                     } else {
@@ -559,7 +587,10 @@
                 });
 
                 transaction.update(gameRef, {
-                    players, deck, gameState: 'active',
+                    players, 
+                    deck, 
+                    gameState: 'active',
+                    turnStartTime: serverTimestamp(),
                     log: arrayUnion("<strong>بدأت اللعبة! تم توزيع البطاقات.</strong>")
                 });
             });
@@ -644,6 +675,7 @@
             scene.add(deckMesh);
 
             window.addEventListener('resize', onWindowResize, false);
+            onWindowResize(); // Call once to set initial camera properties
             animate();
         }
         
@@ -697,7 +729,14 @@
         function onWindowResize() {
             if (!camera || !renderer) return;
             camera.aspect = window.innerWidth / window.innerHeight;
-            camera.fov = window.innerWidth < 768 ? 60 : 50;
+            if (window.innerWidth < 768) {
+                camera.fov = 75;
+                camera.position.set(0, 18, 15);
+            } else {
+                camera.fov = 50;
+                camera.position.set(0, 15, 22);
+            }
+            camera.lookAt(0,0,0);
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
@@ -737,7 +776,7 @@
                 const angle = (relativeIndex / turnOrder.length) * Math.PI * 2;
                 
                 const isMe = pid === currentUserId;
-                const radius = isMe ? 15 : 16;
+                const radius = isMe ? (window.innerWidth < 768 ? 10 : 15) : (window.innerWidth < 768 ? 12 : 16);
                 const yPos = isMe ? 2 : 4;
                 const x = Math.sin(angle) * radius;
                 const z = Math.cos(angle) * radius;
@@ -797,6 +836,7 @@
             
             updateActionButtons(gameData);
             updateMessageLog(gameData);
+            updateTurnTimer(gameData);
         }
         
         function updateActionButtons(gameData) {
@@ -806,7 +846,7 @@
             const myTurn = gameData.turnOrder[gameData.currentPlayerIndex] === currentUserId;
             const me = gameData.players[currentUserId];
             
-            if (gameData.gameState !== 'active' || !myTurn || !me?.isAlive || gameData.pendingAction || gameData.playerUpdates[currentUserId]) {
+            if (gameData.gameState !== 'active' || !myTurn || !me?.isAlive || gameData.pendingAction || (gameData.playerUpdates && gameData.playerUpdates[currentUserId])) {
                 return;
             }
 
@@ -837,7 +877,57 @@
             });
         }
 
-        // --- CORE GAME FLOW ---
+        // --- CORE GAME FLOW & TIMER ---
+        
+        async function forceEndTurn() {
+            console.log("Turn timer expired. Forcing 'Income' action.");
+            const gameRef = doc(db, 'games', currentGameId);
+            await runTransaction(db, async (transaction) => {
+                const gameSnap = await transaction.get(gameRef);
+                if (!gameSnap.exists()) return;
+                const gameData = gameSnap.data();
+                
+                // Only force end if it's still my turn and there's no pending action
+                if (gameData.turnOrder[gameData.currentPlayerIndex] !== currentUserId || gameData.pendingAction) {
+                    return;
+                }
+
+                const updates = {};
+                updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins + 1;
+                updates.log = arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> نفذ الوقت وأخذ 'دخل' تلقائيًا.`);
+                updates.currentPlayerIndex = getNextPlayerIndex(gameData);
+                updates.turnStartTime = serverTimestamp();
+                transaction.update(gameRef, updates);
+            });
+        }
+
+        function updateTurnTimer(gameData) {
+            if (turnTimerInterval) clearInterval(turnTimerInterval);
+            
+            const isMyTurn = gameData.turnOrder[gameData.currentPlayerIndex] === currentUserId;
+            const noPendingActions = !gameData.pendingAction && (!gameData.playerUpdates || !gameData.playerUpdates[currentUserId]);
+
+            if (gameData.gameState === 'active' && isMyTurn && noPendingActions && gameData.turnStartTime) {
+                turnTimerEl.style.display = 'block';
+                const startTime = gameData.turnStartTime.toDate();
+                
+                turnTimerInterval = setInterval(() => {
+                    const now = new Date();
+                    const elapsed = Math.floor((now - startTime) / 1000);
+                    const remaining = TURN_DURATION - elapsed;
+                    
+                    if (remaining <= 0) {
+                        turnTimerEl.textContent = '0';
+                        clearInterval(turnTimerInterval);
+                        forceEndTurn();
+                    } else {
+                        turnTimerEl.textContent = remaining;
+                    }
+                }, 1000);
+            } else {
+                turnTimerEl.style.display = 'none';
+            }
+        }
         
         async function initiateAction(actionType, targetId = null) {
             const gameRef = doc(db, 'games', currentGameId);
@@ -856,18 +946,18 @@
                 Object.assign(updates, getActionEffects(gameData, { actorId: currentUserId, actionType, targetId }));
                 if (actionType !== 'Coup') {
                     updates.currentPlayerIndex = getNextPlayerIndex(gameData);
+                    updates.turnStartTime = serverTimestamp();
                 }
-                await updateDoc(gameRef, updates);
             } else {
                 updates.pendingAction = {
-                    type: 'ACTION', // 'ACTION' or 'BLOCK'
+                    type: 'ACTION',
                     actorId: currentUserId,
                     actionType: actionType,
                     targetId: targetId,
                     responses: {},
                 };
-                await updateDoc(gameRef, updates);
             }
+            await updateDoc(gameRef, updates);
         }
         
         function handlePendingAction(gameData) {
@@ -879,7 +969,6 @@
             const buttonsContainer = document.getElementById('modal-buttons');
             buttonsContainer.innerHTML = '';
 
-            // --- Case 1: An action is happening, and I need to respond ---
             if (pendingAction.type === 'ACTION' && pendingAction.actorId !== currentUserId && !pendingAction.responses[currentUserId]) {
                 const actorName = players[pendingAction.actorId].name;
                 document.getElementById('modal-title').textContent = `حركة من ${actorName}!`;
@@ -903,7 +992,6 @@
                 return;
             }
 
-            // --- Case 2: A block has been declared, and I (the original actor) need to respond ---
             if (pendingAction.type === 'BLOCK' && pendingAction.actorId === currentUserId && !pendingAction.responses[currentUserId]) {
                 const blockerName = players[pendingAction.blockerId].name;
                 document.getElementById('modal-title').textContent = `${blockerName} يمنع حركتك!`;
@@ -915,7 +1003,6 @@
                 return;
             }
 
-            // --- Otherwise, I am waiting for others ---
             document.getElementById('action-buttons').innerHTML = `<p class="text-gray-400 animate-pulse">في انتظار ردود اللاعبين...</p>`;
             hideModal('interaction-modal');
         }
@@ -935,52 +1022,45 @@
                 const updates = {};
                 const me = players[currentUserId];
 
-                // --- Responding to an initial ACTION ---
                 if (pendingAction.type === 'ACTION') {
                     if (responseType === 'pass') {
                         updates[`pendingAction.responses.${currentUserId}`] = 'pass';
                         const aliveOpponents = turnOrder.filter(pid => players[pid].isAlive && pid !== pendingAction.actorId);
                         const allPassed = aliveOpponents.every(pid => (pendingAction.responses[pid] === 'pass' || pid === currentUserId));
                         if (allPassed) {
-                            // Action succeeds
                             updates.log = arrayUnion(`الجميع تجاهل. <strong>${players[pendingAction.actorId].name}</strong> نجح في حركة <strong>${pendingAction.actionType}</strong>.`);
                             Object.assign(updates, getActionEffects(gameData, pendingAction));
                             if (pendingAction.actionType !== 'Exchange' && pendingAction.actionType !== 'Assassinate') {
                                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
+                                updates.turnStartTime = serverTimestamp();
                             }
                             updates.pendingAction = null;
                         }
                     } else if (responseType === 'challenge') {
-                        // Resolve challenge immediately
                         await resolveChallenge(transaction, gameData, pendingAction, currentUserId);
                         return;
                     } else if (responseType === 'block') {
-                        // Transition to a BLOCK pending state
                         const blockCardMap = { 'BlockForeignAid': CARD_TYPES.DUKE, 'BlockAssassination': CARD_TYPES.CONTESSA, 'BlockSteal': [CARD_TYPES.CAPTAIN, CARD_TYPES.AMBASSADOR] };
                         const blockCard = Array.isArray(blockCardMap[blockType]) ? (me.cards.includes(CARD_TYPES.CAPTAIN) ? CARD_TYPES.CAPTAIN : CARD_TYPES.AMBASSADOR) : blockCardMap[blockType];
                         
                         updates.pendingAction = {
                             type: 'BLOCK',
-                            actorId: pendingAction.actorId,
-                            actionType: pendingAction.actionType,
-                            targetId: pendingAction.targetId,
-                            blockerId: currentUserId,
-                            blockCard: blockCard,
-                            responses: {} // For the actor to respond to the block
+                            actorId: pendingAction.actorId, actionType: pendingAction.actionType,
+                            targetId: pendingAction.targetId, blockerId: currentUserId,
+                            blockCard: blockCard, responses: {}
                         };
                         updates.log = arrayUnion(`<strong>${me.name}</strong> يمنع الحركة!`);
                     }
                 }
-                // --- Responding to a BLOCK ---
                 else if (pendingAction.type === 'BLOCK') {
                     if (responseType === 'challenge_block') {
                         await resolveBlockChallenge(transaction, gameData, pendingAction, currentUserId);
                         return;
                     } else if (responseType === 'pass_block') {
-                        // Actor accepts the block, action fails.
                         updates.log = arrayUnion(`<strong>${me.name}</strong> قبل المنع. الحركة فشلت.`);
                         updates.pendingAction = null;
                         updates.currentPlayerIndex = getNextPlayerIndex(gameData);
+                        updates.turnStartTime = serverTimestamp();
                     }
                 }
                 
@@ -993,14 +1073,12 @@
             const actor = players[action.actorId];
             const challenger = players[challengerId];
             const updates = {};
-
             const claimCard = { 'Tax': CARD_TYPES.DUKE, 'Assassinate': CARD_TYPES.ASSASSIN, 'Steal': CARD_TYPES.CAPTAIN, 'Exchange': CARD_TYPES.AMBASSADOR }[action.actionType];
 
-            if (actor.cards.includes(claimCard)) { // Challenge FAILED (Actor was truthful)
+            if (actor.cards.includes(claimCard)) { // Challenge FAILED
                 updates.log = arrayUnion(`تحدي فاشل! <strong>${actor.name}</strong> كان صادقًا. <strong>${challenger.name}</strong> يخسر نفوذًا.`);
                 updates[`playerUpdates.${challengerId}`] = { type: 'mustReveal', reason: 'خسرت التحدي.' };
                 
-                // Swap card
                 const newDeck = [...deck];
                 const cardIndex = actor.cards.indexOf(claimCard);
                 const revealedCard = actor.cards.splice(cardIndex, 1)[0];
@@ -1010,19 +1088,13 @@
                 updates.deck = shuffle(newDeck);
                 updates.log = arrayUnion(`${actor.name} أظهر بطاقة ${CARD_TRANSLATIONS[revealedCard]} وسحب واحدة جديدة.`);
 
-                // Original action continues
                 Object.assign(updates, getActionEffects({ ...gameData, deck: newDeck, players }, action));
-                if (action.actionType === 'Exchange' || action.actionType === 'Assassinate') {
-                     updates.pendingAction = null; // Wait for reveal/exchange
-                } else {
-                    updates.pendingAction = null;
-                    updates.currentPlayerIndex = getNextPlayerIndex(gameData);
-                }
+                updates.pendingAction = null; 
 
-            } else { // Challenge SUCCEEDED (Actor was bluffing)
+            } else { // Challenge SUCCEEDED
                 updates.log = arrayUnion(`تحدي ناجح! <strong>${actor.name}</strong> كان يكذب ويخسر نفوذًا.`);
                 updates[`playerUpdates.${action.actorId}`] = { type: 'mustReveal', reason: 'تم كشف كذبتك.' };
-                updates.pendingAction = null; // Action is cancelled, wait for reveal
+                updates.pendingAction = null; 
             }
             transaction.update(doc(db, 'games', currentGameId), updates);
         }
@@ -1030,15 +1102,14 @@
         async function resolveBlockChallenge(transaction, gameData, action, challengerId) {
             const { players, deck } = gameData;
             const blocker = players[action.blockerId];
-            const challenger = players[challengerId]; // This is the original actor
+            const challenger = players[challengerId];
             const updates = {};
             const blockClaim = action.blockCard;
 
-            if (blocker.cards.includes(blockClaim)) { // Block challenge FAILED (Blocker was truthful)
+            if (blocker.cards.includes(blockClaim)) { // Block challenge FAILED
                 updates.log = arrayUnion(`تحدي فاشل! <strong>${blocker.name}</strong> كان صادقًا. <strong>${challenger.name}</strong> يخسر نفوذًا.`);
                 updates[`playerUpdates.${challengerId}`] = { type: 'mustReveal', reason: 'خسرت تحدي المنع.' };
                 
-                // Swap card
                 const newDeck = [...deck];
                 const cardIndex = blocker.cards.indexOf(blockClaim);
                 const revealedCard = blocker.cards.splice(cardIndex, 1)[0];
@@ -1048,14 +1119,13 @@
                 updates.deck = shuffle(newDeck);
                 updates.log = arrayUnion(`${blocker.name} أظهر بطاقة ${CARD_TRANSLATIONS[revealedCard]} وسحب واحدة جديدة.`);
                 
-                updates.pendingAction = null; // Action fails, wait for challenger to reveal
-            } else { // Block challenge SUCCEEDED (Blocker was bluffing)
+                updates.pendingAction = null;
+            } else { // Block challenge SUCCEEDED
                 updates.log = arrayUnion(`تحدي ناجح! <strong>${blocker.name}</strong> كان يكذب ويخسر نفوذًا.`);
                 updates[`playerUpdates.${action.blockerId}`] = { type: 'mustReveal', reason: 'تم كشف كذبة المنع.' };
                 
-                // Original action proceeds
                 Object.assign(updates, getActionEffects(gameData, action));
-                updates.pendingAction = null; // Wait for blocker to reveal
+                updates.pendingAction = null; 
             }
             transaction.update(doc(db, 'games', currentGameId), updates);
         }
@@ -1116,7 +1186,7 @@
 
                 const updates = {};
                 updates[`players.${currentUserId}`] = player;
-                updates[`playerUpdates.${currentUserId}`] = null; // Clear the update
+                updates[`playerUpdates.${currentUserId}`] = null;
                 
                 let logMessage = `<strong>${player.name}</strong> يكشف ويخسر <strong>${CARD_TRANSLATIONS[cardToReveal]}</strong>.`;
                 if (player.cards.length === 0) {
@@ -1125,6 +1195,7 @@
                 }
                 
                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
+                updates.turnStartTime = serverTimestamp();
                 updates.log = arrayUnion(logMessage);
                 transaction.update(gameRef, updates);
             });
@@ -1141,7 +1212,8 @@
                      [`playerUpdates.${currentUserId}`]: null,
                      deck: shuffle([...gameData.deck, ...returnedCards]),
                      log: arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> قام بتبديل بطاقاته.`),
-                     currentPlayerIndex: getNextPlayerIndex(gameData)
+                     currentPlayerIndex: getNextPlayerIndex(gameData),
+                     turnStartTime: serverTimestamp()
                  };
                  transaction.update(gameRef, updates);
              });
@@ -1271,6 +1343,8 @@
             const alivePlayers = gameData.turnOrder.filter(pid => gameData.players[pid]?.isAlive);
             if (alivePlayers.length <= 1) {
                 if (gameUnsubscribe) gameUnsubscribe(); gameUnsubscribe = null;
+                if (turnTimerInterval) clearInterval(turnTimerInterval);
+
                 const winnerId = alivePlayers.length === 1 ? alivePlayers[0] : null;
                 const winnerName = winnerId ? gameData.players[winnerId].name : "لا أحد";
                 
