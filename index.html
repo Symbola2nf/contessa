@@ -71,22 +71,24 @@
         .ui-element {
             pointer-events: auto;
             background-color: var(--dark-ui);
-            padding: 6px 12px; /* Mobile Style */
+            padding: 6px 12px;
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
         }
+        /* MODIFIED: Smaller player info box for mobile */
         .player-info {
             position: absolute;
             text-align: center;
             transform: translateX(-50%);
             transition: all 0.3s ease;
-            width: 90px; /* Mobile Style */
+            width: 80px; /* Reduced from 90px */
             z-index: 20;
+            font-size: 11px; /* Added to shrink text */
         }
         .player-info .avatar {
-            width: 45px; height: 45px; /* Mobile Style */
+            width: 40px; height: 40px; /* Reduced from 45px */
             background-color: #4a4a4a;
             border-radius: 50%;
             border: 2px solid white;
@@ -94,7 +96,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 22px; /* Reduced from 24px */
             font-weight: bold;
             overflow: hidden;
         }
@@ -127,7 +129,7 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 5px; /* Mobile Style */
+            gap: 5px;
             margin-bottom: 10px;
             max-width: 95%;
             width: 100%;
@@ -137,15 +139,15 @@
             background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
             color: white;
             border: none;
-            padding: 12px; /* Mobile Style */
+            padding: 12px;
             border-radius: 10px;
-            font-size: 13px; /* Mobile Style */
+            font-size: 13px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             flex-shrink: 0;
-            min-width: 80px; /* Mobile Style */
+            min-width: 80px;
         }
         .action-btn:hover:not(:disabled) {
             transform: translateY(-2px);
@@ -200,7 +202,7 @@
         }
         .modal-content {
             background-color: #2d2d2d;
-            padding: 15px; /* Mobile Style */
+            padding: 15px;
             border-radius: 15px;
             text-align: center;
             border: 1px solid var(--yellow-glow);
@@ -214,7 +216,7 @@
             gap: 10px;
         }
         .card-selection-container img {
-            width: 70px; /* Mobile Style */
+            width: 70px;
             height: auto;
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -243,8 +245,6 @@
         .top-right-ui {
             display: none !important;
         }
-        
-        /* --- AVATAR CUSTOMIZER STYLES --- */
         #avatar-customizer {
             display: flex;
             flex-direction: column;
@@ -294,17 +294,15 @@
             line-height: 1;
         }
         
-        /* --- DESKTOP & LANDSCAPE ENHANCEMENTS --- */
+        /* MODIFIED: Desktop enhancements */
         @media (min-width: 1024px) and (orientation: landscape) {
-            .ui-element {
-                padding: 10px 20px;
-            }
             .player-info {
-                width: 130px; /* Larger UI box for player info */
+                width: 120px; /* Larger UI box for player info */
+                font-size: 14px;
             }
             .player-info .avatar {
-                width: 60px; height: 60px; /* Larger avatar */
-                font-size: 30px;
+                width: 55px; height: 55px; /* Balanced avatar size */
+                font-size: 28px;
             }
             .action-btn {
                 padding: 14px;
@@ -312,11 +310,11 @@
                 min-width: 90px;
             }
             .modal-content {
-                padding: 25px; /* More padding in modals */
+                padding: 25px;
                 max-width: 500px;
             }
             .card-selection-container img {
-                width: 90px; /* Larger cards in selection modals */
+                width: 90px;
             }
             #turn-timer {
                 font-size: 28px;
@@ -496,44 +494,20 @@
         let turnTimerInterval = null;
         const TURN_DURATION = 40; 
         
-        let tableMesh = null; // Reference to the table mesh
-        let layoutConfig = {}; // Object to hold layout parameters based on screen size
-        let lastKnownGameState = null; // To redraw scene on resize
+        let tableMesh = null;
+        let layoutConfig = {};
+        let lastKnownGameState = null;
 
-        // --- AVATAR CUSTOMIZATION DATA ---
         const avatarOptions = {
             skinTones: ['#f2d2b2', '#d1a377', '#a07c5b', '#6e513d', '#3c2a21'],
             shirtColors: ['#ff5733', '#33ff57', '#3357ff', '#ff33a1', '#a133ff', '#ffffff', '#4a4a4a', '#fde047'],
             hairColors: ['#1a1a1a', '#4d331f', '#d4a373', '#9e2a2b', '#808080'],
-            hairStyles: [
-                'none', // Bald
-                'M 25 18 C 30 10, 70 10, 75 18 L 75 25 L 25 25 Z', // Short
-                'M 20 20 C 25 5, 75 5, 80 20 Q 85 40 50 45 Q 15 40 20 20 Z', // Spiky
-                'M 22 15 C 20 5, 80 5, 78 15 T 75 30 T 25 30 T 22 15 Z', // Long
-                'M 25,25 C 15,25 15,10 30,10 C 45,10 45,25 35,25 M 65,25 C 55,25 55,10 70,10 C 85,10 85,25 75,25' // Puffs
-            ],
-            eyes: [
-                'M 38 48 C 42 52, 48 52, 52 48 M 58 48 C 62 52, 68 52, 72 48', // Normal
-                'M 38 50 L 52 50 M 58 50 L 72 50', // Annoyed/Straight
-                'M 38 48 A 10 10 0 0 1 52 48 M 58 48 A 10 10 0 0 1 72 48', // Happy
-                'M 35 45 L 45 55 M 45 45 L 35 55 M 65 45 L 75 55 M 75 45 L 65 55', // X eyes (eliminated look)
-                'M 55 42 L 55 58 M 60 42 C 75 42, 75 58, 60 58' // Eyepatch
-            ],
-            facialHairs: [
-                'none', // Clean
-                'M 35 70 Q 55 75 75 70', // Moustache
-                'M 45 75 C 50 85, 60 85, 65 75 Z', // Goatee
-                'M 35 70 Q 55 75 75 70 V 85 H 35 Z', // Full Moustache + Beard
-                'M 30 65 C 35 80, 45 90, 55 90 C 65 90, 75 80, 80 65 H 70 C 65 75, 55 75, 60 65 Z' // Mutton Chops
-            ]
+            hairStyles: ['none','M 25 18 C 30 10, 70 10, 75 18 L 75 25 L 25 25 Z','M 20 20 C 25 5, 75 5, 80 20 Q 85 40 50 45 Q 15 40 20 20 Z','M 22 15 C 20 5, 80 5, 78 15 T 75 30 T 25 30 T 22 15 Z','M 25,25 C 15,25 15,10 30,10 C 45,10 45,25 35,25 M 65,25 C 55,25 55,10 70,10 C 85,10 85,25 75,25'],
+            eyes: ['M 38 48 C 42 52, 48 52, 52 48 M 58 48 C 62 52, 68 52, 72 48','M 38 50 L 52 50 M 58 50 L 72 50','M 38 48 A 10 10 0 0 1 52 48 M 58 48 A 10 10 0 0 1 72 48','M 35 45 L 45 55 M 45 45 L 35 55 M 65 45 L 75 55 M 75 45 L 65 55','M 55 42 L 55 58 M 60 42 C 75 42, 75 58, 60 58'],
+            facialHairs: ['none','M 35 70 Q 55 75 75 70','M 45 75 C 50 85, 60 85, 65 75 Z','M 35 70 Q 55 75 75 70 V 85 H 35 Z','M 30 65 C 35 80, 45 90, 55 90 C 65 90, 75 80, 80 65 H 70 C 65 75, 55 75, 60 65 Z']
         };
-        
-        let currentAvatar = {
-            skinTone: 0, shirtColor: 0, hairColor: 0,
-            hairStyle: 1, eyes: 0, facialHair: 0,
-        };
+        let currentAvatar = { skinTone: 0, shirtColor: 0, hairColor: 0, hairStyle: 1, eyes: 0, facialHair: 0 };
 
-        // --- UI ELEMENTS ---
         const loadingOverlay = document.getElementById('loading-overlay');
         const lobbyEl = document.getElementById('lobby');
         const gameIdInput = document.getElementById('game-id-input');
@@ -549,28 +523,13 @@
         const turnTimerEl = document.getElementById('turn-timer');
         const avatarPreview = document.getElementById('avatar-preview');
         
-        // --- AVATAR LOGIC ---
         function generateAvatarSVG({ skinTone, shirtColor, hairColor, hairStyle, eyes, facialHair }) {
-            const skin = avatarOptions.skinTones[skinTone];
-            const shirt = avatarOptions.shirtColors[shirtColor];
-            const hairC = avatarOptions.hairColors[hairColor];
-            const hairS = avatarOptions.hairStyles[hairStyle];
-            const eyeS = avatarOptions.eyes[eyes];
-            const facialH = avatarOptions.facialHairs[facialHair];
-
-            return `
-                <svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M 20 100 V 55 C 20 40, 30 40, 45 40 H 65 C 80 40, 90 40, 90 55 V 100 Z" fill="${shirt}" />
-                    <circle cx="55" cy="50" r="30" fill="${skin}" />
-                    ${hairS !== 'none' ? `<path d="${hairS}" fill="${hairC}" stroke="${hairC}" stroke-width="2" />` : ''}
-                    <path d="${eyeS}" stroke="black" stroke-width="4" fill="none" stroke-linecap="round" />
-                    ${facialH !== 'none' ? `<path d="${facialH}" fill="${hairC}" />` : ''}
-                </svg>
-            `;
+            const skin = avatarOptions.skinTones[skinTone]; const shirt = avatarOptions.shirtColors[shirtColor];
+            const hairC = avatarOptions.hairColors[hairColor]; const hairS = avatarOptions.hairStyles[hairStyle];
+            const eyeS = avatarOptions.eyes[eyes]; const facialH = avatarOptions.facialHairs[facialHair];
+            return `<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg"><path d="M 20 100 V 55 C 20 40, 30 40, 45 40 H 65 C 80 40, 90 40, 90 55 V 100 Z" fill="${shirt}" /><circle cx="55" cy="50" r="30" fill="${skin}" />${hairS !== 'none' ? `<path d="${hairS}" fill="${hairC}" stroke="${hairC}" stroke-width="2" />` : ''}<path d="${eyeS}" stroke="black" stroke-width="4" fill="none" stroke-linecap="round" />${facialH !== 'none' ? `<path d="${facialH}" fill="${hairC}" />` : ''}</svg>`;
         }
-        function updateAvatarPreview() {
-            avatarPreview.innerHTML = generateAvatarSVG(currentAvatar);
-        }
+        function updateAvatarPreview() { avatarPreview.innerHTML = generateAvatarSVG(currentAvatar); }
         document.getElementById('next-skin-btn').onclick = () => { currentAvatar.skinTone = (currentAvatar.skinTone + 1) % avatarOptions.skinTones.length; updateAvatarPreview(); };
         document.getElementById('prev-skin-btn').onclick = () => { currentAvatar.skinTone = (currentAvatar.skinTone - 1 + avatarOptions.skinTones.length) % avatarOptions.skinTones.length; updateAvatarPreview(); };
         document.getElementById('next-shirt-color-btn').onclick = () => { currentAvatar.shirtColor = (currentAvatar.shirtColor + 1) % avatarOptions.shirtColors.length; updateAvatarPreview(); };
@@ -585,974 +544,170 @@
         document.getElementById('prev-facial-hair-btn').onclick = () => { currentAvatar.facialHair = (currentAvatar.facialHair - 1 + avatarOptions.facialHairs.length) % avatarOptions.facialHairs.length; updateAvatarPreview(); };
         updateAvatarPreview();
 
-        // --- AUTH & PRELOAD ---
         window.addEventListener('resize', onWindowResize, false);
         onAuthStateChanged(auth, user => {
-            if (user) {
-                currentUserId = user.uid;
-                if (texturesPreloaded) loadingOverlay.classList.add('hidden');
-            } else {
-                signInAnonymously(auth).catch(() => {});
-            }
+            if (user) { currentUserId = user.uid; if (texturesPreloaded) loadingOverlay.classList.add('hidden'); } 
+            else { signInAnonymously(auth).catch(() => {}); }
         });
         preloadTextures(() => {
-            texturesPreloaded = true;
-            if (currentUserId) loadingOverlay.classList.add('hidden');
+            texturesPreloaded = true; if (currentUserId) loadingOverlay.classList.add('hidden');
         });
 
-        // --- LOBBY LOGIC (UNCHANGED) ---
-        createGameBtn.addEventListener('click', async () => {
-            if (!validateLobbyInput()) return;
-            const newGameId = doc(collection(db, 'games')).id.substring(0, 5).toUpperCase();
-            await joinGame(newGameId, true);
-        });
-        joinGameBtn.addEventListener('click', async () => {
-            if (!validateLobbyInput()) return;
-            const gameId = gameIdInput.value.trim().toUpperCase();
-            if (!gameId) { lobbyError.textContent = "الرجاء إدخال رمز اللعبة."; return; }
-            await joinGame(gameId, false);
-        });
-        startGameBtn.addEventListener('click', async () => {
-             if(currentGameId) await startGame(currentGameId);
-        });
-        playAgainBtn.addEventListener('click', () => {
-            window.location.reload();
-        });
-        function validateLobbyInput() {
-            if (!currentUserId) { lobbyError.textContent = "جاري المصادقة، يرجى الانتظار..."; return false; }
-            if (!playerNameInput.value.trim()) { lobbyError.textContent = "الرجاء إدخال اسمك."; return false; }
-            lobbyError.textContent = '';
-            return true;
-        }
-        async function joinGame(gameId, isCreating) {
-            const gameRef = doc(db, 'games', gameId);
-            const playerName = playerNameInput.value.trim();
-            
-            try {
-                await runTransaction(db, async (transaction) => {
-                    const gameSnap = await transaction.get(gameRef);
-                    const playerInitialData = { name: playerName, coins: 2, cards: [], isAlive: true, revealedCards: [], avatar: currentAvatar };
-
-                    if (isCreating) {
-                        if (gameSnap.exists()) throw new Error("Game ID already exists. Try another.");
-                        const initialDeck = [];
-                        Object.values(CARD_TYPES).forEach(type => { for (let i = 0; i < 3; i++) initialDeck.push(type); });
-                        
-                        const newGameData = {
-                            players: { [currentUserId]: playerInitialData },
-                            deck: shuffle(initialDeck),
-                            gameState: 'waiting', currentPlayerIndex: 0, turnOrder: [currentUserId],
-                            log: [`اللعبة ${gameId} تم إنشاؤها.`, `${playerName} انضم للعبة.`],
-                            createdAt: serverTimestamp(), creatorId: currentUserId,
-                            pendingAction: null, playerUpdates: {}, turnStartTime: null,
-                            justUsedForeignAid: null,
-                        };
-                        transaction.set(gameRef, newGameData);
-                    } else {
-                        const gameData = gameSnap.data();
-                        if (!gameSnap.exists()) throw new Error("اللعبة غير موجودة.");
-                        if (Object.keys(gameData.players).length >= 6 && !gameData.players[currentUserId]) throw new Error("هذه اللعبة ممتلئة.");
-                        if (gameData.gameState !== 'waiting' && !gameData.players[currentUserId]) throw new Error("لا يمكن الانضمام، اللعبة بدأت بالفعل.");
-                        
-                        if (!gameData.players[currentUserId]) {
-                            transaction.update(gameRef, {
-                                [`players.${currentUserId}`]: playerInitialData,
-                                turnOrder: arrayUnion(currentUserId),
-                                log: arrayUnion(`${playerName} انضم للعبة.`)
-                            });
-                        }
-                    }
-                });
-                currentGameId = gameId;
-                listenToLobbyUpdates(gameId);
-            } catch (error) {
-                lobbyError.textContent = error.message;
-            }
-        }
-        function listenToLobbyUpdates(gameId) {
-            const gameRef = doc(db, 'games', gameId);
-            if (gameUnsubscribe) gameUnsubscribe();
-            
-            gameIdDisplay.textContent = `(${gameId})`;
-            gameIdIngame.textContent = gameId;
-
-            gameUnsubscribe = onSnapshot(gameRef, (docSnap) => {
-                if (!docSnap.exists()) return;
-                const gameData = docSnap.data();
-                
-                if (gameData.gameState === 'waiting') {
-                    lobbyPlayersList.innerHTML = '';
-                    gameData.turnOrder.forEach(pid => {
-                        const player = gameData.players[pid];
-                        if (player) {
-                            const li = document.createElement('li');
-                            li.textContent = player.name + (pid === gameData.creatorId ? ' (المضيف)' : '');
-                            lobbyPlayersList.appendChild(li);
-                        }
-                    });
-                    
-                    if (currentUserId === gameData.creatorId && gameData.turnOrder.length >= 2) {
-                        startGameBtn.style.display = 'block';
-                    } else {
-                        startGameBtn.style.display = 'none';
-                    }
-                } else if (gameData.gameState === 'active' || gameData.gameState === 'finished') {
-                    if (lobbyEl.style.display !== 'none') {
-                        lobbyEl.style.display = 'none';
-                        document.getElementById('ui-overlay').style.display = 'flex';
-                        initThreeJS();
-                        listenToGameUpdates(gameId); 
-                    }
-                }
-            });
-        }
-        async function startGame(gameId) {
-            const gameRef = doc(db, 'games', gameId);
-            await runTransaction(db, async (transaction) => {
-                const gameSnap = await transaction.get(gameRef);
-                if (!gameSnap.exists()) throw new Error("Game not found");
-                let gameData = gameSnap.data();
-                if (gameData.gameState !== 'waiting') return;
-
-                let { deck, players, turnOrder } = gameData;
-                turnOrder.forEach(pid => {
-                    players[pid].cards.push(deck.pop());
-                    players[pid].cards.push(deck.pop());
-                });
-
-                transaction.update(gameRef, {
-                    players, deck, gameState: 'active',
-                    turnStartTime: serverTimestamp(),
-                    log: arrayUnion("<strong>بدأت اللعبة! تم توزيع البطاقات.</strong>")
-                });
-            });
-        }
+        createGameBtn.addEventListener('click', async () => { if (!validateLobbyInput()) return; const newGameId = doc(collection(db, 'games')).id.substring(0, 5).toUpperCase(); await joinGame(newGameId, true); });
+        joinGameBtn.addEventListener('click', async () => { if (!validateLobbyInput()) return; const gameId = gameIdInput.value.trim().toUpperCase(); if (!gameId) { lobbyError.textContent = "الرجاء إدخال رمز اللعبة."; return; } await joinGame(gameId, false); });
+        startGameBtn.addEventListener('click', async () => { if(currentGameId) await startGame(currentGameId); });
+        playAgainBtn.addEventListener('click', () => { window.location.reload(); });
+        function validateLobbyInput() { if (!currentUserId) { lobbyError.textContent = "جاري المصادقة..."; return false; } if (!playerNameInput.value.trim()) { lobbyError.textContent = "الرجاء إدخال اسمك."; return false; } lobbyError.textContent = ''; return true; }
+        async function joinGame(gameId, isCreating) { const gameRef = doc(db, 'games', gameId); const playerName = playerNameInput.value.trim(); try { await runTransaction(db, async (transaction) => { const gameSnap = await transaction.get(gameRef); const playerInitialData = { name: playerName, coins: 2, cards: [], isAlive: true, revealedCards: [], avatar: currentAvatar }; if (isCreating) { if (gameSnap.exists()) throw new Error("Game ID already exists."); const initialDeck = []; Object.values(CARD_TYPES).forEach(type => { for (let i = 0; i < 3; i++) initialDeck.push(type); }); const newGameData = { players: { [currentUserId]: playerInitialData }, deck: shuffle(initialDeck), gameState: 'waiting', currentPlayerIndex: 0, turnOrder: [currentUserId], log: [`اللعبة ${gameId} تم إنشاؤها.`, `${playerName} انضم للعبة.`], createdAt: serverTimestamp(), creatorId: currentUserId, pendingAction: null, playerUpdates: {}, turnStartTime: null, justUsedForeignAid: null, }; transaction.set(gameRef, newGameData); } else { const gameData = gameSnap.data(); if (!gameSnap.exists()) throw new Error("اللعبة غير موجودة."); if (Object.keys(gameData.players).length >= 6 && !gameData.players[currentUserId]) throw new Error("هذه اللعبة ممتلئة."); if (gameData.gameState !== 'waiting' && !gameData.players[currentUserId]) throw new Error("لا يمكن الانضمام، اللعبة بدأت بالفعل."); if (!gameData.players[currentUserId]) { transaction.update(gameRef, { [`players.${currentUserId}`]: playerInitialData, turnOrder: arrayUnion(currentUserId), log: arrayUnion(`${playerName} انضم للعبة.`) }); } } }); currentGameId = gameId; listenToLobbyUpdates(gameId); } catch (error) { lobbyError.textContent = error.message; } }
+        function listenToLobbyUpdates(gameId) { const gameRef = doc(db, 'games', gameId); if (gameUnsubscribe) gameUnsubscribe(); gameIdDisplay.textContent = `(${gameId})`; gameIdIngame.textContent = gameId; gameUnsubscribe = onSnapshot(gameRef, (docSnap) => { if (!docSnap.exists()) return; const gameData = docSnap.data(); if (gameData.gameState === 'waiting') { lobbyPlayersList.innerHTML = ''; gameData.turnOrder.forEach(pid => { const player = gameData.players[pid]; if (player) { const li = document.createElement('li'); li.textContent = player.name + (pid === gameData.creatorId ? ' (المضيف)' : ''); lobbyPlayersList.appendChild(li); } }); if (currentUserId === gameData.creatorId && gameData.turnOrder.length >= 2) { startGameBtn.style.display = 'block'; } else { startGameBtn.style.display = 'none'; } } else if (gameData.gameState === 'active' || gameData.gameState === 'finished') { if (lobbyEl.style.display !== 'none') { lobbyEl.style.display = 'none'; document.getElementById('ui-overlay').style.display = 'flex'; initThreeJS(); listenToGameUpdates(gameId); } } }); }
+        async function startGame(gameId) { const gameRef = doc(db, 'games', gameId); await runTransaction(db, async (transaction) => { const gameSnap = await transaction.get(gameRef); if (!gameSnap.exists()) throw new Error("Game not found"); let gameData = gameSnap.data(); if (gameData.gameState !== 'waiting') return; let { deck, players, turnOrder } = gameData; turnOrder.forEach(pid => { players[pid].cards.push(deck.pop()); players[pid].cards.push(deck.pop()); }); transaction.update(gameRef, { players, deck, gameState: 'active', turnStartTime: serverTimestamp(), log: arrayUnion("<strong>بدأت اللعبة! تم توزيع البطاقات.</strong>") }); }); }
         
-        // --- GAME STATE LISTENER & MANAGEMENT ---
-        function listenToGameUpdates(gameId) {
-            const gameRef = doc(db, 'games', gameId);
-            if (gameUnsubscribe) gameUnsubscribe();
-            
-            gameUnsubscribe = onSnapshot(gameRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const gameData = docSnap.data();
-                    lastKnownGameState = gameData; // Cache the state for resizing
-                    if (!scene) return;
-                    
-                    renderGameState(gameData);
-                    
-                    const myPlayerData = gameData.players[currentUserId];
-                    const myUpdate = gameData.playerUpdates ? gameData.playerUpdates[currentUserId] : null;
-
-                    if (!myPlayerData || !myPlayerData.isAlive) {
-                        hideAllModals();
-                        checkGameOver(gameData);
-                        return;
-                    }
-
-                    if (myUpdate) {
-                        handlePlayerUpdate(gameData, myUpdate);
-                    } else if (gameData.pendingAction) {
-                        handlePendingAction(gameData);
-                    } else {
-                        hideAllModals(); 
-                    }
-                    
-                    checkGameOver(gameData);
-                } else {
-                    if (gameUnsubscribe) gameUnsubscribe();
-                    showGameOverScreen("انتهت اللعبة", "تم حذف بيانات اللعبة من الخادم.");
-                    deleteGameData(currentGameId);
-                }
-            });
-        }
+        function listenToGameUpdates(gameId) { const gameRef = doc(db, 'games', gameId); if (gameUnsubscribe) gameUnsubscribe(); gameUnsubscribe = onSnapshot(gameRef, (docSnap) => { if (docSnap.exists()) { const gameData = docSnap.data(); lastKnownGameState = gameData; if (!scene) return; renderGameState(gameData); const myPlayerData = gameData.players[currentUserId]; const myUpdate = gameData.playerUpdates ? gameData.playerUpdates[currentUserId] : null; if (!myPlayerData || !myPlayerData.isAlive) { hideAllModals(); checkGameOver(gameData); return; } if (myUpdate) { handlePlayerUpdate(gameData, myUpdate); } else if (gameData.pendingAction) { handlePendingAction(gameData); } else { hideAllModals(); } checkGameOver(gameData); } else { if (gameUnsubscribe) gameUnsubscribe(); showGameOverScreen("انتهت اللعبة", "تم حذف بيانات اللعبة من الخادم."); deleteGameData(currentGameId); } }); }
 
         // --- 3D SCENE (NEW & IMPROVED) ---
         function initThreeJS() {
             if (scene) return;
             const container = document.getElementById('game-container');
             clock = new THREE.Clock();
-            
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x1a1a1a);
             scene.fog = new THREE.Fog(0x1a1a1a, 35, 60);
-
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.shadowMap.enabled = true;
             container.appendChild(renderer.domElement);
-
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambientLight);
             const pointLight = new THREE.PointLight(0xffffff, 0.9, 100);
             pointLight.position.set(0, 15, 10);
             pointLight.castShadow = true;
             scene.add(pointLight);
-
             const tableGeometry = new THREE.CylinderGeometry(8, 8.5, 0.5, 64);
             const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x3d291a });
             tableMesh = new THREE.Mesh(tableGeometry, tableMaterial);
             tableMesh.position.y = -0.25;
             tableMesh.receiveShadow = true;
             scene.add(tableMesh);
-
-            updateLayout(); // Initial layout setup
+            updateLayout(2); // Initial layout with default player count
             animate();
         }
 
-        function updateLayout() {
+        // MODIFIED: This function now adapts to player count
+        function updateLayout(playerCount) {
             if (!camera || !renderer || !tableMesh) return;
-
             const aspect = window.innerWidth / window.innerHeight;
 
-            if (aspect < 1) { // Portrait View
+            if (aspect < 1) { // Portrait View (Mobile)
+                const cameraY = 24;
+                const cameraZ = 19;
+                let radius = 9, uiYOffset = 3.8, selfCardY = 3.0;
+
+                // Dynamic adjustments based on player count
+                if (playerCount <= 2) { radius = 8; selfCardY = 2.0; } 
+                else if (playerCount === 3) { radius = 8.5; } 
+                else if (playerCount === 4) { radius = 9; } 
+                else if (playerCount === 5) { radius = 9.5; uiYOffset = 3.6; } 
+                else { radius = 10; uiYOffset = 3.4; } // 6+ players
+
                 layoutConfig = {
-                    isPortrait: true, radius: 9, selfCardZOffset: 4,
-                    selfCardY: 3.0, otherPlayerY: 1.5, uiYOffset: 3.8
+                    isPortrait: true, radius: radius, selfCardZOffset: 4, selfCardY: selfCardY,
+                    otherPlayerY: 1.5, uiYOffset: uiYOffset,
                 };
-                camera.position.set(0, 22, 18);
-                tableMesh.scale.set(0.8, 1, 0.8); // Smaller, circular table
+                camera.position.set(0, cameraY, cameraZ);
+                camera.lookAt(0, 0, 0);
+                tableMesh.scale.set(0.8, 1, 0.8);
             } else { // Landscape & Desktop View
                 layoutConfig = {
                     isPortrait: false, radiusX: 14, radiusZ: 9, selfCardZOffset: 3,
                     selfCardY: 3.5, otherPlayerY: 1.5, uiYOffset: 4.2
                 };
                 camera.position.set(0, 20, 25);
-                tableMesh.scale.set(1.5, 1, 1); // Longer, oval table
+                camera.lookAt(0, 0, 0);
+                tableMesh.scale.set(1.5, 1, 1);
             }
-            camera.lookAt(0, 0, 0);
         }
 
-        function preloadTextures(callback) {
-            const keys = Object.keys(CARD_IMAGES);
-            let loaded = 0;
-            const total = keys.length;
-            if (total === 0) { if(callback) callback(); return; }
-            const onAssetLoaded = () => { if (++loaded === total) if(callback) callback(); };
-            keys.forEach(key => {
-                textureLoader.load(CARD_IMAGES[key], (texture) => {
-                    cardTextures[key] = texture; onAssetLoaded();
-                }, undefined, onAssetLoaded);
-            });
-        }
-        
-        function createCardMesh(cardType, isFaceUp = false) {
-             const cardGeometry = new THREE.BoxGeometry(3.0, 4.15, 0.1);
-             const materials = [
-                 new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
-                 new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
-                 new THREE.MeshStandardMaterial({ map: isFaceUp && cardTextures[cardType] ? cardTextures[cardType] : cardTextures.BACK }),
-                 new THREE.MeshStandardMaterial({ map: cardTextures.BACK })
-             ];
-             const cardMesh = new THREE.Mesh(cardGeometry, materials);
-             cardMesh.castShadow = true;
-             cardMesh.userData = { type: cardType, isFaceUp: isFaceUp };
-             return cardMesh;
-        }
+        function preloadTextures(callback) { const keys = Object.keys(CARD_IMAGES); let loaded = 0; const total = keys.length; if (total === 0) { if(callback) callback(); return; } const onAssetLoaded = () => { if (++loaded === total) if(callback) callback(); }; keys.forEach(key => { textureLoader.load(CARD_IMAGES[key], (texture) => { cardTextures[key] = texture; onAssetLoaded(); }, undefined, onAssetLoaded); }); }
+        function createCardMesh(cardType, isFaceUp = false) { const cardGeometry = new THREE.BoxGeometry(3.0, 4.15, 0.1); const materials = [ new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ map: isFaceUp && cardTextures[cardType] ? cardTextures[cardType] : cardTextures.BACK }), new THREE.MeshStandardMaterial({ map: cardTextures.BACK }) ]; const cardMesh = new THREE.Mesh(cardGeometry, materials); cardMesh.castShadow = true; cardMesh.userData = { type: cardType, isFaceUp: isFaceUp }; return cardMesh; }
+        function animate() { requestAnimationFrame(animate); if(renderer) renderer.render(scene, camera); }
 
         function onWindowResize() {
             if (!camera || !renderer) return;
-            
-            updateLayout(); // Recalculate layout parameters
-
+            if (lastKnownGameState) { updateLayout(lastKnownGameState.turnOrder.length); }
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-            
-            if (lastKnownGameState) {
-                renderGameState(lastKnownGameState); // Force redraw with new layout
-            }
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            if(renderer) renderer.render(scene, camera);
+            if (lastKnownGameState) { renderGameState(lastKnownGameState); }
         }
         
-        // --- GAME STATE RENDERING (NEW & IMPROVED) ---
+        // MODIFIED: Calls updateLayout at the start
         function renderGameState(gameData) {
             if (!scene) return;
+            updateLayout(gameData.turnOrder.length); // IMPORTANT: Set layout for current player count
 
             const { players, turnOrder, currentPlayerIndex } = gameData;
             const myIndex = turnOrder.indexOf(currentUserId);
             const playerInfosContainer = document.getElementById('player-infos');
             const activePlayerIds = new Set(turnOrder);
 
-            // Clean up disconnected players
-            for (const pid in playerObjects) {
-                if (!activePlayerIds.has(pid)) {
-                    if (playerObjects[pid].infoDiv) playerObjects[pid].infoDiv.remove();
-                    if (playerObjects[pid].cards) playerObjects[pid].cards.forEach(c => scene.remove(c));
-                    if (playerObjects[pid].revealedCards) playerObjects[pid].revealedCards.forEach(c => scene.remove(c));
-                    delete playerObjects[pid];
-                }
-            }
-
+            for (const pid in playerObjects) { if (!activePlayerIds.has(pid)) { if (playerObjects[pid].infoDiv) playerObjects[pid].infoDiv.remove(); if (playerObjects[pid].cards) playerObjects[pid].cards.forEach(c => scene.remove(c)); if (playerObjects[pid].revealedCards) playerObjects[pid].revealedCards.forEach(c => scene.remove(c)); delete playerObjects[pid]; } }
             turnOrder.forEach((pid, index) => {
-                const player = players[pid];
-                if (!player) return;
-
-                if (!playerObjects[pid]) {
-                    playerObjects[pid] = { cards: [], revealedCards: [], infoDiv: null };
-                }
-
+                const player = players[pid]; if (!player) return;
+                if (!playerObjects[pid]) { playerObjects[pid] = { cards: [], revealedCards: [], infoDiv: null }; }
                 const relativeIndex = (index - myIndex + turnOrder.length) % turnOrder.length;
                 const isMe = (relativeIndex === 0);
-                
-                // Dynamic positioning logic
-                let x, z;
-                const angle = (relativeIndex / turnOrder.length) * Math.PI * 2;
-                if (layoutConfig.isPortrait) {
-                    x = Math.sin(angle) * layoutConfig.radius;
-                    z = Math.cos(angle) * layoutConfig.radius;
-                } else {
-                    x = Math.sin(angle) * layoutConfig.radiusX;
-                    z = Math.cos(angle) * layoutConfig.radiusZ;
-                }
+                let x, z; const angle = (relativeIndex / turnOrder.length) * Math.PI * 2;
+                if (layoutConfig.isPortrait) { x = Math.sin(angle) * layoutConfig.radius; z = Math.cos(angle) * layoutConfig.radius; } 
+                else { x = Math.sin(angle) * layoutConfig.radiusX; z = Math.cos(angle) * layoutConfig.radiusZ; }
                 const yPos = isMe ? layoutConfig.selfCardY : layoutConfig.otherPlayerY;
-
                 updateCardGroup(playerObjects[pid].cards, player.cards, pid, 'active', { x, y: yPos, z }, angle, isMe);
                 updateCardGroup(playerObjects[pid].revealedCards, player.revealedCards, pid, 'revealed', { x, y: yPos, z }, angle, isMe);
-        
                 const screenPos = toScreenPosition(new THREE.Vector3(x, yPos + layoutConfig.uiYOffset, z), camera);
-                
                 let infoDiv = playerObjects[pid].infoDiv;
-                if (!infoDiv) {
-                    infoDiv = document.createElement('div');
-                    playerInfosContainer.appendChild(infoDiv);
-                    playerObjects[pid].infoDiv = infoDiv;
-                }
-                
+                if (!infoDiv) { infoDiv = document.createElement('div'); playerInfosContainer.appendChild(infoDiv); playerObjects[pid].infoDiv = infoDiv; }
                 let newClassName = 'player-info ui-element';
                 if (!player.isAlive) newClassName += ' eliminated';
                 if (turnOrder[currentPlayerIndex] === pid && player.isAlive) newClassName += ' current-turn';
                 if(infoDiv.className !== newClassName) infoDiv.className = newClassName;
-
-                infoDiv.style.left = `${screenPos.x}px`;
-                infoDiv.style.top = `${screenPos.y}px`;
-
-                const avatarDiv = document.createElement('div');
-                avatarDiv.className = 'avatar';
-                if (player.avatar) {
-                    avatarDiv.innerHTML = generateAvatarSVG(player.avatar);
-                } else {
-                    avatarDiv.textContent = player.name.charAt(0);
-                }
-
-                const contentDiv = document.createElement('div');
-                contentDiv.appendChild(avatarDiv);
-                contentDiv.innerHTML += `<div class="font-bold">${player.name}</div><div>💰 ${player.coins}</div>`;
-                
-                if (infoDiv.innerHTML !== contentDiv.innerHTML) {
-                    infoDiv.innerHTML = contentDiv.innerHTML;
-                }
+                infoDiv.style.left = `${screenPos.x}px`; infoDiv.style.top = `${screenPos.y}px`;
+                const avatarDiv = document.createElement('div'); avatarDiv.className = 'avatar';
+                if (player.avatar) { avatarDiv.innerHTML = generateAvatarSVG(player.avatar); } else { avatarDiv.textContent = player.name.charAt(0); }
+                const contentDiv = document.createElement('div'); contentDiv.appendChild(avatarDiv); contentDiv.innerHTML += `<div class="font-bold">${player.name}</div><div>💰 ${player.coins}</div>`;
+                if (infoDiv.innerHTML !== contentDiv.innerHTML) { infoDiv.innerHTML = contentDiv.innerHTML; }
             });
-        
-            updateActionButtons(gameData);
-            updateTurnTimer(gameData);
+            updateActionButtons(gameData); updateTurnTimer(gameData);
         }
         
-        function updateCardGroup(meshArray, dataArray, pid, cardGroupType, basePos, angle, isMe) {
-            while (meshArray.length > dataArray.length) scene.remove(meshArray.pop());
-            while (meshArray.length < dataArray.length) {
-                const newMesh = createCardMesh(null, cardGroupType === 'revealed');
-                newMesh.position.set(basePos.x, basePos.y, basePos.z);
-                scene.add(newMesh);
-                meshArray.push(newMesh);
-            }
-        
-            dataArray.forEach((cardType, i) => {
-                const cardMesh = meshArray[i];
-                const isFaceUp = (isMe && cardGroupType === 'active') || cardGroupType === 'revealed';
-        
-                if (cardMesh.userData.type !== cardType || cardMesh.userData.isFaceUp !== isFaceUp) {
-                    cardMesh.material[4].map = isFaceUp ? cardTextures[cardType] : cardTextures.BACK;
-                    cardMesh.material[4].needsUpdate = true;
-                    cardMesh.userData.type = cardType;
-                    cardMesh.userData.isFaceUp = isFaceUp;
-                }
-        
-                let targetPos, targetRot;
-                const cardOffsetMultiplier = 3.5;
-                const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier;
-                
-                if (cardGroupType === 'active') {
-                    if (isMe) {
-                        targetPos = new THREE.Vector3(cardOffset, basePos.y, basePos.z + layoutConfig.selfCardZOffset);
-                        targetRot = new THREE.Euler(-Math.PI / 8, 0, 0);
-                    } else {
-                        targetPos = new THREE.Vector3(basePos.x, basePos.y, basePos.z);
-                        const tempLookAt = cardMesh.clone();
-                        tempLookAt.position.copy(targetPos);
-                        tempLookAt.lookAt(camera.position);
-                        targetRot = tempLookAt.rotation.clone();
-                        const offsetAngle = angle - Math.PI / 2;
-                        targetPos.x += Math.sin(offsetAngle) * cardOffset * 0.3;
-                        targetPos.z += Math.cos(offsetAngle) * cardOffset * 0.3;
-                    }
-                } else { // Revealed cards on the table
-                    const tableRadiusGeom = 8; // base radius from THREE.CylinderGeometry
-                    const tableRadiusX = tableRadiusGeom * tableMesh.scale.x * 0.7; // Factor in current scale
-                    const tableRadiusZ = tableRadiusGeom * tableMesh.scale.z * 0.7;
-                    
-                    const tablePos = new THREE.Vector3(Math.sin(angle) * tableRadiusX, 0.2, Math.cos(angle) * tableRadiusZ);
-
-                    const perpendicularAngle = angle - Math.PI / 2;
-                    const offsetVec = new THREE.Vector3(Math.sin(perpendicularAngle), 0, Math.cos(perpendicularAngle)).multiplyScalar(cardOffset * 0.5);
-
-                    targetPos = tablePos.add(offsetVec);
-                    targetPos.y = 0.3;
-                    targetRot = new THREE.Euler(-Math.PI / 2.3, 0, -angle);
-                }
-        
-                gsap.to(cardMesh.position, { duration: 0.5, x: targetPos.x, y: targetPos.y, z: targetPos.z });
-                gsap.to(cardMesh.rotation, { duration: 0.5, x: targetRot.x, y: targetRot.y, z: targetRot.z });
-            });
-        }
-        
-        function updateActionButtons(gameData) {
-            const actionsContainer = document.getElementById('action-buttons');
-            const myTurn = gameData.turnOrder[gameData.currentPlayerIndex] === currentUserId;
-            const me = gameData.players[currentUserId];
-            
-            const shouldShow = gameData.gameState === 'active' && myTurn && me?.isAlive && !gameData.pendingAction && (!gameData.playerUpdates || !gameData.playerUpdates[currentUserId]);
-
-            if (!shouldShow) {
-                actionsContainer.innerHTML = '';
-                if(myTurn && (gameData.pendingAction || (gameData.playerUpdates && gameData.playerUpdates[currentUserId]))) {
-                    actionsContainer.innerHTML = `<p class="text-gray-400 animate-pulse">في انتظار ردود اللاعبين...</p>`;
-                }
-                return;
-            }
-
-            actionsContainer.innerHTML = '';
-            const myCoins = me.coins;
-            const justUsedFA = gameData.justUsedForeignAid === currentUserId;
-
-            if (myCoins >= 10) {
-                addActionBtn('انقلاب (إجباري)', () => showTargetSelection('Coup'));
-                return;
-            }
-            
-            addActionBtn('دخل (1💰)', () => initiateAction('Income'));
-            addActionBtn('مساعدة أجنبية (2💰)', () => initiateAction('Foreign Aid'), justUsedFA);
-            if (myCoins >= 7) addActionBtn('انقلاب (7💰)', () => showTargetSelection('Coup'));
-            addActionBtn('اغتيال (3💰)', () => showTargetSelection('Assassinate'), myCoins < 3);
-            addActionBtn('ضرائب (الدوق)', () => initiateAction('Tax'));
-            addActionBtn('سرقة (القبطان)', () => showTargetSelection('Steal'));
-            addActionBtn('تبديل (السفير)', () => initiateAction('Exchange'));
-        }
-        
-        // --- CORE GAME FLOW & TIMER (UNCHANGED) ---
-        async function forceEndTurn() {
-            const gameRef = doc(db, 'games', currentGameId);
-            await runTransaction(db, async (transaction) => {
-                const gameSnap = await transaction.get(gameRef);
-                if (!gameSnap.exists()) return;
-                const gameData = gameSnap.data();
-                
-                if (gameData.turnOrder[gameData.currentPlayerIndex] !== currentUserId || gameData.pendingAction) return;
-
-                const updates = {};
-                updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins + 1;
-                updates.log = arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> نفذ الوقت وأخذ 'دخل' تلقائيًا.`);
-                updates.currentPlayerIndex = getNextPlayerIndex(gameData);
-                updates.turnStartTime = serverTimestamp();
-                updates.justUsedForeignAid = null;
-                transaction.update(gameRef, updates);
-            });
-        }
-        function updateTurnTimer(gameData) {
-            if (turnTimerInterval) clearInterval(turnTimerInterval);
-            
-            const isMyTurn = gameData.turnOrder[gameData.currentPlayerIndex] === currentUserId;
-            const noPendingActions = !gameData.pendingAction && (!gameData.playerUpdates || !gameData.playerUpdates[currentUserId]);
-
-            if (gameData.gameState === 'active' && isMyTurn && noPendingActions && gameData.turnStartTime) {
-                turnTimerEl.style.display = 'block';
-                const startTime = gameData.turnStartTime.toDate();
-                
-                turnTimerInterval = setInterval(() => {
-                    const elapsed = Math.floor((new Date() - startTime) / 1000);
-                    const remaining = TURN_DURATION - elapsed;
-                    
-                    if (remaining <= 0) {
-                        turnTimerEl.textContent = '0';
-                        clearInterval(turnTimerInterval);
-                        forceEndTurn();
-                    } else {
-                        turnTimerEl.textContent = remaining;
-                    }
-                }, 1000);
-            } else {
-                turnTimerEl.style.display = 'none';
-            }
-        }
-        async function initiateAction(actionType, targetId = null) {
-            const gameRef = doc(db, 'games', currentGameId);
-            const gameSnap = await getDoc(gameRef);
-            if (!gameSnap.exists()) return;
-            const gameData = gameSnap.data();
-            const actorName = gameData.players[currentUserId].name;
-            
-            let logMessage = `<strong>${actorName}</strong> ينوي القيام بـ: <strong>${actionType}</strong>`;
-            if (targetId) logMessage += ` ضد <strong>${gameData.players[targetId].name}</strong>.`;
-            
-            const updates = { log: arrayUnion(logMessage), justUsedForeignAid: null };
-
-            const unchallengable = ['Income', 'Coup'];
-            if (unchallengable.includes(actionType)) {
-                if (actionType === 'Coup') {
-                    const target = gameData.players[targetId];
-                    if (target.cards.length > 1 && gameData.players[currentUserId].coins >= 10) {
-                        updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
-                        updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
-                    } else if (target.cards.length === 1 && gameData.players[currentUserId].coins >= 10) {
-                          updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
-                          updates[`players.${targetId}`].coins = 0;
-                          updates.log = arrayUnion(`<strong>${actorName}</strong> انقلب على <strong>${target.name}</strong>، الذي خسر كل عملاته بدلاً من نفوذه الأخير.`);
-                          updates.currentPlayerIndex = getNextPlayerIndex(gameData);
-                          updates.turnStartTime = serverTimestamp();
-                          await updateDoc(gameRef, updates);
-                          return;
-                    } else { // Normal Coup
-                          updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
-                          updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
-                    }
-                }
-                
-                Object.assign(updates, getActionEffects(gameData, { actorId: currentUserId, actionType, targetId }));
-                if (actionType !== 'Coup') {
-                    updates.currentPlayerIndex = getNextPlayerIndex(gameData);
-                    updates.turnStartTime = serverTimestamp();
-                }
-            } else {
-                updates.pendingAction = {
-                    type: 'ACTION', actorId: currentUserId, actionType: actionType,
-                    targetId: targetId, responses: {},
-                };
-            }
-            await updateDoc(gameRef, updates);
-        }
-        
-        // --- UTILITY & UI FUNCTIONS (UNCHANGED) ---
-        function hideModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if(modal) modal.style.display = 'none';
-        }
-        function hideAllModals() {
-            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-        }
-        function getNextPlayerIndex(gameData) {
-            let nextIndex = gameData.currentPlayerIndex;
-            let count = 0;
-            do {
-                nextIndex = (nextIndex + 1) % gameData.turnOrder.length;
-                count++;
-            } while(!gameData.players[gameData.turnOrder[nextIndex]].isAlive && count < gameData.turnOrder.length * 2);
-            return nextIndex;
-        }
-        async function checkGameOver(gameData) {
-            if (gameData.gameState !== 'active') return;
-            const alivePlayers = gameData.turnOrder.filter(pid => gameData.players[pid]?.isAlive);
-            if (alivePlayers.length <= 1) {
-                if (gameUnsubscribe) gameUnsubscribe(); gameUnsubscribe = null;
-                if (turnTimerInterval) clearInterval(turnTimerInterval);
-
-                const winnerId = alivePlayers.length === 1 ? alivePlayers[0] : null;
-                const winnerName = winnerId ? gameData.players[winnerId].name : "لا أحد";
-                
-                await updateDoc(doc(db, 'games', currentGameId), { gameState: 'finished', log: arrayUnion(`انتهت اللعبة! الفائز هو <strong>${winnerName}</strong>.`) });
-                showGameOverScreen(`الفائز هو ${winnerName}!`, "سيتم حذف بيانات هذه اللعبة الآن.");
-                
-                deleteGameData(currentGameId);
-            }
-        }
-        function showGameOverScreen(winnerText, cleanupText) {
-              document.getElementById('winner-text').textContent = winnerText;
-              document.getElementById('cleanup-text').textContent = cleanupText;
-              document.getElementById('game-over-screen').style.display = 'flex';
-        }
-        async function deleteGameData(gameId) {
-            if (!gameId) return;
-            try {
-                const gameRef = doc(db, 'games', gameId);
-                const gameSnap = await getDoc(gameRef);
-                if (gameSnap.exists() && gameSnap.data().creatorId === currentUserId) {
-                    await deleteDoc(gameRef);
-                }
-            } catch (error) {}
-        }
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-        function toScreenPosition(vector, camera) {
-            const width = window.innerWidth, height = window.innerHeight;
-            const widthHalf = width / 2, heightHalf = height / 2;
-            vector.project(camera);
-            vector.x = (vector.x * widthHalf) + widthHalf;
-            vector.y = -(vector.y * heightHalf) + heightHalf;
-            return { x: vector.x, y: vector.y };
-        }
+        function updateCardGroup(meshArray, dataArray, pid, cardGroupType, basePos, angle, isMe) { while (meshArray.length > dataArray.length) scene.remove(meshArray.pop()); while (meshArray.length < dataArray.length) { const newMesh = createCardMesh(null, cardGroupType === 'revealed'); newMesh.position.set(basePos.x, basePos.y, basePos.z); scene.add(newMesh); meshArray.push(newMesh); } dataArray.forEach((cardType, i) => { const cardMesh = meshArray[i]; const isFaceUp = (isMe && cardGroupType === 'active') || cardGroupType === 'revealed'; if (cardMesh.userData.type !== cardType || cardMesh.userData.isFaceUp !== isFaceUp) { cardMesh.material[4].map = isFaceUp ? cardTextures[cardType] : cardTextures.BACK; cardMesh.material[4].needsUpdate = true; cardMesh.userData.type = cardType; cardMesh.userData.isFaceUp = isFaceUp; } let targetPos, targetRot; const cardOffsetMultiplier = 3.5; const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier; if (cardGroupType === 'active') { if (isMe) { targetPos = new THREE.Vector3(cardOffset, basePos.y, basePos.z + layoutConfig.selfCardZOffset); targetRot = new THREE.Euler(-Math.PI / 8, 0, 0); } else { targetPos = new THREE.Vector3(basePos.x, basePos.y, basePos.z); const tempLookAt = cardMesh.clone(); tempLookAt.position.copy(targetPos); tempLookAt.lookAt(camera.position); targetRot = tempLookAt.rotation.clone(); const offsetAngle = angle - Math.PI / 2; targetPos.x += Math.sin(offsetAngle) * cardOffset * 0.3; targetPos.z += Math.cos(offsetAngle) * cardOffset * 0.3; } } else { const tableRadiusGeom = 8; const tableRadiusX = tableRadiusGeom * tableMesh.scale.x * 0.7; const tableRadiusZ = tableRadiusGeom * tableMesh.scale.z * 0.7; const tablePos = new THREE.Vector3(Math.sin(angle) * tableRadiusX, 0.2, Math.cos(angle) * tableRadiusZ); const perpendicularAngle = angle - Math.PI / 2; const offsetVec = new THREE.Vector3(Math.sin(perpendicularAngle), 0, Math.cos(perpendicularAngle)).multiplyScalar(cardOffset * 0.5); targetPos = tablePos.add(offsetVec); targetPos.y = 0.3; targetRot = new THREE.Euler(-Math.PI / 2.3, 0, -angle); } gsap.to(cardMesh.position, { duration: 0.5, x: targetPos.x, y: targetPos.y, z: targetPos.z }); gsap.to(cardMesh.rotation, { duration: 0.5, x: targetRot.x, y: targetRot.y, z: targetRot.z }); }); }
+        function updateActionButtons(gameData) { const actionsContainer = document.getElementById('action-buttons'); const myTurn = gameData.turnOrder[gameData.currentPlayerIndex] === currentUserId; const me = gameData.players[currentUserId]; const shouldShow = gameData.gameState === 'active' && myTurn && me?.isAlive && !gameData.pendingAction && (!gameData.playerUpdates || !gameData.playerUpdates[currentUserId]); if (!shouldShow) { actionsContainer.innerHTML = ''; if(myTurn && (gameData.pendingAction || (gameData.playerUpdates && gameData.playerUpdates[currentUserId]))) { actionsContainer.innerHTML = `<p class="text-gray-400 animate-pulse">في انتظار ردود اللاعبين...</p>`; } return; } actionsContainer.innerHTML = ''; const myCoins = me.coins; const justUsedFA = gameData.justUsedForeignAid === currentUserId; if (myCoins >= 10) { addActionBtn('انقلاب (إجباري)', () => showTargetSelection('Coup')); return; } addActionBtn('دخل (1💰)', () => initiateAction('Income')); addActionBtn('مساعدة أجنبية (2💰)', () => initiateAction('Foreign Aid'), justUsedFA); if (myCoins >= 7) addActionBtn('انقلاب (7💰)', () => showTargetSelection('Coup')); addActionBtn('اغتيال (3💰)', () => showTargetSelection('Assassinate'), myCoins < 3); addActionBtn('ضرائب (الدوق)', () => initiateAction('Tax')); addActionBtn('سرقة (القبطان)', () => showTargetSelection('Steal')); addActionBtn('تبديل (السفير)', () => initiateAction('Exchange')); }
         
         // --- Remaining Game Logic Handlers (Unchanged) ---
-        var handlePendingAction = function(gameData) {
-             const { pendingAction, players } = gameData;
-             if (!pendingAction) { hideModal('interaction-modal'); return; }
-
-             const me = players[currentUserId];
-             const modal = document.getElementById('interaction-modal');
-             const buttonsContainer = document.getElementById('modal-buttons');
-             buttonsContainer.innerHTML = '';
-
-             if (pendingAction.type === 'ACTION' && pendingAction.actorId !== currentUserId && me.isAlive && !pendingAction.responses[currentUserId]) {
-                 const actorName = players[pendingAction.actorId].name;
-                 document.getElementById('modal-title').textContent = `حركة من ${actorName}!`;
-                 document.getElementById('modal-text').textContent = `${actorName} يقوم بـ ${CARD_TRANSLATIONS[pendingAction.actionType] || pendingAction.actionType}.`;
-
-                 buttonsContainer.appendChild(createModalBtn('تحدي!', () => respondToAction('challenge')));
-
-                 const amITarget = pendingAction.targetId === currentUserId;
-                 if (pendingAction.actionType === 'Foreign Aid') buttonsContainer.appendChild(createModalBtn('أمنع (بالدوق)', () => respondToAction('block', 'BlockForeignAid')));
-                 if (amITarget && pendingAction.actionType === 'Steal') {
-                     buttonsContainer.appendChild(createModalBtn('أمنع (بالقبطان)', () => respondToAction('block', 'BlockStealCaptain')));
-                     buttonsContainer.appendChild(createModalBtn('أمنع (بالسفير)', () => respondToAction('block', 'BlockStealAmbassador')));
-                 }
-                 if (amITarget && pendingAction.actionType === 'Assassinate') buttonsContainer.appendChild(createModalBtn('أمنع (بالكونتيسا)', () => respondToAction('block', 'BlockAssassination')));
-
-                 buttonsContainer.appendChild(createModalBtn('تجاهل', () => respondToAction('pass')));
-                 modal.style.display = 'flex';
-                 return;
-             }
-
-             if (pendingAction.type === 'BLOCK' && pendingAction.actorId === currentUserId && me.isAlive && !pendingAction.responses[currentUserId]) {
-                 const blockerName = players[pendingAction.blockerId].name;
-                 document.getElementById('modal-title').textContent = `${blockerName} يمنع حركتك!`;
-                 document.getElementById('modal-text').textContent = `${blockerName} يدعي أن لديه ${CARD_TRANSLATIONS[pendingAction.blockCard]} لمنع ${CARD_TRANSLATIONS[pendingAction.actionType] || pendingAction.actionType}.`;
-                
-                 buttonsContainer.appendChild(createModalBtn('تحدى المنع!', () => respondToAction('challenge_block')));
-                 buttonsContainer.appendChild(createModalBtn('اقبل المنع', () => respondToAction('pass_block')));
-                 modal.style.display = 'flex';
-                 return;
-             }
-
-             hideModal('interaction-modal');
-        }
-        var respondToAction = async function(responseType, blockType = null) {
-             hideModal('interaction-modal');
-             const gameRef = doc(db, 'games', currentGameId);
-            
-             await runTransaction(db, async (transaction) => {
-                 const gameSnap = await transaction.get(gameRef);
-                 if (!gameSnap.exists()) return;
-                 const gameData = gameSnap.data();
-                 let { pendingAction, players, turnOrder } = gameData;
-                 
-                 if (!pendingAction) return;
-
-                 const updates = {};
-                 const me = players[currentUserId];
-
-                 if (pendingAction.type === 'ACTION') {
-                     if (responseType === 'pass') {
-                         updates[`pendingAction.responses.${currentUserId}`] = 'pass';
-                         const aliveOpponents = turnOrder.filter(pid => players[pid].isAlive && pid !== pendingAction.actorId);
-                         const allPassed = aliveOpponents.every(pid => (pendingAction.responses[pid] === 'pass' || pid === currentUserId));
-                         if (allPassed) {
-                             updates.log = arrayUnion(`الجميع تجاهل. <strong>${players[pendingAction.actorId].name}</strong> نجح في حركة <strong>${CARD_TRANSLATIONS[pendingAction.actionType] || pendingAction.actionType}</strong>.`);
-                             Object.assign(updates, getActionEffects(gameData, pendingAction));
-                             
-                             if (pendingAction.actionType === 'Foreign Aid') {
-                                 updates.log = arrayUnion(`<strong>${players[pendingAction.actorId].name}</strong> يلعب مرة أخرى.`);
-                                 updates.turnStartTime = serverTimestamp();
-                                 updates.justUsedForeignAid = pendingAction.actorId;
-                             } else if (pendingAction.actionType !== 'Exchange' && pendingAction.actionType !== 'Assassinate') {
-                                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
-                                 updates.turnStartTime = serverTimestamp();
-                             }
-                             updates.pendingAction = null;
-                         }
-                     } else if (responseType === 'challenge') {
-                         await resolveChallenge(transaction, gameData, pendingAction, currentUserId);
-                         return;
-                     } else if (responseType === 'block') {
-                         const blockCardMap = { 'BlockForeignAid': CARD_TYPES.DUKE, 'BlockAssassination': CARD_TYPES.CONTESSA, 'BlockStealCaptain': CARD_TYPES.CAPTAIN, 'BlockStealAmbassador': CARD_TYPES.AMBASSADOR };
-                         updates.pendingAction = {
-                             type: 'BLOCK', actorId: pendingAction.actorId, actionType: pendingAction.actionType,
-                             targetId: pendingAction.targetId, blockerId: currentUserId, blockCard: blockCardMap[blockType], responses: {}
-                         };
-                         updates.log = arrayUnion(`<strong>${me.name}</strong> يمنع الحركة!`);
-                     }
-                 }
-                 else if (pendingAction.type === 'BLOCK') {
-                     if (responseType === 'challenge_block') {
-                         await resolveBlockChallenge(transaction, gameData, pendingAction, currentUserId);
-                         return;
-                     } else if (responseType === 'pass_block') {
-                         updates.log = arrayUnion(`<strong>${me.name}</strong> قبل المنع. الحركة فشلت.`);
-                         updates.pendingAction = null;
-                         updates.currentPlayerIndex = getNextPlayerIndex(gameData);
-                         updates.turnStartTime = serverTimestamp();
-                     }
-                 }
-                 
-                 transaction.update(gameRef, updates);
-             });
-        }
-        var resolveChallenge = async function(transaction, gameData, action, challengerId) {
-             const { players, deck } = gameData;
-             const actor = players[action.actorId];
-             const challenger = players[challengerId];
-             const updates = {};
-             const claimCard = { 'Tax': CARD_TYPES.DUKE, 'Assassinate': CARD_TYPES.ASSASSIN, 'Steal': CARD_TYPES.CAPTAIN, 'Exchange': CARD_TYPES.AMBASSADOR }[action.actionType];
-
-             if (actor.cards.includes(claimCard)) { 
-                 updates.log = arrayUnion(`تحدي فاشل! <strong>${actor.name}</strong> كان صادقًا. <strong>${challenger.name}</strong> يخسر نفوذًا.`);
-                 updates[`playerUpdates.${challengerId}`] = { type: 'mustReveal', reason: 'خسرت التحدي.' };
-                
-                 const newDeck = [...deck];
-                 const cardIndex = actor.cards.indexOf(claimCard);
-                 const revealedCard = actor.cards.splice(cardIndex, 1)[0];
-                 actor.cards.push(newDeck.pop());
-                 newDeck.push(revealedCard);
-                 updates[`players.${action.actorId}.cards`] = actor.cards;
-                 updates.deck = shuffle(newDeck);
-                 updates.log = arrayUnion(`${actor.name} أظهر بطاقة ${CARD_TRANSLATIONS[revealedCard]} وسحب واحدة جديدة.`);
-
-                 Object.assign(updates, getActionEffects({ ...gameData, deck: newDeck, players }, action));
-                 updates.pendingAction = null; 
-
-             } else { 
-                 updates.log = arrayUnion(`تحدي ناجح! <strong>${actor.name}</strong> كان يكذب ويخسر نفوذًا.`);
-                 updates[`playerUpdates.${action.actorId}`] = { type: 'mustReveal', reason: 'تم كشف كذبتك.' };
-                 updates.pendingAction = null; 
-                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
-                 updates.turnStartTime = serverTimestamp();
-             }
-             transaction.update(doc(db, 'games', currentGameId), updates);
-        }
-        var resolveBlockChallenge = async function(transaction, gameData, action, challengerId) {
-             const { players, deck } = gameData;
-             const blocker = players[action.blockerId];
-             const challenger = players[challengerId]; 
-             const updates = {};
-             const blockClaim = action.blockCard;
-
-             if (blocker.cards.includes(blockClaim)) { 
-                 updates.log = arrayUnion(`تحدي فاشل! <strong>${blocker.name}</strong> كان صادقًا. <strong>${challenger.name}</strong> يخسر نفوذًا.`);
-                 updates[`playerUpdates.${challengerId}`] = { type: 'mustReveal', reason: 'خسرت تحدي المنع.' };
-                
-                 const newDeck = [...deck];
-                 const cardIndex = blocker.cards.indexOf(blockClaim);
-                 const revealedCard = blocker.cards.splice(cardIndex, 1)[0];
-                 blocker.cards.push(newDeck.pop());
-                 newDeck.push(revealedCard);
-                 updates[`players.${action.blockerId}.cards`] = blocker.cards;
-                 updates.deck = shuffle(newDeck);
-                 updates.log = arrayUnion(`${blocker.name} أظهر بطاقة ${CARD_TRANSLATIONS[revealedCard]} وسحب واحدة جديدة.`);
-                
-                 updates.pendingAction = null;
-                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
-                 updates.turnStartTime = serverTimestamp();
-             } else { 
-                 updates.log = arrayUnion(`تحدي ناجح! <strong>${blocker.name}</strong> كان يكذب ويخسر نفوذًا.`);
-                 updates[`playerUpdates.${action.blockerId}`] = { type: 'mustReveal', reason: 'تم كشف كذبة المنع.' };
-                
-                 Object.assign(updates, getActionEffects(gameData, action));
-                 updates.pendingAction = null; 
-             }
-             transaction.update(doc(db, 'games', currentGameId), updates);
-        }
-        var getActionEffects = function(gameData, action) {
-             const { actorId, actionType, targetId } = action;
-             const updates = {};
-             const actorCoins = gameData.players[actorId].coins;
-            
-             switch (actionType) {
-                 case 'Income': updates[`players.${actorId}.coins`] = actorCoins + 1; break;
-                 case 'Foreign Aid': updates[`players.${actorId}.coins`] = actorCoins + 2; break;
-                 case 'Tax': updates[`players.${actorId}.coins`] = actorCoins + 3; break;
-                 case 'Coup':
-                     updates[`players.${actorId}.coins`] = actorCoins - 7;
-                     updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
-                     break;
-                 case 'Steal':
-                     const targetCoins = gameData.players[targetId].coins;
-                     const stolenAmount = Math.min(2, targetCoins);
-                     updates[`players.${actorId}.coins`] = actorCoins + stolenAmount;
-                     updates[`players.${targetId}.coins`] = targetCoins - stolenAmount;
-                     break;
-                 case 'Assassinate':
-                     updates[`players.${actorId}.coins`] = actorCoins - 3;
-                     updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم اغتيالك!' };
-                     break;
-                 case 'Exchange':
-                     const newDeck = [...gameData.deck];
-                     const drawnCards = [newDeck.pop(), newDeck.pop()];
-                     updates[`playerUpdates.${actorId}`] = { type: 'exchange', cards: drawnCards };
-                     updates.deck = newDeck;
-                     break;
-             }
-             return updates;
-        }
-        var handlePlayerUpdate = function(gameData, update) {
-             hideAllModals();
-             if (update.type === 'mustReveal') {
-                 showRevealCardModal(gameData, update.reason);
-             } else if (update.type === 'exchange') {
-                 showExchangeModal(gameData, update.cards);
-             }
-        }
-        var revealCard = async function(cardIndex) {
-             hideModal('reveal-card-modal');
-             await runTransaction(db, async (transaction) => {
-                 const gameRef = doc(db, 'games', currentGameId);
-                 const gameSnap = await transaction.get(gameRef);
-                 const gameData = gameSnap.data();
-                 const player = gameData.players[currentUserId];
-
-                 const cardToReveal = player.cards.splice(cardIndex, 1)[0];
-                 player.revealedCards.push(cardToReveal);
-
-                 const updates = {};
-                
-                 let logMessage = `<strong>${player.name}</strong> يكشف ويخسر <strong>${CARD_TRANSLATIONS[cardToReveal]}</strong>.`;
-                 if (player.cards.length === 0) {
-                     player.isAlive = false;
-                     logMessage += ` <strong>${player.name}</strong> تم إقصاؤه!`;
-                 }
-
-                 updates[`players.${currentUserId}`] = player;
-                 updates[`playerUpdates.${currentUserId}`] = null;
-                
-                 const updateCausedByChallenge = gameData.playerUpdates[currentUserId] && gameData.playerUpdates[currentUserId].reason;
-                 if (!updateCausedByChallenge) {
-                     updates.currentPlayerIndex = getNextPlayerIndex(gameData);
-                     updates.turnStartTime = serverTimestamp();
-                 }
-
-                 updates.log = arrayUnion(logMessage);
-                 transaction.update(gameRef, updates);
-             });
-        }
-        var confirmExchange = async function(keptCards, returnedCards) {
-              hideModal('exchange-modal');
-              await runTransaction(db, async (transaction) => {
-                  const gameRef = doc(db, 'games', currentGameId);
-                  const gameData = await transaction.get(gameRef).then(snap => snap.data());
-                  
-                  const updates = {
-                          [`players.${currentUserId}.cards`]: keptCards,
-                          [`playerUpdates.${currentUserId}`]: null,
-                          deck: shuffle([...gameData.deck, ...returnedCards]),
-                          log: arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> قام بتبديل بطاقاته.`),
-                          currentPlayerIndex: getNextPlayerIndex(gameData),
-                          turnStartTime: serverTimestamp()
-                  };
-                  transaction.update(gameRef, updates);
-              });
-        }
-        var showRevealCardModal = function(gameData, reason) {
-             const modal = document.getElementById('reveal-card-modal');
-             const container = document.getElementById('reveal-cards-container');
-             const myData = gameData.players[currentUserId];
-            
-             document.getElementById('reveal-title').textContent = reason;
-             container.innerHTML = '';
-
-             myData.cards.forEach((cardType, index) => {
-                 const img = document.createElement('img');
-                 img.src = CARD_IMAGES[cardType];
-                 img.onclick = () => revealCard(index);
-                 container.appendChild(img);
-             });
-             modal.style.display = 'flex';
-        }
-        var showExchangeModal = function(gameData, drawnCards) {
-             const modal = document.getElementById('exchange-modal');
-             const container = document.getElementById('exchange-cards-container');
-             const myData = gameData.players[currentUserId];
-             const confirmBtn = document.getElementById('confirm-exchange-btn');
-            
-             const allCards = [...myData.cards, ...drawnCards];
-             let selectedImages = [];
-            
-             container.innerHTML = '';
-             const numToKeep = myData.cards.length;
-             document.getElementById('exchange-text').textContent = `لديك ${allCards.length} بطاقات. اختر ${numToKeep} للاحتفاظ بها.`;
-            
-             allCards.forEach((cardType) => {
-                 const img = document.createElement('img');
-                 img.src = CARD_IMAGES[cardType];
-                 img.dataset.cardType = cardType;
-
-                 img.onclick = () => {
-                     if (img.classList.contains('selected')) {
-                         img.classList.remove('selected');
-                         selectedImages.splice(selectedImages.indexOf(img), 1);
-                     } else if (selectedImages.length < numToKeep) {
-                         img.classList.add('selected');
-                         selectedImages.push(img);
-                     }
-                     confirmBtn.disabled = selectedImages.length !== numToKeep;
-                 };
-                 container.appendChild(img);
-             });
-
-             confirmBtn.onclick = () => {
-                 const keptCards = selectedImages.map(img => img.dataset.cardType);
-                 const returnedCards = [...allCards];
-                 keptCards.forEach(keptType => {
-                     const indexToRemove = returnedCards.indexOf(keptType);
-                     if (indexToRemove > -1) returnedCards.splice(indexToRemove, 1);
-                 });
-                 confirmExchange(keptCards, returnedCards);
-             };
-             modal.style.display = 'flex';
-        }
-        var addActionBtn = function(text, onClick, disabled = false) {
-             const btn = document.createElement('button');
-             btn.className = 'action-btn';
-             btn.textContent = text;
-             btn.disabled = disabled;
-             btn.onclick = onClick;
-             document.getElementById('action-buttons').appendChild(btn);
-        }
-        var createModalBtn = function(text, onClick) {
-             const btn = document.createElement('button');
-             btn.className = 'action-btn';
-             btn.textContent = text;
-             btn.onclick = onClick;
-             return btn;
-        }
-        var showTargetSelection = function(actionType) {
-             const modal = document.getElementById('target-selection-modal');
-             const list = document.getElementById('target-player-list');
-             list.innerHTML = '';
-            
-             getDoc(doc(db, 'games', currentGameId)).then(docSnap => {
-                 const gameData = docSnap.data();
-                 gameData.turnOrder.forEach(pid => {
-                     if (pid !== currentUserId && gameData.players[pid].isAlive) {
-                         const btn = createModalBtn(gameData.players[pid].name, () => {
-                             hideModal('target-selection-modal');
-                             initiateAction(actionType, pid);
-                         });
-                         list.appendChild(btn);
-                     }
-                 });
-                 modal.style.display = 'flex';
-             });
-            
-             document.getElementById('cancel-target-btn').onclick = () => hideModal('target-selection-modal');
-        }
+        async function forceEndTurn() { const gameRef = doc(db, 'games', currentGameId); await runTransaction(db, async (transaction) => { const gameSnap = await transaction.get(gameRef); if (!gameSnap.exists()) return; const gameData = gameSnap.data(); if (gameData.turnOrder[gameData.currentPlayerIndex] !== currentUserId || gameData.pendingAction) return; const updates = {}; updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins + 1; updates.log = arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> نفذ الوقت وأخذ 'دخل' تلقائيًا.`); updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); updates.justUsedForeignAid = null; transaction.update(gameRef, updates); }); }
+        function updateTurnTimer(gameData) { if (turnTimerInterval) clearInterval(turnTimerInterval); const isMyTurn = gameData.turnOrder[gameData.currentPlayerIndex] === currentUserId; const noPendingActions = !gameData.pendingAction && (!gameData.playerUpdates || !gameData.playerUpdates[currentUserId]); if (gameData.gameState === 'active' && isMyTurn && noPendingActions && gameData.turnStartTime) { turnTimerEl.style.display = 'block'; const startTime = gameData.turnStartTime.toDate(); turnTimerInterval = setInterval(() => { const elapsed = Math.floor((new Date() - startTime) / 1000); const remaining = TURN_DURATION - elapsed; if (remaining <= 0) { turnTimerEl.textContent = '0'; clearInterval(turnTimerInterval); forceEndTurn(); } else { turnTimerEl.textContent = remaining; } }, 1000); } else { turnTimerEl.style.display = 'none'; } }
+        async function initiateAction(actionType, targetId = null) { const gameRef = doc(db, 'games', currentGameId); const gameSnap = await getDoc(gameRef); if (!gameSnap.exists()) return; const gameData = gameSnap.data(); const actorName = gameData.players[currentUserId].name; let logMessage = `<strong>${actorName}</strong> ينوي القيام بـ: <strong>${actionType}</strong>`; if (targetId) logMessage += ` ضد <strong>${gameData.players[targetId].name}</strong>.`; const updates = { log: arrayUnion(logMessage), justUsedForeignAid: null }; const unchallengable = ['Income', 'Coup']; if (unchallengable.includes(actionType)) { if (actionType === 'Coup') { const target = gameData.players[targetId]; if (target.cards.length > 1 && gameData.players[currentUserId].coins >= 10) { updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7; updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' }; } else if (target.cards.length === 1 && gameData.players[currentUserId].coins >= 10) { updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7; updates[`players.${targetId}`].coins = 0; updates.log = arrayUnion(`<strong>${actorName}</strong> انقلب على <strong>${target.name}</strong>، الذي خسر كل عملاته بدلاً من نفوذه الأخير.`); updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); await updateDoc(gameRef, updates); return; } else { updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7; updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' }; } } Object.assign(updates, getActionEffects(gameData, { actorId: currentUserId, actionType, targetId })); if (actionType !== 'Coup') { updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } } else { updates.pendingAction = { type: 'ACTION', actorId: currentUserId, actionType: actionType, targetId: targetId, responses: {}, }; } await updateDoc(gameRef, updates); }
+        function hideModal(modalId) { const modal = document.getElementById(modalId); if(modal) modal.style.display = 'none'; }
+        function hideAllModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+        function getNextPlayerIndex(gameData) { let nextIndex = gameData.currentPlayerIndex; let count = 0; do { nextIndex = (nextIndex + 1) % gameData.turnOrder.length; count++; } while(!gameData.players[gameData.turnOrder[nextIndex]].isAlive && count < gameData.turnOrder.length * 2); return nextIndex; }
+        async function checkGameOver(gameData) { if (gameData.gameState !== 'active') return; const alivePlayers = gameData.turnOrder.filter(pid => gameData.players[pid]?.isAlive); if (alivePlayers.length <= 1) { if (gameUnsubscribe) gameUnsubscribe(); gameUnsubscribe = null; if (turnTimerInterval) clearInterval(turnTimerInterval); const winnerId = alivePlayers.length === 1 ? alivePlayers[0] : null; const winnerName = winnerId ? gameData.players[winnerId].name : "لا أحد"; await updateDoc(doc(db, 'games', currentGameId), { gameState: 'finished', log: arrayUnion(`انتهت اللعبة! الفائز هو <strong>${winnerName}</strong>.`) }); showGameOverScreen(`الفائز هو ${winnerName}!`, "سيتم حذف بيانات هذه اللعبة الآن."); deleteGameData(currentGameId); } }
+        function showGameOverScreen(winnerText, cleanupText) { document.getElementById('winner-text').textContent = winnerText; document.getElementById('cleanup-text').textContent = cleanupText; document.getElementById('game-over-screen').style.display = 'flex'; }
+        async function deleteGameData(gameId) { if (!gameId) return; try { const gameRef = doc(db, 'games', gameId); const gameSnap = await getDoc(gameRef); if (gameSnap.exists() && gameSnap.data().creatorId === currentUserId) { await deleteDoc(gameRef); } } catch (error) {} }
+        function shuffle(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
+        function toScreenPosition(vector, camera) { const width = window.innerWidth, height = window.innerHeight; const widthHalf = width / 2, heightHalf = height / 2; vector.project(camera); vector.x = (vector.x * widthHalf) + widthHalf; vector.y = -(vector.y * heightHalf) + heightHalf; return { x: vector.x, y: vector.y }; }
+        var handlePendingAction = function(gameData) { const { pendingAction, players } = gameData; if (!pendingAction) { hideModal('interaction-modal'); return; } const me = players[currentUserId]; const modal = document.getElementById('interaction-modal'); const buttonsContainer = document.getElementById('modal-buttons'); buttonsContainer.innerHTML = ''; if (pendingAction.type === 'ACTION' && pendingAction.actorId !== currentUserId && me.isAlive && !pendingAction.responses[currentUserId]) { const actorName = players[pendingAction.actorId].name; document.getElementById('modal-title').textContent = `حركة من ${actorName}!`; document.getElementById('modal-text').textContent = `${actorName} يقوم بـ ${CARD_TRANSLATIONS[pendingAction.actionType] || pendingAction.actionType}.`; buttonsContainer.appendChild(createModalBtn('تحدي!', () => respondToAction('challenge'))); const amITarget = pendingAction.targetId === currentUserId; if (pendingAction.actionType === 'Foreign Aid') buttonsContainer.appendChild(createModalBtn('أمنع (بالدوق)', () => respondToAction('block', 'BlockForeignAid'))); if (amITarget && pendingAction.actionType === 'Steal') { buttonsContainer.appendChild(createModalBtn('أمنع (بالقبطان)', () => respondToAction('block', 'BlockStealCaptain'))); buttonsContainer.appendChild(createModalBtn('أمنع (بالسفير)', () => respondToAction('block', 'BlockStealAmbassador'))); } if (amITarget && pendingAction.actionType === 'Assassinate') buttonsContainer.appendChild(createModalBtn('أمنع (بالكونتيسا)', () => respondToAction('block', 'BlockAssassination'))); buttonsContainer.appendChild(createModalBtn('تجاهل', () => respondToAction('pass'))); modal.style.display = 'flex'; return; } if (pendingAction.type === 'BLOCK' && pendingAction.actorId === currentUserId && me.isAlive && !pendingAction.responses[currentUserId]) { const blockerName = players[pendingAction.blockerId].name; document.getElementById('modal-title').textContent = `${blockerName} يمنع حركتك!`; document.getElementById('modal-text').textContent = `${blockerName} يدعي أن لديه ${CARD_TRANSLATIONS[pendingAction.blockCard]} لمنع ${CARD_TRANSLATIONS[pendingAction.actionType] || pendingAction.actionType}.`; buttonsContainer.appendChild(createModalBtn('تحدى المنع!', () => respondToAction('challenge_block'))); buttonsContainer.appendChild(createModalBtn('اقبل المنع', () => respondToAction('pass_block'))); modal.style.display = 'flex'; return; } hideModal('interaction-modal'); }
+        var respondToAction = async function(responseType, blockType = null) { hideModal('interaction-modal'); const gameRef = doc(db, 'games', currentGameId); await runTransaction(db, async (transaction) => { const gameSnap = await transaction.get(gameRef); if (!gameSnap.exists()) return; const gameData = gameSnap.data(); let { pendingAction, players, turnOrder } = gameData; if (!pendingAction) return; const updates = {}; const me = players[currentUserId]; if (pendingAction.type === 'ACTION') { if (responseType === 'pass') { updates[`pendingAction.responses.${currentUserId}`] = 'pass'; const aliveOpponents = turnOrder.filter(pid => players[pid].isAlive && pid !== pendingAction.actorId); const allPassed = aliveOpponents.every(pid => (pendingAction.responses[pid] === 'pass' || pid === currentUserId)); if (allPassed) { updates.log = arrayUnion(`الجميع تجاهل. <strong>${players[pendingAction.actorId].name}</strong> نجح في حركة <strong>${CARD_TRANSLATIONS[pendingAction.actionType] || pendingAction.actionType}</strong>.`); Object.assign(updates, getActionEffects(gameData, pendingAction)); if (pendingAction.actionType === 'Foreign Aid') { updates.log = arrayUnion(`<strong>${players[pendingAction.actorId].name}</strong> يلعب مرة أخرى.`); updates.turnStartTime = serverTimestamp(); updates.justUsedForeignAid = pendingAction.actorId; } else if (pendingAction.actionType !== 'Exchange' && pendingAction.actionType !== 'Assassinate') { updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } updates.pendingAction = null; } } else if (responseType === 'challenge') { await resolveChallenge(transaction, gameData, pendingAction, currentUserId); return; } else if (responseType === 'block') { const blockCardMap = { 'BlockForeignAid': CARD_TYPES.DUKE, 'BlockAssassination': CARD_TYPES.CONTESSA, 'BlockStealCaptain': CARD_TYPES.CAPTAIN, 'BlockStealAmbassador': CARD_TYPES.AMBASSADOR }; updates.pendingAction = { type: 'BLOCK', actorId: pendingAction.actorId, actionType: pendingAction.actionType, targetId: pendingAction.targetId, blockerId: currentUserId, blockCard: blockCardMap[blockType], responses: {} }; updates.log = arrayUnion(`<strong>${me.name}</strong> يمنع الحركة!`); } } else if (pendingAction.type === 'BLOCK') { if (responseType === 'challenge_block') { await resolveBlockChallenge(transaction, gameData, pendingAction, currentUserId); return; } else if (responseType === 'pass_block') { updates.log = arrayUnion(`<strong>${me.name}</strong> قبل المنع. الحركة فشلت.`); updates.pendingAction = null; updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } } transaction.update(gameRef, updates); }); }
+        var resolveChallenge = async function(transaction, gameData, action, challengerId) { const { players, deck } = gameData; const actor = players[action.actorId]; const challenger = players[challengerId]; const updates = {}; const claimCard = { 'Tax': CARD_TYPES.DUKE, 'Assassinate': CARD_TYPES.ASSASSIN, 'Steal': CARD_TYPES.CAPTAIN, 'Exchange': CARD_TYPES.AMBASSADOR }[action.actionType]; if (actor.cards.includes(claimCard)) { updates.log = arrayUnion(`تحدي فاشل! <strong>${actor.name}</strong> كان صادقًا. <strong>${challenger.name}</strong> يخسر نفوذًا.`); updates[`playerUpdates.${challengerId}`] = { type: 'mustReveal', reason: 'خسرت التحدي.' }; const newDeck = [...deck]; const cardIndex = actor.cards.indexOf(claimCard); const revealedCard = actor.cards.splice(cardIndex, 1)[0]; actor.cards.push(newDeck.pop()); newDeck.push(revealedCard); updates[`players.${action.actorId}.cards`] = actor.cards; updates.deck = shuffle(newDeck); updates.log = arrayUnion(`${actor.name} أظهر بطاقة ${CARD_TRANSLATIONS[revealedCard]} وسحب واحدة جديدة.`); Object.assign(updates, getActionEffects({ ...gameData, deck: newDeck, players }, action)); updates.pendingAction = null; } else { updates.log = arrayUnion(`تحدي ناجح! <strong>${actor.name}</strong> كان يكذب ويخسر نفوذًا.`); updates[`playerUpdates.${action.actorId}`] = { type: 'mustReveal', reason: 'تم كشف كذبتك.' }; updates.pendingAction = null; updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } transaction.update(doc(db, 'games', currentGameId), updates); }
+        var resolveBlockChallenge = async function(transaction, gameData, action, challengerId) { const { players, deck } = gameData; const blocker = players[action.blockerId]; const challenger = players[challengerId]; const updates = {}; const blockClaim = action.blockCard; if (blocker.cards.includes(blockClaim)) { updates.log = arrayUnion(`تحدي فاشل! <strong>${blocker.name}</strong> كان صادقًا. <strong>${challenger.name}</strong> يخسر نفوذًا.`); updates[`playerUpdates.${challengerId}`] = { type: 'mustReveal', reason: 'خسرت تحدي المنع.' }; const newDeck = [...deck]; const cardIndex = blocker.cards.indexOf(blockClaim); const revealedCard = blocker.cards.splice(cardIndex, 1)[0]; blocker.cards.push(newDeck.pop()); newDeck.push(revealedCard); updates[`players.${action.blockerId}.cards`] = blocker.cards; updates.deck = shuffle(newDeck); updates.log = arrayUnion(`${blocker.name} أظهر بطاقة ${CARD_TRANSLATIONS[revealedCard]} وسحب واحدة جديدة.`); updates.pendingAction = null; updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } else { updates.log = arrayUnion(`تحدي ناجح! <strong>${blocker.name}</strong> كان يكذب ويخسر نفوذًا.`); updates[`playerUpdates.${action.blockerId}`] = { type: 'mustReveal', reason: 'تم كشف كذبة المنع.' }; Object.assign(updates, getActionEffects(gameData, action)); updates.pendingAction = null; } transaction.update(doc(db, 'games', currentGameId), updates); }
+        var getActionEffects = function(gameData, action) { const { actorId, actionType, targetId } = action; const updates = {}; const actorCoins = gameData.players[actorId].coins; switch (actionType) { case 'Income': updates[`players.${actorId}.coins`] = actorCoins + 1; break; case 'Foreign Aid': updates[`players.${actorId}.coins`] = actorCoins + 2; break; case 'Tax': updates[`players.${actorId}.coins`] = actorCoins + 3; break; case 'Coup': updates[`players.${actorId}.coins`] = actorCoins - 7; updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' }; break; case 'Steal': const targetCoins = gameData.players[targetId].coins; const stolenAmount = Math.min(2, targetCoins); updates[`players.${actorId}.coins`] = actorCoins + stolenAmount; updates[`players.${targetId}.coins`] = targetCoins - stolenAmount; break; case 'Assassinate': updates[`players.${actorId}.coins`] = actorCoins - 3; updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم اغتيالك!' }; break; case 'Exchange': const newDeck = [...gameData.deck]; const drawnCards = [newDeck.pop(), newDeck.pop()]; updates[`playerUpdates.${actorId}`] = { type: 'exchange', cards: drawnCards }; updates.deck = newDeck; break; } return updates; }
+        var handlePlayerUpdate = function(gameData, update) { hideAllModals(); if (update.type === 'mustReveal') { showRevealCardModal(gameData, update.reason); } else if (update.type === 'exchange') { showExchangeModal(gameData, update.cards); } }
+        var revealCard = async function(cardIndex) { hideModal('reveal-card-modal'); await runTransaction(db, async (transaction) => { const gameRef = doc(db, 'games', currentGameId); const gameSnap = await transaction.get(gameRef); const gameData = gameSnap.data(); const player = gameData.players[currentUserId]; const cardToReveal = player.cards.splice(cardIndex, 1)[0]; player.revealedCards.push(cardToReveal); const updates = {}; let logMessage = `<strong>${player.name}</strong> يكشف ويخسر <strong>${CARD_TRANSLATIONS[cardToReveal]}</strong>.`; if (player.cards.length === 0) { player.isAlive = false; logMessage += ` <strong>${player.name}</strong> تم إقصاؤه!`; } updates[`players.${currentUserId}`] = player; updates[`playerUpdates.${currentUserId}`] = null; const updateCausedByChallenge = gameData.playerUpdates[currentUserId] && gameData.playerUpdates[currentUserId].reason; if (!updateCausedByChallenge) { updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } updates.log = arrayUnion(logMessage); transaction.update(gameRef, updates); }); }
+        var confirmExchange = async function(keptCards, returnedCards) { hideModal('exchange-modal'); await runTransaction(db, async (transaction) => { const gameRef = doc(db, 'games', currentGameId); const gameData = await transaction.get(gameRef).then(snap => snap.data()); const updates = { [`players.${currentUserId}.cards`]: keptCards, [`playerUpdates.${currentUserId}`]: null, deck: shuffle([...gameData.deck, ...returnedCards]), log: arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> قام بتبديل بطاقاته.`), currentPlayerIndex: getNextPlayerIndex(gameData), turnStartTime: serverTimestamp() }; transaction.update(gameRef, updates); }); }
+        var showRevealCardModal = function(gameData, reason) { const modal = document.getElementById('reveal-card-modal'); const container = document.getElementById('reveal-cards-container'); const myData = gameData.players[currentUserId]; document.getElementById('reveal-title').textContent = reason; container.innerHTML = ''; myData.cards.forEach((cardType, index) => { const img = document.createElement('img'); img.src = CARD_IMAGES[cardType]; img.onclick = () => revealCard(index); container.appendChild(img); }); modal.style.display = 'flex'; }
+        var showExchangeModal = function(gameData, drawnCards) { const modal = document.getElementById('exchange-modal'); const container = document.getElementById('exchange-cards-container'); const myData = gameData.players[currentUserId]; const confirmBtn = document.getElementById('confirm-exchange-btn'); const allCards = [...myData.cards, ...drawnCards]; let selectedImages = []; container.innerHTML = ''; const numToKeep = myData.cards.length; document.getElementById('exchange-text').textContent = `لديك ${allCards.length} بطاقات. اختر ${numToKeep} للاحتفاظ بها.`; allCards.forEach((cardType) => { const img = document.createElement('img'); img.src = CARD_IMAGES[cardType]; img.dataset.cardType = cardType; img.onclick = () => { if (img.classList.contains('selected')) { img.classList.remove('selected'); selectedImages.splice(selectedImages.indexOf(img), 1); } else if (selectedImages.length < numToKeep) { img.classList.add('selected'); selectedImages.push(img); } confirmBtn.disabled = selectedImages.length !== numToKeep; }; container.appendChild(img); }); confirmBtn.onclick = () => { const keptCards = selectedImages.map(img => img.dataset.cardType); const returnedCards = [...allCards]; keptCards.forEach(keptType => { const indexToRemove = returnedCards.indexOf(keptType); if (indexToRemove > -1) returnedCards.splice(indexToRemove, 1); }); confirmExchange(keptCards, returnedCards); }; modal.style.display = 'flex'; }
+        var addActionBtn = function(text, onClick, disabled = false) { const btn = document.createElement('button'); btn.className = 'action-btn'; btn.textContent = text; btn.disabled = disabled; btn.onclick = onClick; document.getElementById('action-buttons').appendChild(btn); }
+        var createModalBtn = function(text, onClick) { const btn = document.createElement('button'); btn.className = 'action-btn'; btn.textContent = text; btn.onclick = onClick; return btn; }
+        var showTargetSelection = function(actionType) { const modal = document.getElementById('target-selection-modal'); const list = document.getElementById('target-player-list'); list.innerHTML = ''; getDoc(doc(db, 'games', currentGameId)).then(docSnap => { const gameData = docSnap.data(); gameData.turnOrder.forEach(pid => { if (pid !== currentUserId && gameData.players[pid].isAlive) { const btn = createModalBtn(gameData.players[pid].name, () => { hideModal('target-selection-modal'); initiateAction(actionType, pid); }); list.appendChild(btn); } }); modal.style.display = 'flex'; }); document.getElementById('cancel-target-btn').onclick = () => hideModal('target-selection-modal'); }
 
     </script>
 </body>
