@@ -431,17 +431,15 @@
         onAuthStateChanged(auth, user => {
             if (user) {
                 currentUserId = user.uid;
-                console.log("Authenticated User ID:", currentUserId);
                 if (texturesPreloaded) {
                     loadingOverlay.classList.add('hidden');
                 }
             } else {
-                signInAnonymously(auth).catch(err => console.error("Anonymous sign-in failed:", err));
+                signInAnonymously(auth).catch(() => {});
             }
         });
         
         preloadTextures(() => {
-            console.log("All card textures have been preloaded.");
             texturesPreloaded = true;
             if (currentUserId) {
                 loadingOverlay.classList.add('hidden');
@@ -697,23 +695,17 @@
 
             keys.forEach(key => {
                 const url = CARD_IMAGES[key];
-                textureLoader.load(
-                    url, 
-                    (texture) => {
-                        cardTextures[key] = texture;
-                        onAssetLoaded();
-                    }, 
-                    undefined,
-                    () => {
-                        console.error('CRITICAL: Failed to load texture:', url);
-                        onAssetLoaded();
-                    }
-                );
+                textureLoader.load( url, (texture) => {
+                    cardTextures[key] = texture;
+                    onAssetLoaded();
+                }, undefined, () => {
+                    onAssetLoaded();
+                });
             });
         }
         
         function createCardMesh(cardType, isFaceUp = false) {
-             const cardGeometry = new THREE.BoxGeometry(3.2, 4.4, 0.1); // CHANGE: Increased card size again
+             const cardGeometry = new THREE.BoxGeometry(3.2, 4.4, 0.1);
              const materials = [
                  new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
                  new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
@@ -730,7 +722,6 @@
             if (!camera || !renderer) return;
             camera.aspect = window.innerWidth / window.innerHeight;
             if (window.innerWidth < 768) {
-                // CHANGE: New camera position for mobile for better visibility
                 camera.fov = 70;
                 camera.position.set(0, 16, 18); 
             } else {
@@ -769,15 +760,14 @@
                 let x, z, yPos, angle;
                 let isMe = (relativeIndex === 0);
 
-                // CHANGE: Completely new layout logic for mobile vs desktop
                 if (window.innerWidth < 768) {
                     const mobilePositions = [
-                        { x: 0, z: 12, y: 2 },    // Player 0 (me, at the bottom)
-                        { x: 0, z: -12, y: 4 },   // Player 1 (opposite, top-center)
-                        { x: -10, z: -3, y: 4 },  // Player 2 (left)
-                        { x: 10, z: -3, y: 4 },   // Player 3 (right)
-                        { x: -7, z: -9, y: 4 },   // Player 4 (top-left)
-                        { x: 7, z: -9, y: 4 }    // Player 5 (top-right)
+                        { x: 0, z: 12, y: 2 },
+                        { x: 0, z: -12, y: 4 },
+                        { x: -10, z: -3, y: 4 },
+                        { x: 10, z: -3, y: 4 },
+                        { x: -7, z: -9, y: 4 },
+                        { x: 7, z: -9, y: 4 }
                     ];
                     const pos = mobilePositions[relativeIndex];
                     x = pos.x;
@@ -785,7 +775,6 @@
                     yPos = pos.y;
                     angle = Math.atan2(x, z);
                 } else {
-                    // Original desktop circle layout
                     const radius = isMe ? 15 : 16;
                     yPos = isMe ? 2 : 4;
                     angle = (relativeIndex / turnOrder.length) * Math.PI * 2;
@@ -796,7 +785,6 @@
                 updateCardGroup(playerObjects[pid].cards, player.cards, pid, 'active', { x, y: yPos, z }, angle, isMe);
                 updateCardGroup(playerObjects[pid].revealedCards, player.revealedCards, pid, 'revealed', { x, y: yPos, z }, angle, isMe);
         
-                // CHANGE: Increased Y-offset for infoDiv
                 const screenPos = toScreenPosition(new THREE.Vector3(x, yPos + (isMe ? 4.5 : 5.5), z), camera);
                 let infoDiv = playerObjects[pid].infoDiv;
                 if (!infoDiv) {
@@ -844,7 +832,7 @@
                 }
         
                 let targetPos, targetRot;
-                const cardOffsetMultiplier = 3.8; // CHANGE: Accommodate larger cards
+                const cardOffsetMultiplier = 3.8;
                 
                 if (cardGroupType === 'active') {
                     const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier;
@@ -858,7 +846,7 @@
                         tempLookAt.lookAt(camera.position);
                         targetRot = tempLookAt.rotation.clone();
                     }
-                } else { // Revealed cards
+                } else { 
                     const tableRadius = isMe ? 8 : 7;
                     const tablePos = new THREE.Vector3(basePos.x, 0.2, basePos.z).normalize().multiplyScalar(tableRadius);
                     const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier;
@@ -868,7 +856,6 @@
 
                     targetPos = tablePos.add(offsetVec);
                     targetPos.y = 0.3;
-                    // CHANGE: Tilted revealed cards for better visibility
                     targetRot = new THREE.Euler(-Math.PI / 2.3, 0, -angle);
                 }
         
@@ -888,11 +875,10 @@
             const shouldShow = gameData.gameState === 'active' && myTurn && me?.isAlive && !gameData.pendingAction && (!gameData.playerUpdates || !gameData.playerUpdates[currentUserId]);
 
             if (shouldShow) {
-                playerInfoContainer.style.pointerEvents = 'none'; // Hide player names when actions are available
+                playerInfoContainer.style.pointerEvents = 'none'; 
             } else {
                  playerInfoContainer.style.pointerEvents = 'auto';
             }
-
 
             if (!shouldShow) return;
 
@@ -926,7 +912,6 @@
 
         // --- CORE GAME FLOW & TIMER ---
         async function forceEndTurn() {
-            console.log("Turn timer expired. Forcing 'Income' action.");
             const gameRef = doc(db, 'games', currentGameId);
             await runTransaction(db, async (transaction) => {
                 const gameSnap = await transaction.get(gameRef);
@@ -1091,7 +1076,6 @@
                             
                             if (pendingAction.actionType === 'Foreign Aid') {
                                 updates.log = arrayUnion(`<strong>${players[pendingAction.actorId].name}</strong> يلعب مرة أخرى.`);
-                                // CHANGE: Reset turn timer for the extra move
                                 updates.turnStartTime = serverTimestamp();
                             } else if (pendingAction.actionType !== 'Exchange' && pendingAction.actionType !== 'Assassinate') {
                                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
@@ -1138,7 +1122,7 @@
             const updates = {};
             const claimCard = { 'Tax': CARD_TYPES.DUKE, 'Assassinate': CARD_TYPES.ASSASSIN, 'Steal': CARD_TYPES.CAPTAIN, 'Exchange': CARD_TYPES.AMBASSADOR }[action.actionType];
 
-            if (actor.cards.includes(claimCard)) { // Challenge FAILED
+            if (actor.cards.includes(claimCard)) { 
                 updates.log = arrayUnion(`تحدي فاشل! <strong>${actor.name}</strong> كان صادقًا. <strong>${challenger.name}</strong> يخسر نفوذًا.`);
                 updates[`playerUpdates.${challengerId}`] = { type: 'mustReveal', reason: 'خسرت التحدي.' };
                 
@@ -1154,7 +1138,7 @@
                 Object.assign(updates, getActionEffects({ ...gameData, deck: newDeck, players }, action));
                 updates.pendingAction = null; 
 
-            } else { // Challenge SUCCEEDED
+            } else { 
                 updates.log = arrayUnion(`تحدي ناجح! <strong>${actor.name}</strong> كان يكذب ويخسر نفوذًا.`);
                 updates[`playerUpdates.${action.actorId}`] = { type: 'mustReveal', reason: 'تم كشف كذبتك.' };
                 updates.pendingAction = null; 
@@ -1171,7 +1155,7 @@
             const updates = {};
             const blockClaim = action.blockCard;
 
-            if (blocker.cards.includes(blockClaim)) { // Block challenge FAILED
+            if (blocker.cards.includes(blockClaim)) { 
                 updates.log = arrayUnion(`تحدي فاشل! <strong>${blocker.name}</strong> كان صادقًا. <strong>${challenger.name}</strong> يخسر نفوذًا.`);
                 updates[`playerUpdates.${challengerId}`] = { type: 'mustReveal', reason: 'خسرت تحدي المنع.' };
                 
@@ -1187,7 +1171,7 @@
                 updates.pendingAction = null;
                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
                 updates.turnStartTime = serverTimestamp();
-            } else { // Block challenge SUCCEEDED
+            } else { 
                 updates.log = arrayUnion(`تحدي ناجح! <strong>${blocker.name}</strong> كان يكذب ويخسر نفوذًا.`);
                 updates[`playerUpdates.${action.blockerId}`] = { type: 'mustReveal', reason: 'تم كشف كذبة المنع.' };
                 
@@ -1431,12 +1415,10 @@
 
         async function deleteGameData(gameId) {
             if (!gameId) return;
-            console.log(`Deleting game data for ${gameId}...`);
             try {
                 await deleteDoc(doc(db, 'games', gameId));
-                console.log("Game data deleted successfully.");
             } catch (error) {
-                console.error("Error deleting game data:", error);
+                // Errors are intentionally silenced as requested
             }
         }
         
