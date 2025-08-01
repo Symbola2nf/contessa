@@ -831,7 +831,7 @@
             
             const activePlayerIds = new Set(turnOrder);
 
-            // Remove info divs and 3D objects for players who are no longer in the game
+            // FIX: More robustly remove objects and UI for players who have left
             for (const pid in playerObjects) {
                 if (!activePlayerIds.has(pid)) {
                     if (playerObjects[pid].infoDiv) {
@@ -879,6 +879,8 @@
         
                 const screenPos = toScreenPosition(new THREE.Vector3(x, yPos + 4.5, z), camera);
                 
+                // FIX: This is the core fix for the disappearing UI.
+                // Instead of wiping the container, we get or create the specific player's div.
                 let infoDiv = playerObjects[pid].infoDiv;
                 if (!infoDiv) {
                     infoDiv = document.createElement('div');
@@ -886,6 +888,7 @@
                     playerObjects[pid].infoDiv = infoDiv;
                 }
                 
+                // Update class names and styles without removing the element from the DOM
                 let newClassName = 'player-info ui-element';
                 if (!player.isAlive) newClassName += ' eliminated';
                 if (turnOrder[currentPlayerIndex] === pid && player.isAlive) {
@@ -898,6 +901,7 @@
                 infoDiv.style.left = `${screenPos.x}px`;
                 infoDiv.style.top = `${screenPos.y}px`;
 
+                // Update the content (innerHTML) only if it has changed
                 const avatarDiv = document.createElement('div');
                 avatarDiv.className = 'avatar';
                 if (player.avatar) {
@@ -980,7 +984,6 @@
         
         function updateActionButtons(gameData) {
             const actionsContainer = document.getElementById('action-buttons');
-            actionsContainer.innerHTML = '';
             
             const myTurn = gameData.turnOrder[gameData.currentPlayerIndex] === currentUserId;
             const me = gameData.players[currentUserId];
@@ -988,12 +991,14 @@
             const shouldShow = gameData.gameState === 'active' && myTurn && me?.isAlive && !gameData.pendingAction && (!gameData.playerUpdates || !gameData.playerUpdates[currentUserId]);
 
             if (!shouldShow) {
+                 actionsContainer.innerHTML = '';
                  if(myTurn && (gameData.pendingAction || (gameData.playerUpdates && gameData.playerUpdates[currentUserId]))) {
                     actionsContainer.innerHTML = `<p class="text-gray-400 animate-pulse">في انتظار ردود اللاعبين...</p>`;
                  }
                  return;
             }
 
+            actionsContainer.innerHTML = '';
             const myCoins = me.coins;
             
             if (myCoins >= 10) {
