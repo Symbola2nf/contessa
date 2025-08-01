@@ -244,33 +244,54 @@
             display: none !important;
         }
         
-        /* Avatar Customizer Styles */
+        /* --- AVATAR CUSTOMIZER STYLES (UPDATED) --- */
         #avatar-customizer {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 350px;
         }
         #avatar-preview {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             background-color: #2a2a2a;
-            border: 2px solid var(--yellow-glow);
+            border: 3px solid var(--yellow-glow);
             border-radius: 50%;
             overflow: hidden;
+            box-shadow: 0 0 15px rgba(253, 224, 71, 0.5);
+        }
+        #avatar-controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
         }
         .avatar-controls {
             display: flex;
-            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 5px;
+        }
+        .avatar-controls .label {
+            flex-grow: 1;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
         }
         .avatar-controls button {
             background-color: #4a4a4a;
             border: 1px solid #6a6a6a;
             color: white;
-            border-radius: 8px;
-            padding: 5px 10px;
-            font-size: 12px;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 16px;
+            font-weight: bold;
+            line-height: 1;
         }
     </style>
 </head>
@@ -288,32 +309,39 @@
             <h1 class="text-4xl font-bold text-yellow-300 mb-4">لعبة Coup</h1>
             
             <div id="avatar-customizer">
-                <p class="mb-2">اختر شخصيتك</p>
+                <p class="mb-2 text-lg">صمم شخصيتك</p>
                 <div id="avatar-preview"></div>
-                <div class="avatar-controls">
-                    <button id="prev-shirt-btn">&lt;</button>
-                    <button>القميص</button>
-                    <button id="next-shirt-btn">&gt;</button>
-                </div>
-                 <div class="avatar-controls">
-                    <button id="prev-head-btn">&lt;</button>
-                    <button>الوجه</button>
-                    <button id="next-head-btn">&gt;</button>
-                </div>
-                <div class="avatar-controls">
-                    <button id="prev-eyebrows-btn">&lt;</button>
-                    <button>الحواجب</button>
-                    <button id="next-eyebrows-btn">&gt;</button>
-                </div>
-                <div class="avatar-controls">
-                    <button id="prev-facialhair-btn">&lt;</button>
-                    <button>اللحية</button>
-                    <button id="next-facialhair-btn">&gt;</button>
-                </div>
-                <div class="avatar-controls">
-                    <button id="prev-eyes-btn">&lt;</button>
-                    <button>العينين</button>
-                    <button id="next-eyes-btn">&gt;</button>
+                <div id="avatar-controls-grid">
+                    <div class="avatar-controls">
+                        <button id="prev-skin-btn">&lt;</button>
+                        <span class="label">لون البشرة</span>
+                        <button id="next-skin-btn">&gt;</button>
+                    </div>
+                    <div class="avatar-controls">
+                        <button id="prev-hair-style-btn">&lt;</button>
+                        <span class="label">الشعر</span>
+                        <button id="next-hair-style-btn">&gt;</button>
+                    </div>
+                     <div class="avatar-controls">
+                        <button id="prev-hair-color-btn">&lt;</button>
+                        <span class="label">لون الشعر</span>
+                        <button id="next-hair-color-btn">&gt;</button>
+                    </div>
+                    <div class="avatar-controls">
+                        <button id="prev-eyes-btn">&lt;</button>
+                        <span class="label">العيون</span>
+                        <button id="next-eyes-btn">&gt;</button>
+                    </div>
+                    <div class="avatar-controls">
+                        <button id="prev-facial-hair-btn">&lt;</button>
+                        <span class="label">اللحية</span>
+                        <button id="next-facial-hair-btn">&gt;</button>
+                    </div>
+                    <div class="avatar-controls">
+                        <button id="prev-shirt-color-btn">&lt;</button>
+                        <span class="label">القميص</span>
+                        <button id="next-shirt-color-btn">&gt;</button>
+                    </div>
                 </div>
             </div>
 
@@ -433,20 +461,41 @@
         let turnTimerInterval = null;
         const TURN_DURATION = 40; 
         
-        // --- AVATAR CUSTOMIZATION DATA (EXPANDED) ---
+        // --- AVATAR CUSTOMIZATION DATA (REDESIGNED) ---
         const avatarOptions = {
-            shirts: ['#ff5733', '#33ff57', '#3357ff', '#ff33a1', '#a133ff', '#ffffff', '#f0e68c', '#add8e6'],
-            heads: ['#f2d2b2', '#d1a377', '#a07c5b', '#6e513d', '#3c2a21'],
-            eyebrows: ['M 40 18 Q 50 16 60 18', 'M 40 20 L 60 16', 'M 42 17 C 45 15, 55 15, 58 17' ],
-            facialHairs: ['none', 'M 40 38 Q 50 45 60 38', 'M 38 35 C 40 50, 60 50, 62 35 L 62 45 C 55 52, 45 52, 38 45 Z'],
-            eyePatches: ['none', 'M 38 20 C 35 25, 35 30, 38 35 L 52 35 C 55 30, 55 25, 52 20 Z']
+            skinTones: ['#f2d2b2', '#d1a377', '#a07c5b', '#6e513d', '#3c2a21'],
+            shirtColors: ['#ff5733', '#33ff57', '#3357ff', '#ff33a1', '#a133ff', '#ffffff', '#4a4a4a', '#fde047'],
+            hairColors: ['#1a1a1a', '#4d331f', '#d4a373', '#9e2a2b', '#808080'],
+            hairStyles: [
+                'none', // Bald
+                'M 25 18 C 30 10, 70 10, 75 18 L 75 25 L 25 25 Z', // Short
+                'M 20 20 C 25 5, 75 5, 80 20 Q 85 40 50 45 Q 15 40 20 20 Z', // Spiky
+                'M 22 15 C 20 5, 80 5, 78 15 T 75 30 T 25 30 T 22 15 Z', // Long
+                'M 25,25 C 15,25 15,10 30,10 C 45,10 45,25 35,25 M 65,25 C 55,25 55,10 70,10 C 85,10 85,25 75,25' // Puffs
+            ],
+            eyes: [
+                'M 38 48 C 42 52, 48 52, 52 48 M 58 48 C 62 52, 68 52, 72 48', // Normal
+                'M 38 50 L 52 50 M 58 50 L 72 50', // Annoyed/Straight
+                'M 38 48 A 10 10 0 0 1 52 48 M 58 48 A 10 10 0 0 1 72 48', // Happy
+                'M 35 45 L 45 55 M 45 45 L 35 55 M 65 45 L 75 55 M 75 45 L 65 55', // X eyes (eliminated look)
+                'M 55 42 L 55 58 M 60 42 C 75 42, 75 58, 60 58' // Eyepatch
+            ],
+            facialHairs: [
+                'none', // Clean
+                'M 35 70 Q 55 75 75 70', // Moustache
+                'M 45 75 C 50 85, 60 85, 65 75 Z', // Goatee
+                'M 35 70 Q 55 75 75 70 V 85 H 35 Z', // Full Moustache + Beard
+                'M 30 65 C 35 80, 45 90, 55 90 C 65 90, 75 80, 80 65 H 70 C 65 75, 55 75, 60 65 Z' // Mutton Chops
+            ]
         };
+        
         let currentAvatar = {
-            shirt: 0,
-            head: 0,
-            eyebrows: 0,
+            skinTone: 0,
+            shirtColor: 0,
+            hairColor: 0,
+            hairStyle: 1,
+            eyes: 0,
             facialHair: 0,
-            eyePatch: 0
         };
 
         // --- UI ELEMENTS ---
@@ -465,49 +514,55 @@
         const turnTimerEl = document.getElementById('turn-timer');
         const avatarPreview = document.getElementById('avatar-preview');
         
-        // --- AVATAR LOGIC (EXPANDED) ---
-        function generateAvatarSVG({ shirt, head, eyebrows, facialHair, eyePatch }) {
-            const shirtColor = avatarOptions.shirts[shirt];
-            const headColor = avatarOptions.heads[head];
-            const eyebrowPath = avatarOptions.eyebrows[eyebrows];
-            const facialHairPath = avatarOptions.facialHairs[facialHair];
-            const eyePatchPath = avatarOptions.eyePatches[eyePatch];
-            
-            return `
-                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                    <g>
-                        <path d="M 20 90 V 40 C 20 30, 30 30, 40 30 H 60 C 70 30, 80 30, 80 40 V 90 Z" fill="${shirtColor}" />
-                        <circle cx="50" cy="25" r="15" fill="${headColor}" />
-                        
-                        <circle cx="45" cy="25" r="1.5" fill="black" />
-                        <circle cx="55" cy="25" r="1.5" fill="black" />
-                        
-                        <path d="${eyebrowPath}" stroke="black" stroke-width="2" fill="none" />
-                        
-                        ${facialHairPath !== 'none' ? `<path d="${facialHairPath}" fill="#281c12" />` : ''}
+        // --- AVATAR LOGIC (REDESIGNED) ---
+        function generateAvatarSVG({ skinTone, shirtColor, hairColor, hairStyle, eyes, facialHair }) {
+            const skin = avatarOptions.skinTones[skinTone];
+            const shirt = avatarOptions.shirtColors[shirtColor];
+            const hairC = avatarOptions.hairColors[hairColor];
+            const hairS = avatarOptions.hairStyles[hairStyle];
+            const eyeS = avatarOptions.eyes[eyes];
+            const facialH = avatarOptions.facialHairs[facialHair];
 
-                        ${eyePatchPath !== 'none' ? `<path d="${eyePatchPath}" fill="black" />` : ''}
-                    </g>
+            return `
+                <svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M 20 100 V 55 C 20 40, 30 40, 45 40 H 65 C 80 40, 90 40, 90 55 V 100 Z" fill="${shirt}" />
+                    
+                    <circle cx="55" cy="50" r="30" fill="${skin}" />
+                    
+                    ${hairS !== 'none' ? `<path d="${hairS}" fill="${hairC}" stroke="${hairC}" stroke-width="2" />` : ''}
+
+                    <path d="${eyeS}" stroke="black" stroke-width="4" fill="none" stroke-linecap="round" />
+
+                    ${facialH !== 'none' ? `<path d="${facialH}" fill="${hairC}" />` : ''}
                 </svg>
             `;
         }
+
 
         function updateAvatarPreview() {
             avatarPreview.innerHTML = generateAvatarSVG(currentAvatar);
         }
 
-        document.getElementById('next-shirt-btn').onclick = () => { currentAvatar.shirt = (currentAvatar.shirt + 1) % avatarOptions.shirts.length; updateAvatarPreview(); };
-        document.getElementById('prev-shirt-btn').onclick = () => { currentAvatar.shirt = (currentAvatar.shirt - 1 + avatarOptions.shirts.length) % avatarOptions.shirts.length; updateAvatarPreview(); };
-        document.getElementById('next-head-btn').onclick = () => { currentAvatar.head = (currentAvatar.head + 1) % avatarOptions.heads.length; updateAvatarPreview(); };
-        document.getElementById('prev-head-btn').onclick = () => { currentAvatar.head = (currentAvatar.head - 1 + avatarOptions.heads.length) % avatarOptions.heads.length; updateAvatarPreview(); };
-        // NEW LISTENERS
-        document.getElementById('next-eyebrows-btn').onclick = () => { currentAvatar.eyebrows = (currentAvatar.eyebrows + 1) % avatarOptions.eyebrows.length; updateAvatarPreview(); };
-        document.getElementById('prev-eyebrows-btn').onclick = () => { currentAvatar.eyebrows = (currentAvatar.eyebrows - 1 + avatarOptions.eyebrows.length) % avatarOptions.eyebrows.length; updateAvatarPreview(); };
-        document.getElementById('next-facialhair-btn').onclick = () => { currentAvatar.facialHair = (currentAvatar.facialHair + 1) % avatarOptions.facialHairs.length; updateAvatarPreview(); };
-        document.getElementById('prev-facialhair-btn').onclick = () => { currentAvatar.facialHair = (currentAvatar.facialHair - 1 + avatarOptions.facialHairs.length) % avatarOptions.facialHairs.length; updateAvatarPreview(); };
-        document.getElementById('next-eyes-btn').onclick = () => { currentAvatar.eyePatch = (currentAvatar.eyePatch + 1) % avatarOptions.eyePatches.length; updateAvatarPreview(); };
-        document.getElementById('prev-eyes-btn').onclick = () => { currentAvatar.eyePatch = (currentAvatar.eyePatch - 1 + avatarOptions.eyePatches.length) % avatarOptions.eyePatches.length; updateAvatarPreview(); };
+        // --- Event Listeners for new Avatar Controls ---
+        document.getElementById('next-skin-btn').onclick = () => { currentAvatar.skinTone = (currentAvatar.skinTone + 1) % avatarOptions.skinTones.length; updateAvatarPreview(); };
+        document.getElementById('prev-skin-btn').onclick = () => { currentAvatar.skinTone = (currentAvatar.skinTone - 1 + avatarOptions.skinTones.length) % avatarOptions.skinTones.length; updateAvatarPreview(); };
         
+        document.getElementById('next-shirt-color-btn').onclick = () => { currentAvatar.shirtColor = (currentAvatar.shirtColor + 1) % avatarOptions.shirtColors.length; updateAvatarPreview(); };
+        document.getElementById('prev-shirt-color-btn').onclick = () => { currentAvatar.shirtColor = (currentAvatar.shirtColor - 1 + avatarOptions.shirtColors.length) % avatarOptions.shirtColors.length; updateAvatarPreview(); };
+
+        document.getElementById('next-hair-style-btn').onclick = () => { currentAvatar.hairStyle = (currentAvatar.hairStyle + 1) % avatarOptions.hairStyles.length; updateAvatarPreview(); };
+        document.getElementById('prev-hair-style-btn').onclick = () => { currentAvatar.hairStyle = (currentAvatar.hairStyle - 1 + avatarOptions.hairStyles.length) % avatarOptions.hairStyles.length; updateAvatarPreview(); };
+
+        document.getElementById('next-hair-color-btn').onclick = () => { currentAvatar.hairColor = (currentAvatar.hairColor + 1) % avatarOptions.hairColors.length; updateAvatarPreview(); };
+        document.getElementById('prev-hair-color-btn').onclick = () => { currentAvatar.hairColor = (currentAvatar.hairColor - 1 + avatarOptions.hairColors.length) % avatarOptions.hairColors.length; updateAvatarPreview(); };
+
+        document.getElementById('next-eyes-btn').onclick = () => { currentAvatar.eyes = (currentAvatar.eyes + 1) % avatarOptions.eyes.length; updateAvatarPreview(); };
+        document.getElementById('prev-eyes-btn').onclick = () => { currentAvatar.eyes = (currentAvatar.eyes - 1 + avatarOptions.eyes.length) % avatarOptions.eyes.length; updateAvatarPreview(); };
+        
+        document.getElementById('next-facial-hair-btn').onclick = () => { currentAvatar.facialHair = (currentAvatar.facialHair + 1) % avatarOptions.facialHairs.length; updateAvatarPreview(); };
+        document.getElementById('prev-facial-hair-btn').onclick = () => { currentAvatar.facialHair = (currentAvatar.facialHair - 1 + avatarOptions.facialHairs.length) % avatarOptions.facialHairs.length; updateAvatarPreview(); };
+
+        // Initial call
         updateAvatarPreview();
 
 
@@ -576,7 +631,7 @@
                         cards: [], 
                         isAlive: true, 
                         revealedCards: [],
-                        avatar: currentAvatar
+                        avatar: currentAvatar // Save the customized avatar
                     };
 
                     if (isCreating) {
@@ -596,7 +651,7 @@
                             pendingAction: null,
                             playerUpdates: {},
                             turnStartTime: null,
-                            justUsedForeignAid: null, // **NEW** For Foreign Aid logic
+                            justUsedForeignAid: null, // For Foreign Aid logic
                         };
                         transaction.set(gameRef, newGameData);
                     } else {
@@ -981,7 +1036,7 @@
             if (!shouldShow) {
                  actionsContainer.innerHTML = '';
                  if(myTurn && (gameData.pendingAction || (gameData.playerUpdates && gameData.playerUpdates[currentUserId]))) {
-                   actionsContainer.innerHTML = `<p class="text-gray-400 animate-pulse">في انتظار ردود اللاعبين...</p>`;
+                    actionsContainer.innerHTML = `<p class="text-gray-400 animate-pulse">في انتظار ردود اللاعبين...</p>`;
                  }
                  return;
             }
@@ -1076,16 +1131,16 @@
                     const target = gameData.players[targetId];
                     // Rule adjustment for Coup on rich player
                     if (target.cards.length > 1 && gameData.players[currentUserId].coins >= 10) {
-                         updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
-                         updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
-                    } else if (target.cards.length === 1 && gameData.players[currentUserId].coins >= 10) {
                         updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
-                        updates[`players.${targetId}`].coins = 0;
-                        updates.log = arrayUnion(`<strong>${actorName}</strong> انقلب على <strong>${target.name}</strong>، الذي خسر كل عملاته بدلاً من نفوذه الأخير.`);
-                        updates.currentPlayerIndex = getNextPlayerIndex(gameData);
-                        updates.turnStartTime = serverTimestamp();
-                        await updateDoc(gameRef, updates);
-                        return;
+                        updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
+                    } else if (target.cards.length === 1 && gameData.players[currentUserId].coins >= 10) {
+                         updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
+                         updates[`players.${targetId}`].coins = 0;
+                         updates.log = arrayUnion(`<strong>${actorName}</strong> انقلب على <strong>${target.name}</strong>، الذي خسر كل عملاته بدلاً من نفوذه الأخير.`);
+                         updates.currentPlayerIndex = getNextPlayerIndex(gameData);
+                         updates.turnStartTime = serverTimestamp();
+                         await updateDoc(gameRef, updates);
+                         return;
                     } else { // Normal Coup
                          updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
                          updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
