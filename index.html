@@ -734,8 +734,8 @@
             scene.fog = new THREE.Fog(0x1a1a1a, 25, 50);
 
             // **MODIFIED:** Camera setup for a better mobile view
-            camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 16, 19); // Pulled back and up slightly
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 18, 22); // Pulled back and up for a better overview
             camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -795,10 +795,10 @@
              // **MODIFIED:** Slightly smaller cards
              const cardGeometry = new THREE.BoxGeometry(3.0, 4.15, 0.1);
              const materials = [
-                   new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
-                   new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
-                   new THREE.MeshStandardMaterial({ map: isFaceUp && cardTextures[cardType] ? cardTextures[cardType] : cardTextures.BACK }),
-                   new THREE.MeshStandardMaterial({ map: cardTextures.BACK })
+                     new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
+                     new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
+                     new THREE.MeshStandardMaterial({ map: isFaceUp && cardTextures[cardType] ? cardTextures[cardType] : cardTextures.BACK }),
+                     new THREE.MeshStandardMaterial({ map: cardTextures.BACK })
              ];
              const cardMesh = new THREE.Mesh(cardGeometry, materials);
              cardMesh.castShadow = true;
@@ -828,6 +828,7 @@
             
             const activePlayerIds = new Set(turnOrder);
 
+            // Clean up disconnected players
             for (const pid in playerObjects) {
                 if (!activePlayerIds.has(pid)) {
                     if (playerObjects[pid].infoDiv) {
@@ -854,17 +855,19 @@
                 const relativeIndex = (index - myIndex + turnOrder.length) % turnOrder.length;
                 const isMe = (relativeIndex === 0);
                 
-                // **MODIFIED:** Unified layout logic with adjusted radius for mobile
+                // **MODIFIED:** Unified layout logic with adjusted radius for better visibility on mobile
+                const radius = 8.5; // A consistent radius for all players
+                const yPos = isMe ? 2.5 : 1.5; // Keep self slightly higher, lower others
                 const angle = (relativeIndex / turnOrder.length) * Math.PI * 2;
-                const radius = isMe ? 8 : 9.5; // Reduced radius to bring players closer
-                const yPos = isMe ? 2.5 : 3.5;
+                // Position players around the circle
                 const x = Math.sin(angle) * radius;
                 const z = Math.cos(angle) * radius;
-        
+
                 updateCardGroup(playerObjects[pid].cards, player.cards, pid, 'active', { x, y: yPos, z }, angle, isMe);
                 updateCardGroup(playerObjects[pid].revealedCards, player.revealedCards, pid, 'revealed', { x, y: yPos, z }, angle, isMe);
         
-                const screenPos = toScreenPosition(new THREE.Vector3(x, yPos + 4.5, z), camera);
+                // **MODIFIED:** Adjusted UI offset to match new 3D positions
+                const screenPos = toScreenPosition(new THREE.Vector3(x, yPos + 3.8, z), camera);
                 
                 let infoDiv = playerObjects[pid].infoDiv;
                 if (!infoDiv) {
@@ -936,7 +939,7 @@
                 if (cardGroupType === 'active') {
                     const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier;
                     if (isMe) {
-                        targetPos = new THREE.Vector3(cardOffset, basePos.y, basePos.z);
+                        targetPos = new THREE.Vector3(cardOffset, basePos.y, basePos.z + 2); // Pull my cards closer to me
                         targetRot = new THREE.Euler(-Math.PI / 8, 0, 0);
                     } else {
                         targetPos = new THREE.Vector3(basePos.x, basePos.y, basePos.z);
@@ -955,7 +958,7 @@
                     const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier;
                     
                     const perpendicularAngle = angle - Math.PI / 2;
-                    const offsetVec = new THREE.Vector3(Math.sin(perpendicularAngle), 0, Math.cos(perpendicularAngle)).multiplyScalar(cardOffset);
+                    const offsetVec = new THREE.Vector3(Math.sin(perpendicularAngle), 0, Math.cos(perpendicularAngle)).multiplyScalar(cardOffset * 0.5); // reduced spread
 
                     targetPos = tablePos.add(offsetVec);
                     targetPos.y = 0.3;
@@ -1144,10 +1147,10 @@
         }
         
         function showGameOverScreen(winnerText, cleanupText) {
-              document.getElementById('winner-text').textContent = winnerText;
-              document.getElementById('cleanup-text').textContent = cleanupText;
-              document.getElementById('game-over-screen').style.display = 'flex';
-         }
+             document.getElementById('winner-text').textContent = winnerText;
+             document.getElementById('cleanup-text').textContent = cleanupText;
+             document.getElementById('game-over-screen').style.display = 'flex';
+        }
 
         async function deleteGameData(gameId) {
             if (!gameId) return;
@@ -1440,12 +1443,12 @@
                  const gameData = await transaction.get(gameRef).then(snap => snap.data());
                  
                  const updates = {
-                       [`players.${currentUserId}.cards`]: keptCards,
-                       [`playerUpdates.${currentUserId}`]: null,
-                       deck: shuffle([...gameData.deck, ...returnedCards]),
-                       log: arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> قام بتبديل بطاقاته.`),
-                       currentPlayerIndex: getNextPlayerIndex(gameData),
-                       turnStartTime: serverTimestamp()
+                         [`players.${currentUserId}.cards`]: keptCards,
+                         [`playerUpdates.${currentUserId}`]: null,
+                         deck: shuffle([...gameData.deck, ...returnedCards]),
+                         log: arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> قام بتبديل بطاقاته.`),
+                         currentPlayerIndex: getNextPlayerIndex(gameData),
+                         turnStartTime: serverTimestamp()
                  };
                  transaction.update(gameRef, updates);
              });
