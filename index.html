@@ -312,7 +312,26 @@
         width: 45px;
         height: 45px;
     }
-}</style>
+}
+
+/* أوضاع مختلفة لعرض واجهة اللاعب حسب موقعه حول الطاولة */
+.player-info.bottom-side {
+    transform: translateX(-50%) translateY(-140px);
+    text-align: center;
+}
+.player-info.top-side {
+    transform: translateX(-50%) translateY(20px);
+    text-align: center;
+}
+.player-info.left-side {
+    transform: translateX(-140px) translateY(-50%);
+    text-align: right;
+}
+.player-info.right-side {
+    transform: translateX(20px) translateY(-50%);
+    text-align: left;
+}
+</style>
 </head>
 <body>
 <div id="loading-overlay">
@@ -889,6 +908,20 @@
                 }
                 infoDiv.style.left = `${screenPos.x}px`;
                 infoDiv.style.top = `${screenPos.y}px`;
+
+        // تحديد موقع اللاعب على الطاولة لإعطاء الاتجاه المناسب للواجهة
+        const angleDeg = (angle * 180) / Math.PI;
+        let sideClass = 'bottom-side';
+        if (angleDeg >= 45 && angleDeg <= 135) {
+            sideClass = 'left-side';
+        } else if (angleDeg > 135 || angleDeg < -135) {
+            sideClass = 'top-side';
+        } else if (angleDeg >= -135 && angleDeg <= -45) {
+            sideClass = 'right-side';
+        }
+        infoDiv.classList.remove('bottom-side', 'top-side', 'left-side', 'right-side');
+        infoDiv.classList.add(sideClass);
+        
 
                 const avatarDiv = document.createElement('div');
                 avatarDiv.className = 'avatar';
