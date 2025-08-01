@@ -63,15 +63,11 @@
             top: 0; left: 0;
             width: 100%; height: 100%;
             pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
         }
         .ui-element {
             pointer-events: auto;
             background-color: var(--dark-ui);
-            padding: 8px 16px;
+            padding: 6px 12px;
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
@@ -82,10 +78,10 @@
             text-align: center;
             transform: translateX(-50%);
             transition: all 0.3s ease;
-            width: 120px; 
+            width: 100px;
         }
         .player-info .avatar {
-            width: 50px; height: 50px;
+            width: 40px; height: 40px;
             background-color: #4a4a4a;
             border-radius: 50%;
             border: 2px solid white;
@@ -93,7 +89,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
         }
         .player-info.current-turn .avatar {
@@ -106,23 +102,23 @@
         }
         .bottom-ui-container {
             position: absolute;
-            bottom: 0;
+            bottom: 10px;
             left: 0;
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 10px;
+            padding: 0 10px;
             box-sizing: border-box;
             pointer-events: none;
+            gap: 10px;
         }
         .action-buttons {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 10px;
-            margin-bottom: 10px;
-            max-width: 95%;
+            gap: 8px;
+            max-width: 100%;
             width: 100%;
             pointer-events: auto;
         }
@@ -130,19 +126,20 @@
             background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 10px;
             border-radius: 10px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            flex-shrink: 0;
+            flex-grow: 1;
+            flex-basis: 85px; /* Adjust basis for better wrapping */
+            text-align: center;
         }
         .action-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-            background: linear-gradient(145deg, #6a6a6a, #4a4a4a);
         }
         .action-btn:disabled {
             opacity: 0.5;
@@ -175,21 +172,6 @@
             color: var(--dark-bg);
             font-weight: bold;
         }
-        .message-log {
-            width: 300px;
-            height: 120px;
-            background-color: rgba(0,0,0,0.5);
-            border-radius: 10px;
-            padding: 10px;
-            overflow-y: auto;
-            display: flex; 
-            flex-direction: column-reverse;
-            font-size: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            pointer-events: auto;
-            margin-bottom: 10px;
-        }
-        .message-log p { margin: 3px 0; line-height: 1.4; }
         .modal {
             position: fixed;
             z-index: 50;
@@ -217,7 +199,7 @@
             gap: 10px;
         }
         .card-selection-container img {
-            width: 80px;
+            width: 70px;
             height: auto;
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -234,7 +216,7 @@
         }
         #turn-timer {
             position: absolute;
-            top: 20px;
+            top: 15px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 24px;
@@ -243,45 +225,12 @@
             text-shadow: 0 0 10px var(--yellow-glow);
             display: none;
         }
-
-        /* Mobile Responsiveness */
-        @media (max-width: 768px) {
-            .action-btn {
-                padding: 12px;
-                font-size: 13px;
-                min-width: 80px;
-            }
-            .action-buttons {
-                gap: 5px;
-            }
-            .message-log {
-                width: 90vw;
-                height: 100px;
-                font-size: 12px;
-                margin-bottom: 5px;
-            }
-            .player-info {
-                width: 90px;
-            }
-            .player-info .avatar {
-                width: 40px;
-                height: 40px;
-                font-size: 20px;
-            }
-            .modal-content {
-                padding: 15px;
-            }
-            .card-selection-container img {
-                width: 70px;
-            }
-            .ui-element {
-                padding: 6px 12px;
-            }
-            .top-right-ui {
-                top: 10px !important;
-                right: 10px !important;
-            }
+        .top-info-bar {
+            position: absolute;
+            top: 15px;
+            left: 15px;
         }
+
     </style>
 </head>
 <body>
@@ -316,11 +265,10 @@
     <div id="ui-overlay" class="ui-overlay" style="display: none;">
         <div id="player-infos" class="w-full h-full absolute"></div>
         <div id="turn-timer" class="ui-element"></div>
-        <div class="absolute top-4 right-4 ui-element top-right-ui">
+         <div class="top-info-bar ui-element">
             <p>رمز اللعبة: <strong id="game-id-ingame"></strong></p>
         </div>
         <div class="bottom-ui-container">
-            <div id="message-log" class="message-log"></div>
             <div id="action-buttons" class="action-buttons"></div>
         </div>
     </div>
@@ -560,7 +508,7 @@
                 } else if (gameData.gameState === 'active' || gameData.gameState === 'finished') {
                     if (lobbyEl.style.display !== 'none') {
                         lobbyEl.style.display = 'none';
-                        document.getElementById('ui-overlay').style.display = 'flex';
+                        document.getElementById('ui-overlay').style.display = 'block';
                         initThreeJS();
                         listenToGameUpdates(gameId); 
                     }
@@ -639,10 +587,10 @@
             
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x1a1a1a);
-            scene.fog = new THREE.Fog(0x1a1a1a, 28, 55);
+            scene.fog = new THREE.Fog(0x1a1a1a, 25, 50);
 
-            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 15, 22);
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 18, 20);
             camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -705,7 +653,7 @@
         }
         
         function createCardMesh(cardType, isFaceUp = false) {
-             const cardGeometry = new THREE.BoxGeometry(3.2, 4.4, 0.1);
+             const cardGeometry = new THREE.BoxGeometry(3.5, 4.8, 0.1); // Slightly larger cards for mobile
              const materials = [
                  new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
                  new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
@@ -721,14 +669,6 @@
         function onWindowResize() {
             if (!camera || !renderer) return;
             camera.aspect = window.innerWidth / window.innerHeight;
-            if (window.innerWidth < 768) {
-                camera.fov = 70;
-                camera.position.set(0, 16, 18); 
-            } else {
-                camera.fov = 50;
-                camera.position.set(0, 15, 22);
-            }
-            camera.lookAt(0,0,0);
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
@@ -745,8 +685,25 @@
             const { players, turnOrder, currentPlayerIndex } = gameData;
             const myIndex = turnOrder.indexOf(currentUserId);
             
+            // This is the container for player info divs, clear it before redrawing
             document.getElementById('player-infos').innerHTML = '';
         
+            // Mobile-first player layout (up to 6 players)
+            const playerLayout = [
+                // Player 0 (Me)
+                { pos: new THREE.Vector3(0, 2.5, 14), infoYOffset: 230 },
+                // Player 1 (Opponent directly opposite)
+                { pos: new THREE.Vector3(0, 4, -12), infoYOffset: 15 },
+                // Player 2 (Opponent top-left)
+                { pos: new THREE.Vector3(-11, 4, -5), infoYOffset: 50 },
+                // Player 3 (Opponent top-right)
+                { pos: new THREE.Vector3(11, 4, -5), infoYOffset: 50 },
+                // Player 4 (Opponent far-left)
+                { pos: new THREE.Vector3(-12, 4, 3), infoYOffset: 100 },
+                // Player 5 (Opponent far-right)
+                { pos: new THREE.Vector3(12, 4, 3), infoYOffset: 100 },
+            ];
+
             turnOrder.forEach((pid, index) => {
                 const player = players[pid];
                 if (!player) return;
@@ -756,36 +713,19 @@
                 }
         
                 const relativeIndex = (index - myIndex + turnOrder.length) % turnOrder.length;
-                
-                let x, z, yPos, angle;
-                let isMe = (relativeIndex === 0);
+                const slot = playerLayout[relativeIndex];
+                if (!slot) return; // Should not happen for <= 6 players
 
-                if (window.innerWidth < 768) {
-                    const mobilePositions = [
-                        { x: 0, z: 12, y: 2 },
-                        { x: 0, z: -12, y: 4 },
-                        { x: -10, z: -3, y: 4 },
-                        { x: 10, z: -3, y: 4 },
-                        { x: -7, z: -9, y: 4 },
-                        { x: 7, z: -9, y: 4 }
-                    ];
-                    const pos = mobilePositions[relativeIndex];
-                    x = pos.x;
-                    z = pos.z;
-                    yPos = pos.y;
-                    angle = Math.atan2(x, z);
-                } else {
-                    const radius = isMe ? 15 : 16;
-                    yPos = isMe ? 2 : 4;
-                    angle = (relativeIndex / turnOrder.length) * Math.PI * 2;
-                    x = Math.sin(angle) * radius;
-                    z = Math.cos(angle) * radius;
-                }
+                const { pos, infoYOffset } = slot;
+                const isMe = (relativeIndex === 0);
+                
+                updateCardGroup(playerObjects[pid].cards, player.cards, pid, 'active', pos, isMe);
+                updateCardGroup(playerObjects[pid].revealedCards, player.revealedCards, pid, 'revealed', pos, isMe);
         
-                updateCardGroup(playerObjects[pid].cards, player.cards, pid, 'active', { x, y: yPos, z }, angle, isMe);
-                updateCardGroup(playerObjects[pid].revealedCards, player.revealedCards, pid, 'revealed', { x, y: yPos, z }, angle, isMe);
-        
-                const screenPos = toScreenPosition(new THREE.Vector3(x, yPos + (isMe ? 4.5 : 5.5), z), camera);
+                // Position the HTML info div for each player
+                const screenPosVector = isMe ? new THREE.Vector3(pos.x, pos.y + 4.5, pos.z) : new THREE.Vector3(pos.x, pos.y + 2.5, pos.z);
+                const screenPos = toScreenPosition(screenPosVector, camera);
+                
                 let infoDiv = playerObjects[pid].infoDiv;
                 if (!infoDiv) {
                     infoDiv = document.createElement('div');
@@ -798,24 +738,26 @@
                 if (turnOrder[currentPlayerIndex] === pid && player.isAlive) {
                     infoDiv.classList.add('current-turn');
                 }
+                
+                // Use a combination of calculated position and fixed offset for robustness
                 infoDiv.style.left = `${screenPos.x}px`;
-                infoDiv.style.top = `${screenPos.y}px`;
+                infoDiv.style.top = isMe ? `${window.innerHeight - infoYOffset}px` : `${infoYOffset}px`;
+
                 infoDiv.innerHTML = `<div class="avatar">${player.name.charAt(0)}</div><div class="font-bold">${player.name}</div><div>💰 ${player.coins}</div>`;
             });
         
             updateActionButtons(gameData);
-            updateMessageLog(gameData);
             updateTurnTimer(gameData);
         }
         
-        function updateCardGroup(meshArray, dataArray, pid, cardGroupType, basePos, angle, isMe) {
+        function updateCardGroup(meshArray, dataArray, pid, cardGroupType, basePos, isMe) {
             while (meshArray.length > dataArray.length) {
                 scene.remove(meshArray.pop());
             }
         
             while (meshArray.length < dataArray.length) {
                 const newMesh = createCardMesh(null, cardGroupType === 'revealed');
-                newMesh.position.set(basePos.x, basePos.y, basePos.z);
+                newMesh.position.copy(basePos);
                 scene.add(newMesh);
                 meshArray.push(newMesh);
             }
@@ -832,31 +774,37 @@
                 }
         
                 let targetPos, targetRot;
-                const cardOffsetMultiplier = 3.8;
+                const lookAtCameraVector = new THREE.Vector3(0, basePos.y, basePos.z).sub(camera.position).normalize();
                 
                 if (cardGroupType === 'active') {
-                    const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier;
+                    const cardSpread = isMe ? 2.2 : 1.0;
+                    const fanRotation = isMe ? Math.PI / 20 : Math.PI / 40;
+                    
+                    const offset = (i - (dataArray.length - 1) / 2.0);
+                    targetPos = basePos.clone().add(new THREE.Vector3(offset * cardSpread, 0, 0));
+                    
                     if (isMe) {
-                        targetPos = new THREE.Vector3(cardOffset, basePos.y, basePos.z);
-                        targetRot = new THREE.Euler(-Math.PI / 8, 0, 0);
+                        targetRot = new THREE.Euler(-Math.PI / 8, 0, offset * -fanRotation);
                     } else {
-                        targetPos = new THREE.Vector3(basePos.x + cardOffset * 0.3, basePos.y, basePos.z);
                         const tempLookAt = cardMesh.clone();
                         tempLookAt.position.copy(targetPos);
                         tempLookAt.lookAt(camera.position);
                         targetRot = tempLookAt.rotation.clone();
+                        targetRot.z += offset * -fanRotation; // Fan opponent cards slightly
                     }
-                } else { 
-                    const tableRadius = isMe ? 8 : 7;
-                    const tablePos = new THREE.Vector3(basePos.x, 0.2, basePos.z).normalize().multiplyScalar(tableRadius);
-                    const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier;
-                    
-                    const perpendicularAngle = angle - Math.PI / 2;
-                    const offsetVec = new THREE.Vector3(Math.sin(perpendicularAngle), 0, Math.cos(perpendicularAngle)).multiplyScalar(cardOffset);
+                } else { // Revealed cards
+                    const tableRadius = 8;
+                    const tablePos = new THREE.Vector3(basePos.x, 0, basePos.z).normalize().multiplyScalar(tableRadius);
+                    const cardSpread = 2.0;
+                    const offset = (i - (dataArray.length - 1) / 2.0);
 
-                    targetPos = tablePos.add(offsetVec);
+                    // Align revealed cards perpendicular to the line from player to center
+                    const perpVec = new THREE.Vector3(basePos.z, 0, -basePos.x).normalize();
+                    targetPos = tablePos.add(perpVec.multiplyScalar(offset * cardSpread));
                     targetPos.y = 0.3;
-                    targetRot = new THREE.Euler(-Math.PI / 2.3, 0, -angle);
+
+                    const angleToCenter = Math.atan2(basePos.x, basePos.z);
+                    targetRot = new THREE.Euler(-Math.PI / 2, 0, -angleToCenter + Math.PI);
                 }
         
                 gsap.to(cardMesh.position, { duration: 0.5, x: targetPos.x, y: targetPos.y, z: targetPos.z });
@@ -866,19 +814,12 @@
         
         function updateActionButtons(gameData) {
             const actionsContainer = document.getElementById('action-buttons');
-            const playerInfoContainer = document.getElementById('player-infos');
             actionsContainer.innerHTML = '';
             
             const myTurn = gameData.turnOrder[gameData.currentPlayerIndex] === currentUserId;
             const me = gameData.players[currentUserId];
             
             const shouldShow = gameData.gameState === 'active' && myTurn && me?.isAlive && !gameData.pendingAction && (!gameData.playerUpdates || !gameData.playerUpdates[currentUserId]);
-
-            if (shouldShow) {
-                playerInfoContainer.style.pointerEvents = 'none'; 
-            } else {
-                 playerInfoContainer.style.pointerEvents = 'auto';
-            }
 
             if (!shouldShow) return;
 
@@ -892,25 +833,13 @@
             addActionBtn('دخل (1💰)', () => initiateAction('Income'));
             addActionBtn('مساعدة أجنبية (2💰)', () => initiateAction('Foreign Aid'));
             if (myCoins >= 7) addActionBtn('انقلاب (7💰)', () => showTargetSelection('Coup'));
-            addActionBtn('اغتيال (3💰)', () => showTargetSelection('Assassinate'), myCoins < 3);
             addActionBtn('ضرائب (الدوق)', () => initiateAction('Tax'));
+            addActionBtn('اغتيال (3💰)', () => showTargetSelection('Assassinate'), myCoins < 3);
             addActionBtn('سرقة (القبطان)', () => showTargetSelection('Steal'));
             addActionBtn('تبديل (السفير)', () => initiateAction('Exchange'));
         }
-        
-        function updateMessageLog(gameData) {
-            const messageLog = document.getElementById('message-log');
-            messageLog.innerHTML = '';
-            if(!gameData.log) return;
-            messageLog.style.display = 'flex';
-            gameData.log.slice(-15).reverse().forEach(msg => {
-                const p = document.createElement('p');
-                p.innerHTML = msg; 
-                messageLog.appendChild(p);
-            });
-        }
 
-        // --- CORE GAME FLOW & TIMER ---
+        // --- CORE GAME FLOW & TIMER (Functions from here are mostly unchanged but included for completeness) ---
         async function forceEndTurn() {
             const gameRef = doc(db, 'games', currentGameId);
             await runTransaction(db, async (transaction) => {
@@ -1418,7 +1347,8 @@
             try {
                 await deleteDoc(doc(db, 'games', gameId));
             } catch (error) {
-                // Errors are intentionally silenced as requested
+                // As requested, errors during cleanup are intentionally silenced
+                // to prevent any user-facing error messages on game-end.
             }
         }
         
