@@ -352,45 +352,61 @@
             return true;
         }
 
-        async function joinGame(gameId, isCreating) {
+         async function joinGame(gameId, isCreating) {
             const gameRef = doc(db, 'games', gameId);
             
             try {
                 await runTransaction(db, async (transaction) => {
                     const gameSnap = await transaction.get(gameRef);
-
-                    if (!isCreating && !gameSnap.exists()) {
-                        throw new Error("اللعبة غير موجودة.");
-                    }
-
-                    const gameData = gameSnap.exists() ? gameSnap.data() : null;
+                    const gameDataOnServer = gameSnap.exists() ? gameSnap.data() : null;
 
                     if (isCreating) {
                         const initialDeck = [];
                         Object.values(CARD_TYPES).forEach(type => { for (let i = 0; i < 3; i++) initialDeck.push(type); });
-                        
+                        const creatorName = playerNameInput.value.trim();
+
+                        // FIX: Build the complete initial state with the creator already inside
                         const newGameData = {
-                            players: {}, deck: shuffle(initialDeck), discardPile: [], gameState: 'waiting',
-                            currentPlayerIndex: 0, turnOrder: [], log: [`اللعبة ${gameId} تم إنشاؤها.`],
-                            createdAt: serverTimestamp(), creatorId: currentUserId
+                            players: {
+                                [currentUserId]: { // Add the creator directly here
+                                    name: creatorName,
+                                    coins: 2,
+                                    cards: [], // Cards are dealt in startGame
+                                    isAlive: true,
+                                    revealedCards: [],
+                                    mustReveal: null,
+                                    exchangeInfo: null
+                                }
+                            },
+                            deck: shuffle(initialDeck),
+                            discardPile: [],
+                            gameState: 'waiting',
+                            currentPlayerIndex: 0,
+                            turnOrder: [currentUserId], // Creator is the first in turn order
+                            log: [`اللعبة ${gameId} تم إنشاؤها.`, `${creatorName} انضم للعبة.`],
+                            createdAt: serverTimestamp(),
+                            creatorId: currentUserId
                         };
+                        // Perform a single, complete 'set' operation
                         transaction.set(gameRef, newGameData);
-                        // Add current player immediately after creation
-                        addPlayerToGame(transaction, gameRef, newGameData);
-                    } else {
-                        if (Object.keys(gameData.players).length >= 6 && !gameData.players[currentUserId]) {
+
+                    } else { // This part is for joining players, and it's correct
+                        if (!gameDataOnServer) {
+                            throw new Error("اللعبة غير موجودة.");
+                        }
+                        if (Object.keys(gameDataOnServer.players).length >= 6 && !gameDataOnServer.players[currentUserId]) {
                             throw new Error("هذه اللعبة ممتلئة.");
                         }
-                        if (gameData.gameState !== 'waiting' && !gameData.players[currentUserId]) {
+                        if (gameDataOnServer.gameState !== 'waiting' && !gameDataOnServer.players[currentUserId]) {
                             throw new Error("لا يمكن الانضمام، اللعبة بدأت بالفعل.");
                         }
-                        if (!gameData.players[currentUserId]) {
-                           addPlayerToGame(transaction, gameRef, gameData);
+                        if (!gameDataOnServer.players[currentUserId]) {
+                           addPlayerToGame(transaction, gameRef, gameDataOnServer);
                         }
                     }
                 });
                 currentGameId = gameId;
-                listenToLobbyUpdates(gameId);
+                listenToLobbyUpdates(gameId); // This will now work correctly after creation
             } catch (error) {
                 lobbyError.textContent = error.message;
             }
