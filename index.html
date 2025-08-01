@@ -431,7 +431,7 @@
         onAuthStateChanged(auth, user => {
             if (user) {
                 currentUserId = user.uid;
-                console.log("Authenticated User ID:", currentUserId);
+                // console.log("Authenticated User ID:", currentUserId); // Removed as requested
                 if (texturesPreloaded) {
                     loadingOverlay.classList.add('hidden');
                 }
@@ -441,7 +441,7 @@
         });
         
         preloadTextures(() => {
-            console.log("All card textures have been preloaded.");
+            // console.log("All card textures have been preloaded."); // Removed as requested
             texturesPreloaded = true;
             if (currentUserId) {
                 loadingOverlay.classList.add('hidden');
@@ -1361,10 +1361,10 @@
 
         async function deleteGameData(gameId) {
             if (!gameId) return;
-            console.log(`Deleting game data for ${gameId}...`);
+            // console.log(`Deleting game data for ${gameId}...`); // Removed as requested
             try {
                 await deleteDoc(doc(db, 'games', gameId));
-                console.log("Game data deleted successfully.");
+                // console.log("Game data deleted successfully."); // Removed as requested
             } catch (error) {
                 console.error("Error deleting game data:", error);
             }
