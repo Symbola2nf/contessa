@@ -182,7 +182,7 @@
             border-radius: 10px;
             padding: 10px;
             overflow-y: auto;
-            display: none; /* تم التغيير هنا لإخفاء سجل الأحداث */
+            display: flex; /* Changed */
             flex-direction: column-reverse;
             font-size: 14px;
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -713,7 +713,7 @@
         }
         
         function createCardMesh(cardType, isFaceUp = false) {
-             const cardGeometry = new THREE.BoxGeometry(2.5, 3.5, 0.1);
+             const cardGeometry = new THREE.BoxGeometry(2.8, 3.9, 0.1); // CHANGE: Increased card size
              const materials = [
                  new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
                  new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
@@ -722,7 +722,7 @@
              ];
              const cardMesh = new THREE.Mesh(cardGeometry, materials);
              cardMesh.castShadow = true;
-             cardMesh.userData = { type: cardType };
+             cardMesh.userData = { type: cardType, isFaceUp: isFaceUp }; // Store type and state
              return cardMesh;
         }
 
@@ -746,32 +746,25 @@
             if(renderer) renderer.render(scene, camera);
         }
         
-        // --- GAME STATE RENDERING ---
+        // --- GAME STATE RENDERING (REFACTORED) ---
         function renderGameState(gameData) {
             if (!scene) return;
-            
+        
             const { players, turnOrder, currentPlayerIndex } = gameData;
             const myIndex = turnOrder.indexOf(currentUserId);
             
-            const existingPids = Object.keys(playerObjects);
-            const currentPids = turnOrder;
-            
-            const pidsToRemove = existingPids.filter(pid => !currentPids.includes(pid));
-            pidsToRemove.forEach(pid => {
-                if (playerObjects[pid]) {
-                    playerObjects[pid].cards?.forEach(card => scene.remove(card));
-                    playerObjects[pid].revealedCards?.forEach(card => scene.remove(card));
-                    delete playerObjects[pid];
-                }
-            });
+            // Cleanup UI for players who might have left
             document.getElementById('player-infos').innerHTML = '';
-
+        
             turnOrder.forEach((pid, index) => {
                 const player = players[pid];
                 if (!player) return;
-
-                if (!playerObjects[pid]) playerObjects[pid] = { cards: [], revealedCards: [] };
-
+        
+                // Ensure player object container exists
+                if (!playerObjects[pid]) {
+                    playerObjects[pid] = { cards: [], revealedCards: [], infoDiv: null };
+                }
+        
                 const relativeIndex = (index - myIndex + turnOrder.length) % turnOrder.length;
                 const angle = (relativeIndex / turnOrder.length) * Math.PI * 2;
                 
@@ -780,50 +773,24 @@
                 const yPos = isMe ? 2 : 4;
                 const x = Math.sin(angle) * radius;
                 const z = Math.cos(angle) * radius;
-
-                playerObjects[pid].cards.forEach(card => scene.remove(card));
-                playerObjects[pid].cards = [];
-                
-                player.cards.forEach((cardType, i) => {
-                    const cardMesh = createCardMesh(cardType, isMe);
-                    const cardOffset = (i - (player.cards.length - 1) / 2) * 3.0;
-                    
-                    let targetPos, targetRot;
-                    if (isMe) {
-                        targetPos = new THREE.Vector3(cardOffset, yPos, z);
-                        targetRot = new THREE.Euler(-Math.PI / 8, 0, 0);
-                    } else {
-                        targetPos = new THREE.Vector3(x + cardOffset * 0.3, yPos, z);
-                        cardMesh.lookAt(camera.position); 
-                        targetRot = cardMesh.rotation.clone();
-                    }
-                    
-                    gsap.to(cardMesh.position, { duration: 0.5, x: targetPos.x, y: targetPos.y, z: targetPos.z });
-                    gsap.to(cardMesh.rotation, { duration: 0.5, x: targetRot.x, y: targetRot.y, z: targetRot.z });
-                    
-                    scene.add(cardMesh);
-                    playerObjects[pid].cards.push(cardMesh);
-                });
-                
-                playerObjects[pid].revealedCards?.forEach(card => scene.remove(card));
-                playerObjects[pid].revealedCards = [];
-
-                player.revealedCards.forEach((cardType, i) => {
-                    const cardMesh = createCardMesh(cardType, true);
-                    const tablePos = new THREE.Vector3(x, 0.2, z).normalize().multiplyScalar(8);
-                    const cardOffset = (i - (player.revealedCards.length - 1) / 2) * 3.0;
-                    const finalPos = tablePos.add(new THREE.Vector3(Math.cos(angle) * cardOffset, 0, -Math.sin(angle) * cardOffset));
-
-                    gsap.to(cardMesh.position, { duration: 0.5, x: finalPos.x, y: 0.3, z: finalPos.z });
-                    gsap.to(cardMesh.rotation, { duration: 0.5, x: -Math.PI / 2, y: 0, z: -angle });
-                    
-                    scene.add(cardMesh);
-                    playerObjects[pid].revealedCards.push(cardMesh);
-                });
-
-                const screenPos = toScreenPosition(new THREE.Vector3(x, yPos + (isMe ? 1.5 : 3.5), z), camera);
-                const infoDiv = document.createElement('div');
-                infoDiv.className = 'player-info ui-element';
+        
+                // Sync active cards
+                updateCardGroup(playerObjects[pid].cards, player.cards, pid, 'active', { x, y: yPos, z }, angle, isMe);
+        
+                // Sync revealed cards
+                updateCardGroup(playerObjects[pid].revealedCards, player.revealedCards, pid, 'revealed', { x, y: yPos, z }, angle, isMe);
+        
+                // Update or create player info div
+                const screenPos = toScreenPosition(new THREE.Vector3(x, yPos + (isMe ? 3.0 : 4.5), z), camera); // CHANGE: Increased Y-offset
+                let infoDiv = playerObjects[pid].infoDiv;
+                if (!infoDiv) {
+                    infoDiv = document.createElement('div');
+                    infoDiv.className = 'player-info ui-element';
+                    document.getElementById('player-infos').appendChild(infoDiv);
+                    playerObjects[pid].infoDiv = infoDiv;
+                }
+        
+                infoDiv.className = 'player-info ui-element'; // Reset classes
                 if (!player.isAlive) infoDiv.classList.add('eliminated');
                 if (turnOrder[currentPlayerIndex] === pid && player.isAlive) {
                     infoDiv.classList.add('current-turn');
@@ -831,12 +798,65 @@
                 infoDiv.style.left = `${screenPos.x}px`;
                 infoDiv.style.top = `${screenPos.y}px`;
                 infoDiv.innerHTML = `<div class="avatar">${player.name.charAt(0)}</div><div class="font-bold">${player.name}</div><div>💰 ${player.coins}</div>`;
-                document.getElementById('player-infos').appendChild(infoDiv);
             });
-            
+        
             updateActionButtons(gameData);
             updateMessageLog(gameData);
             updateTurnTimer(gameData);
+        }
+        
+        // Helper function for the refactored renderGameState
+        function updateCardGroup(meshArray, dataArray, pid, cardGroupType, basePos, angle, isMe) {
+            // Remove extra meshes if data array is smaller
+            while (meshArray.length > dataArray.length) {
+                scene.remove(meshArray.pop());
+            }
+        
+            // Add new meshes if data array is larger
+            while (meshArray.length < dataArray.length) {
+                const newMesh = createCardMesh(null, cardGroupType === 'revealed');
+                newMesh.position.set(basePos.x, basePos.y, basePos.z); // Start at player position
+                scene.add(newMesh);
+                meshArray.push(newMesh);
+            }
+        
+            // Update all meshes in the array
+            dataArray.forEach((cardType, i) => {
+                const cardMesh = meshArray[i];
+                const isFaceUp = (isMe && cardGroupType === 'active') || cardGroupType === 'revealed';
+        
+                // Update texture if necessary
+                if (cardMesh.userData.type !== cardType || cardMesh.userData.isFaceUp !== isFaceUp) {
+                    cardMesh.material[4].map = isFaceUp ? cardTextures[cardType] : cardTextures.BACK;
+                    cardMesh.material[4].needsUpdate = true;
+                    cardMesh.userData.type = cardType;
+                    cardMesh.userData.isFaceUp = isFaceUp;
+                }
+        
+                let targetPos, targetRot;
+                if (cardGroupType === 'active') {
+                    const cardOffset = (i - (dataArray.length - 1) / 2) * 3.4; // CHANGE: Increased offset
+                    if (isMe) {
+                        targetPos = new THREE.Vector3(cardOffset, basePos.y, basePos.z);
+                        targetRot = new THREE.Euler(-Math.PI / 8, 0, 0);
+                    } else {
+                        targetPos = new THREE.Vector3(basePos.x + cardOffset * 0.3, basePos.y, basePos.z);
+                        const tempLookAt = cardMesh.clone();
+                        tempLookAt.position.copy(targetPos);
+                        tempLookAt.lookAt(camera.position);
+                        targetRot = tempLookAt.rotation.clone();
+                    }
+                } else { // Revealed cards
+                    const tablePos = new THREE.Vector3(basePos.x, 0.2, basePos.z).normalize().multiplyScalar(8);
+                    const cardOffset = (i - (dataArray.length - 1) / 2) * 3.4; // CHANGE: Increased offset
+                    targetPos = tablePos.add(new THREE.Vector3(Math.cos(angle) * cardOffset, 0, -Math.sin(angle) * cardOffset));
+                    targetPos.y = 0.3;
+                    targetRot = new THREE.Euler(-Math.PI / 2, 0, -angle);
+                }
+        
+                gsap.to(cardMesh.position, { duration: 0.5, x: targetPos.x, y: targetPos.y, z: targetPos.z });
+                gsap.to(cardMesh.rotation, { duration: 0.5, x: targetRot.x, y: targetRot.y, z: targetRot.z });
+            });
         }
         
         function updateActionButtons(gameData) {
@@ -870,6 +890,8 @@
             const messageLog = document.getElementById('message-log');
             messageLog.innerHTML = '';
             if(!gameData.log) return;
+            // Make sure the log is visible
+            messageLog.style.display = 'flex';
             gameData.log.slice(-15).reverse().forEach(msg => {
                 const p = document.createElement('p');
                 p.innerHTML = msg; 
@@ -943,8 +965,22 @@
 
             const unchallengable = ['Income', 'Coup'];
             if (unchallengable.includes(actionType)) {
+                 // CHANGE: Handle special Coup case for players with 10+ coins
+                if (actionType === 'Coup') {
+                    const target = gameData.players[targetId];
+                    if (target && target.coins >= 10) {
+                        updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
+                        updates[`players.${targetId}.coins`] = 0;
+                        updates.log = arrayUnion(`<strong>${actorName}</strong> انقلب على <strong>${target.name}</strong>، الذي خسر كل عملاته بدلاً من نفوذه.`);
+                        updates.currentPlayerIndex = getNextPlayerIndex(gameData);
+                        updates.turnStartTime = serverTimestamp();
+                        await updateDoc(gameRef, updates);
+                        return; // Exit early as this action resolves instantly
+                    }
+                }
+                
                 Object.assign(updates, getActionEffects(gameData, { actorId: currentUserId, actionType, targetId }));
-                if (actionType !== 'Coup') {
+                if (actionType !== 'Coup') { // Normal Coup waits for reveal
                     updates.currentPlayerIndex = getNextPlayerIndex(gameData);
                     updates.turnStartTime = serverTimestamp();
                 }
@@ -1030,7 +1066,12 @@
                         if (allPassed) {
                             updates.log = arrayUnion(`الجميع تجاهل. <strong>${players[pendingAction.actorId].name}</strong> نجح في حركة <strong>${pendingAction.actionType}</strong>.`);
                             Object.assign(updates, getActionEffects(gameData, pendingAction));
-                            if (pendingAction.actionType !== 'Exchange' && pendingAction.actionType !== 'Assassinate') {
+                            
+                            // CHANGE: Logic for Foreign Aid double play
+                            if (pendingAction.actionType === 'Foreign Aid') {
+                                updates.log = arrayUnion(`<strong>${players[pendingAction.actorId].name}</strong> يلعب مرة أخرى.`);
+                                // Do not advance turn, let the player play again
+                            } else if (pendingAction.actionType !== 'Exchange' && pendingAction.actionType !== 'Assassinate') {
                                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
                                 updates.turnStartTime = serverTimestamp();
                             }
@@ -1095,6 +1136,9 @@
                 updates.log = arrayUnion(`تحدي ناجح! <strong>${actor.name}</strong> كان يكذب ويخسر نفوذًا.`);
                 updates[`playerUpdates.${action.actorId}`] = { type: 'mustReveal', reason: 'تم كشف كذبتك.' };
                 updates.pendingAction = null; 
+                // Since the action failed, we advance the turn
+                updates.currentPlayerIndex = getNextPlayerIndex(gameData);
+                updates.turnStartTime = serverTimestamp();
             }
             transaction.update(doc(db, 'games', currentGameId), updates);
         }
@@ -1102,7 +1146,7 @@
         async function resolveBlockChallenge(transaction, gameData, action, challengerId) {
             const { players, deck } = gameData;
             const blocker = players[action.blockerId];
-            const challenger = players[challengerId];
+            const challenger = players[challengerId]; // This is the original action actor
             const updates = {};
             const blockClaim = action.blockCard;
 
@@ -1119,11 +1163,15 @@
                 updates.deck = shuffle(newDeck);
                 updates.log = arrayUnion(`${blocker.name} أظهر بطاقة ${CARD_TRANSLATIONS[revealedCard]} وسحب واحدة جديدة.`);
                 
+                // Block was successful, action fails, advance turn
                 updates.pendingAction = null;
+                updates.currentPlayerIndex = getNextPlayerIndex(gameData);
+                updates.turnStartTime = serverTimestamp();
             } else { // Block challenge SUCCEEDED
                 updates.log = arrayUnion(`تحدي ناجح! <strong>${blocker.name}</strong> كان يكذب ويخسر نفوذًا.`);
                 updates[`playerUpdates.${action.blockerId}`] = { type: 'mustReveal', reason: 'تم كشف كذبة المنع.' };
                 
+                // Block fails, so original action goes through
                 Object.assign(updates, getActionEffects(gameData, action));
                 updates.pendingAction = null; 
             }
@@ -1140,6 +1188,7 @@
                 case 'Foreign Aid': updates[`players.${actorId}.coins`] = actorCoins + 2; break;
                 case 'Tax': updates[`players.${actorId}.coins`] = actorCoins + 3; break;
                 case 'Coup':
+                    // This is now only for regular coups, 10+ coin case is handled in initiateAction
                     updates[`players.${actorId}.coins`] = actorCoins - 7;
                     updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
                     break;
@@ -1185,14 +1234,15 @@
                 player.revealedCards.push(cardToReveal);
 
                 const updates = {};
-                updates[`players.${currentUserId}`] = player;
-                updates[`playerUpdates.${currentUserId}`] = null;
                 
                 let logMessage = `<strong>${player.name}</strong> يكشف ويخسر <strong>${CARD_TRANSLATIONS[cardToReveal]}</strong>.`;
                 if (player.cards.length === 0) {
                     player.isAlive = false;
                     logMessage += ` <strong>${player.name}</strong> تم إقصاؤه!`;
                 }
+
+                updates[`players.${currentUserId}`] = player;
+                updates[`playerUpdates.${currentUserId}`] = null;
                 
                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
                 updates.turnStartTime = serverTimestamp();
