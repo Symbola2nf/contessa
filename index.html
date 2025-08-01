@@ -182,7 +182,7 @@
             border-radius: 10px;
             padding: 10px;
             overflow-y: auto;
-            display: flex;
+            display: none; /* تم التغيير هنا لإخفاء سجل الأحداث */
             flex-direction: column-reverse;
             font-size: 14px;
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -431,7 +431,7 @@
         onAuthStateChanged(auth, user => {
             if (user) {
                 currentUserId = user.uid;
-                // console.log("Authenticated User ID:", currentUserId); // Removed as requested
+                console.log("Authenticated User ID:", currentUserId);
                 if (texturesPreloaded) {
                     loadingOverlay.classList.add('hidden');
                 }
@@ -441,7 +441,7 @@
         });
         
         preloadTextures(() => {
-            // console.log("All card textures have been preloaded."); // Removed as requested
+            console.log("All card textures have been preloaded.");
             texturesPreloaded = true;
             if (currentUserId) {
                 loadingOverlay.classList.add('hidden');
@@ -713,7 +713,7 @@
         }
         
         function createCardMesh(cardType, isFaceUp = false) {
-             const cardGeometry = new THREE.BoxGeometry(2.7, 3.8, 0.1);
+             const cardGeometry = new THREE.BoxGeometry(2.5, 3.5, 0.1);
              const materials = [
                  new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
                  new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
@@ -786,7 +786,7 @@
                 
                 player.cards.forEach((cardType, i) => {
                     const cardMesh = createCardMesh(cardType, isMe);
-                    const cardOffset = (i - (player.cards.length - 1) / 2) * 3.2;
+                    const cardOffset = (i - (player.cards.length - 1) / 2) * 3.0;
                     
                     let targetPos, targetRot;
                     if (isMe) {
@@ -811,7 +811,7 @@
                 player.revealedCards.forEach((cardType, i) => {
                     const cardMesh = createCardMesh(cardType, true);
                     const tablePos = new THREE.Vector3(x, 0.2, z).normalize().multiplyScalar(8);
-                    const cardOffset = (i - (player.revealedCards.length - 1) / 2) * 3.2;
+                    const cardOffset = (i - (player.revealedCards.length - 1) / 2) * 3.0;
                     const finalPos = tablePos.add(new THREE.Vector3(Math.cos(angle) * cardOffset, 0, -Math.sin(angle) * cardOffset));
 
                     gsap.to(cardMesh.position, { duration: 0.5, x: finalPos.x, y: 0.3, z: finalPos.z });
@@ -880,12 +880,14 @@
         // --- CORE GAME FLOW & TIMER ---
         
         async function forceEndTurn() {
+            console.log("Turn timer expired. Forcing 'Income' action.");
             const gameRef = doc(db, 'games', currentGameId);
             await runTransaction(db, async (transaction) => {
                 const gameSnap = await transaction.get(gameRef);
                 if (!gameSnap.exists()) return;
                 const gameData = gameSnap.data();
                 
+                // Only force end if it's still my turn and there's no pending action
                 if (gameData.turnOrder[gameData.currentPlayerIndex] !== currentUserId || gameData.pendingAction) {
                     return;
                 }
@@ -903,7 +905,7 @@
             if (turnTimerInterval) clearInterval(turnTimerInterval);
             
             const isMyTurn = gameData.turnOrder[gameData.currentPlayerIndex] === currentUserId;
-            const noPendingActions = !gameData.pendingAction && (!gameData.playerUpdates || !Object.keys(gameData.playerUpdates).length);
+            const noPendingActions = !gameData.pendingAction && (!gameData.playerUpdates || !gameData.playerUpdates[currentUserId]);
 
             if (gameData.gameState === 'active' && isMyTurn && noPendingActions && gameData.turnStartTime) {
                 turnTimerEl.style.display = 'block';
@@ -1361,10 +1363,10 @@
 
         async function deleteGameData(gameId) {
             if (!gameId) return;
-            // console.log(`Deleting game data for ${gameId}...`); // Removed as requested
+            console.log(`Deleting game data for ${gameId}...`);
             try {
                 await deleteDoc(doc(db, 'games', gameId));
-                // console.log("Game data deleted successfully."); // Removed as requested
+                console.log("Game data deleted successfully.");
             } catch (error) {
                 console.error("Error deleting game data:", error);
             }
