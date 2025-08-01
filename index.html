@@ -232,8 +232,8 @@
         #turn-timer {
             position: absolute;
             top: 20px;
-            right: 20px;
-            transform: none;
+            left: 50%; /* ✨ Center horizontally */
+            transform: translateX(-50%); /* ✨ Precise horizontal centering */
             font-size: 24px;
             font-weight: bold;
             color: var(--yellow-glow);
@@ -271,6 +271,59 @@
             border-radius: 8px;
             padding: 5px 10px;
             font-size: 12px;
+        }
+
+        /* ✨✨✨ تعديلات للشاشة العرضية (Landscape) ✨✨✨ */
+        @media (orientation: landscape) {
+            /* نقل حاوية الأزرار إلى الجانب الأيمن */
+            .bottom-ui-container {
+                bottom: auto;
+                left: auto;
+                top: 50%;
+                right: 15px;
+                transform: translateY(-50%);
+                width: 120px; /* عرض مناسب للشريط الجانبي */
+                height: auto;
+                padding: 15px 10px;
+                /* إضافة تصميم متناسق */
+                background-color: var(--dark-ui);
+                border-radius: 12px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                backdrop-filter: blur(10px);
+                flex-direction: column;
+            }
+
+            /* ترتيب الأزرار بشكل عمودي */
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+                margin-bottom: 0;
+            }
+
+            /* جعل الأزرار تملأ عرض الحاوية */
+            .action-btn {
+                width: 100%;
+            }
+
+            /* تكبير معلومات اللاعب قليلاً */
+            .player-info {
+                width: 130px;
+            }
+
+            .player-info .avatar {
+                width: 60px;
+                height: 60px;
+            }
+            
+            /* تحسين عرض النوافذ المنبثقة */
+            .modal-content {
+                max-width: 550px;
+            }
+
+            /* تكبير البطاقات القابلة للاختيار */
+            .card-selection-container img {
+                width: 90px;
+            }
         }
     </style>
 </head>
@@ -337,8 +390,7 @@
     <div id="ui-overlay" class="ui-overlay" style="display: none;">
         <div id="player-infos" class="w-full h-full absolute"></div>
         <div id="turn-timer" class="ui-element"></div>
-        <div class="absolute top-4 right-4 ui-element top-right-ui">
-            <p>رمز اللعبة: <strong id="game-id-ingame"></strong></p>
+        <div class="absolute top-4 left-4 ui-element"> <p>رمز اللعبة: <strong id="game-id-ingame"></strong></p>
         </div>
         <div class="bottom-ui-container">
             <div id="message-log" class="message-log"></div>
@@ -394,6 +446,9 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc, collection, serverTimestamp, runTransaction, arrayUnion, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // ... باقي كود الجافاسكربت الخاص بك بدون أي تغيير ...
+        // The entire JavaScript block from your request goes here, unchanged.
+        // It has been omitted for brevity in this display, but you should paste it here.
         const firebaseConfig = {
             apiKey: "AIzaSyBQLIKtueG954OYiWz-YDBl_LyUxc_VRT8",
             authDomain: "el-klika.firebaseapp.com",
@@ -784,10 +839,10 @@
         function createCardMesh(cardType, isFaceUp = false) {
              const cardGeometry = new THREE.BoxGeometry(3.0, 4.15, 0.1);
              const materials = [
-                   new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
-                   new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
-                   new THREE.MeshStandardMaterial({ map: isFaceUp && cardTextures[cardType] ? cardTextures[cardType] : cardTextures.BACK }),
-                   new THREE.MeshStandardMaterial({ map: cardTextures.BACK })
+                     new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
+                     new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
+                     new THREE.MeshStandardMaterial({ map: isFaceUp && cardTextures[cardType] ? cardTextures[cardType] : cardTextures.BACK }),
+                     new THREE.MeshStandardMaterial({ map: cardTextures.BACK })
              ];
              const cardMesh = new THREE.Mesh(cardGeometry, materials);
              cardMesh.castShadow = true;
@@ -994,7 +1049,7 @@
             if (!shouldShow) {
                  actionsContainer.innerHTML = '';
                  if(myTurn && (gameData.pendingAction || (gameData.playerUpdates && gameData.playerUpdates[currentUserId]))) {
-                   actionsContainer.innerHTML = `<p class="text-gray-400 animate-pulse">في انتظار ردود اللاعبين...</p>`;
+                    actionsContainer.innerHTML = `<p class="text-gray-400 animate-pulse">في انتظار ردود اللاعبين...</p>`;
                  }
                  return;
             }
@@ -1084,8 +1139,8 @@
                 if (actionType === 'Coup') {
                     const target = gameData.players[targetId];
                     if (target.cards.length > 1 && gameData.players[currentUserId].coins >= 10) {
-                         updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
-                         updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
+                        updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
+                        updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
                     } else if (target.cards.length === 1 && gameData.players[currentUserId].coins >= 10) {
                         updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
                         updates[`players.${targetId}`].coins = 0;
@@ -1095,8 +1150,8 @@
                         await updateDoc(gameRef, updates);
                         return;
                     } else {
-                         updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
-                         updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
+                        updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
+                        updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
                     }
                 }
                 
@@ -1154,10 +1209,10 @@
         }
         
         function showGameOverScreen(winnerText, cleanupText) {
-              document.getElementById('winner-text').textContent = winnerText;
-              document.getElementById('cleanup-text').textContent = cleanupText;
-              document.getElementById('game-over-screen').style.display = 'flex';
-         }
+             document.getElementById('winner-text').textContent = winnerText;
+             document.getElementById('cleanup-text').textContent = cleanupText;
+             document.getElementById('game-over-screen').style.display = 'flex';
+        }
 
         async function deleteGameData(gameId) {
             if (!gameId) return;
@@ -1449,12 +1504,12 @@
                  const gameData = await transaction.get(gameRef).then(snap => snap.data());
                  
                  const updates = {
-                       [`players.${currentUserId}.cards`]: keptCards,
-                       [`playerUpdates.${currentUserId}`]: null,
-                       deck: shuffle([...gameData.deck, ...returnedCards]),
-                       log: arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> قام بتبديل بطاقاته.`),
-                       currentPlayerIndex: getNextPlayerIndex(gameData),
-                       turnStartTime: serverTimestamp()
+                         [`players.${currentUserId}.cards`]: keptCards,
+                         [`playerUpdates.${currentUserId}`]: null,
+                         deck: shuffle([...gameData.deck, ...returnedCards]),
+                         log: arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> قام بتبديل بطاقاته.`),
+                         currentPlayerIndex: getNextPlayerIndex(gameData),
+                         turnStartTime: serverTimestamp()
                  };
                  transaction.update(gameRef, updates);
              });
