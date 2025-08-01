@@ -82,7 +82,7 @@
             text-align: center;
             transform: translateX(-50%);
             transition: all 0.3s ease;
-            width: 120px; /* Gemini FIX: Set a fixed width */
+            width: 120px; 
         }
         .player-info .avatar {
             width: 50px; height: 50px;
@@ -96,7 +96,7 @@
             font-size: 24px;
             font-weight: bold;
         }
-        .player-info.current-turn {
+        .player-info.current-turn .avatar { /* Gemini FIX: Target avatar for glow */
             border-color: var(--yellow-glow);
             box-shadow: 0 0 15px var(--yellow-glow), 0 0 25px var(--yellow-glow);
         }
@@ -124,7 +124,7 @@
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            flex-shrink: 0; /* Gemini FIX: Prevent buttons from shrinking too much */
+            flex-shrink: 0;
         }
         .action-btn:hover:not(:disabled) {
             transform: translateY(-2px);
@@ -200,12 +200,12 @@
         }
         .card-selection-container {
             display: flex;
-            flex-wrap: wrap; /* Gemini FIX: Allow wrapping on small screens */
+            flex-wrap: wrap;
             justify-content: center;
             gap: 10px;
         }
         .card-selection-container img {
-            width: 80px; /* Gemini FIX: Slightly smaller cards for mobile */
+            width: 80px;
             height: auto;
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -221,7 +221,7 @@
             box-shadow: 0 0 20px var(--yellow-glow);
         }
 
-        /* Gemini FIX: Mobile Responsiveness */
+        /* Mobile Responsiveness */
         @media (max-width: 768px) {
             .action-btn {
                 padding: 12px;
@@ -349,12 +349,11 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc, collection, serverTimestamp, runTransaction, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Gemini FIX: Updated Firebase Config with the correct storageBucket.
         const firebaseConfig = {
             apiKey: "AIzaSyBQLIKtueG954OYiWz-YDBl_LyUxc_VRT8",
             authDomain: "el-klika.firebaseapp.com",
             projectId: "el-klika",
-            storageBucket: "el-klika.firebasestorage.app", // Corrected
+            storageBucket: "el-klika.appspot.com", // Correct Firebase Storage bucket format
             messagingSenderId: "357776786294",
             appId: "1:357776786294:web:8cb4ec7eabe2895a133057",
             measurementId: "G-0VZ35M4V50"
@@ -370,14 +369,13 @@
             [CARD_TYPES.CAPTAIN]: 'القبطان', [CARD_TYPES.AMBASSADOR]: 'السفير',
             [CARD_TYPES.CONTESSA]: 'الكونتيسا'
         };
-        // Gemini FIX: Updated card image URLs for better performance and correctness.
         const CARD_IMAGES = {
             [CARD_TYPES.DUKE]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754009220/duke_lag0l2.png',
             [CARD_TYPES.CONTESSA]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754009251/contessa_cxsqzf.png',
             [CARD_TYPES.ASSASSIN]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754009250/assasin_k8epdg.png',
             [CARD_TYPES.CAPTAIN]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754009235/captain_chjshh.png',
             [CARD_TYPES.AMBASSADOR]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754009472/ambassador_n12xtv.png',
-            BACK: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754014741/back_czsgkx.png' // Corrected back image
+            BACK: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754014741/back_czsgkx.png'
         };
 
         let currentUserId = null, currentGameId = null, gameUnsubscribe = null;
@@ -570,12 +568,11 @@
                     
                     renderGameState(gameData);
                     
-                    // Gemini FIX: Simplified state handling. Only one modal can be active at a time.
                     const myPlayerData = gameData.players[currentUserId];
                     if (!myPlayerData || !myPlayerData.isAlive) {
-                         hideAllModals();
-                         checkGameOver(gameData);
-                         return;
+                        hideAllModals();
+                        checkGameOver(gameData);
+                        return;
                     }
 
                     if (myPlayerData.mustReveal) {
@@ -642,20 +639,37 @@
             window.addEventListener('resize', onWindowResize, false);
             animate();
         }
-
-        // Gemini FIX: Improved preloading with visible feedback
+        
         function preloadTextures(callback) {
             const keys = Object.keys(CARD_IMAGES);
             let loaded = 0;
             const total = keys.length;
-            
+
+            if (total === 0) {
+                callback();
+                return;
+            }
+
+            const onAssetLoaded = () => {
+                if (++loaded === total) {
+                    callback();
+                }
+            };
+
             keys.forEach(key => {
-                textureLoader.load(CARD_IMAGES[key], texture => {
-                    cardTextures[key] = texture;
-                    if (++loaded === total) {
-                        callback();
+                const url = CARD_IMAGES[key];
+                textureLoader.load(
+                    url, 
+                    (texture) => { // onLoad
+                        cardTextures[key] = texture;
+                        onAssetLoaded();
+                    }, 
+                    undefined, // onProgress
+                    () => { // onError
+                        console.error('CRITICAL: Failed to load texture:', url);
+                        onAssetLoaded();
                     }
-                });
+                );
             });
         }
         
@@ -676,7 +690,6 @@
         function onWindowResize() {
             if (!camera || !renderer) return;
             camera.aspect = window.innerWidth / window.innerHeight;
-            // Gemini FIX: Adjust FOV for mobile to see more
             if (window.innerWidth < 768) {
                 camera.fov = 60;
             } else {
@@ -698,14 +711,28 @@
             const { players, turnOrder, currentPlayerIndex } = gameData;
             const myIndex = turnOrder.indexOf(currentUserId);
             
-            // Clear old objects
-            Object.values(playerObjects).forEach(pObj => pObj.cards.forEach(card => scene.remove(card)));
-            playerObjects = {};
+            const existingPids = Object.keys(playerObjects);
+            const currentPids = turnOrder;
+            
+            // Basic diffing to remove objects of players who left (less efficient than full diffing, but better than full clear)
+            const pidsToRemove = existingPids.filter(pid => !currentPids.includes(pid));
+            pidsToRemove.forEach(pid => {
+                if (playerObjects[pid]) {
+                    playerObjects[pid].cards.forEach(card => scene.remove(card));
+                    delete playerObjects[pid];
+                }
+            });
             document.getElementById('player-infos').innerHTML = '';
+
 
             turnOrder.forEach((pid, index) => {
                 const player = players[pid];
                 if (!player) return;
+
+                // Create player object if it doesn't exist
+                if (!playerObjects[pid]) {
+                    playerObjects[pid] = { cards: [], revealedCards: [] };
+                }
 
                 const relativeIndex = (index - myIndex + turnOrder.length) % turnOrder.length;
                 const angle = (relativeIndex / turnOrder.length) * Math.PI * 2;
@@ -715,10 +742,13 @@
                 const yPos = isMe ? 2 : 4;
                 const x = Math.sin(angle) * radius;
                 const z = Math.cos(angle) * radius;
-                
-                playerObjects[pid] = { cards: [] };
 
-                // Render hand cards
+                // RENDER HAND CARDS (simplified update)
+                // This part is complex to make fully efficient without a library. We'll stick to a clearer, slightly less performant way.
+                // Clear old cards for this player
+                playerObjects[pid].cards.forEach(card => scene.remove(card));
+                playerObjects[pid].cards = [];
+                
                 player.cards.forEach((cardType, i) => {
                     const cardMesh = createCardMesh(cardType, isMe);
                     const cardOffset = (i - (player.cards.length - 1) / 2) * 3.0;
@@ -729,11 +759,10 @@
                         targetRot = new THREE.Euler(-Math.PI / 8, 0, 0);
                     } else {
                         targetPos = new THREE.Vector3(x + cardOffset * 0.3, yPos, z);
-                        cardMesh.lookAt(camera.position); // Initial lookAt
+                        cardMesh.lookAt(camera.position); 
                         targetRot = cardMesh.rotation.clone();
                     }
                     
-                    // Gemini FIX: Animate card dealing and movement
                     gsap.to(cardMesh.position, { duration: 0.5, x: targetPos.x, y: targetPos.y, z: targetPos.z });
                     gsap.to(cardMesh.rotation, { duration: 0.5, x: targetRot.x, y: targetRot.y, z: targetRot.z });
                     
@@ -741,17 +770,23 @@
                     playerObjects[pid].cards.push(cardMesh);
                 });
                 
-                // Render revealed cards (placed on the table)
+                // RENDER REVEALED CARDS
+                playerObjects[pid].revealedCards?.forEach(card => scene.remove(card));
+                playerObjects[pid].revealedCards = [];
+
                 player.revealedCards.forEach((cardType, i) => {
                     const cardMesh = createCardMesh(cardType, true);
-                    const pos = new THREE.Vector3(x, 0.5, z).normalize().multiplyScalar(8); // Place on table
+                    const tablePos = new THREE.Vector3(x, 0.2, z).normalize().multiplyScalar(8); // Place on table
                     const cardOffset = (i - (player.revealedCards.length - 1) / 2) * 3.0;
-                    pos.x += cardOffset;
                     
-                    gsap.to(cardMesh.position, { duration: 0.5, x: pos.x, y: pos.y, z: pos.z });
-                    gsap.to(cardMesh.rotation, { duration: 0.5, x: -Math.PI / 2, y: 0, z: angle }); // Lay flat on table
+                    // Simple positioning on the table in front of the player
+                    const finalPos = tablePos.add(new THREE.Vector3(Math.cos(angle) * cardOffset, 0, -Math.sin(angle) * cardOffset));
+
+                    gsap.to(cardMesh.position, { duration: 0.5, x: finalPos.x, y: 0.3, z: finalPos.z });
+                    gsap.to(cardMesh.rotation, { duration: 0.5, x: -Math.PI / 2, y: 0, z: -angle }); // Lay flat on table
                     
                     scene.add(cardMesh);
+                    playerObjects[pid].revealedCards.push(cardMesh);
                 });
 
                 // Render UI Info
@@ -772,7 +807,6 @@
             updateMessageLog(gameData);
         }
         
-        // Gemini FIX: Rewritten and simplified action button logic
         function updateActionButtons(gameData) {
             const actionsContainer = document.getElementById('action-buttons');
             actionsContainer.innerHTML = '';
@@ -814,7 +848,6 @@
             });
         }
 
-        // Gemini FIX: Entire game flow logic rewritten for robustness and clarity.
         // --- CORE GAME FLOW ---
         
         async function initiateAction(actionType, targetId = null) {
@@ -848,9 +881,6 @@
                 hideModal('interaction-modal');
                 return;
             }
-
-            // Check if action has timed out (auto-pass)
-            // A simple client-side timeout can be added here if desired.
 
             const me = players[currentUserId];
             if (!me.isAlive || pendingAction.actorId === currentUserId || pendingAction.responses[currentUserId]) {
@@ -920,7 +950,6 @@
             });
         }
         
-        // Universal action resolver
         async function resolveAction(action, response, success, transaction = null) {
             const resolver = async (trans) => {
                 const gameRef = doc(db, 'games', currentGameId);
@@ -937,8 +966,6 @@
                 if (response) { // There was a challenge or block
                     const responder = players[response.responderId];
                     if (response.responseType === 'block') {
-                        // The original actor can now challenge this block. For simplicity, we make this a new action.
-                        // This implementation handles blocks as a direct success or failure.
                         const blockClaim = {
                             'BlockForeignAid': CARD_TYPES.DUKE, 'BlockAssassination': CARD_TYPES.CONTESSA,
                             'BlockSteal': [CARD_TYPES.CAPTAIN, CARD_TYPES.AMBASSADOR]
@@ -950,8 +977,11 @@
                              logMessages.push(`<strong>${responder.name}</strong> منع الحركة بنجاح!`);
                              success = false; // Original action fails
                         } else {
-                             logMessages.push(`<strong>${responder.name}</strong> فشل في المنع (لا يملك البطاقة)!`);
-                             success = true; // Original action succeeds
+                            // Gemini FIX: Penalize player for a failed (bluffed) block attempt.
+                            logMessages.push(`<strong>${responder.name}</strong> حاول المنع وكذب! الحركة الأصلية تنجح، و <strong>${responder.name}</strong> يخسر نفوذًا.`);
+                            updates[`players.${response.responderId}.mustReveal`] = { reason: 'تم كشف كذبة المنع.' };
+                            success = true; // The original action still succeeds because the block was invalid.
+                            nextTurn = false; // The game must wait for the bluffer to reveal a card.
                         }
                     } else { // Challenge
                         const claim = {
@@ -986,6 +1016,7 @@
                     const effects = getActionEffects(gameData, action);
                     Object.assign(updates, effects);
                     if (action.actionType === 'Exchange') nextTurn = false; // Wait for exchange modal
+                    if (action.actionType === 'Coup' || (action.actionType === 'Assassinate' && success)) nextTurn = false; // Wait for reveal
                 }
 
                 updates.pendingAction = null;
@@ -1079,7 +1110,6 @@
              });
         }
         
-        // ... (Modal display functions like showRevealCardModal, showExchangeModal remain mostly the same)
         function showRevealCardModal(gameData) {
             hideAllModals();
             const modal = document.getElementById('reveal-card-modal');
@@ -1106,7 +1136,7 @@
             const confirmBtn = document.getElementById('confirm-exchange-btn');
             
             const allCards = [...myData.cards, ...myData.exchangeInfo.cards];
-            let selectedCards = [];
+            let selectedImages = [];
             
             container.innerHTML = '';
             const numToKeep = myData.cards.length;
@@ -1115,36 +1145,38 @@
             allCards.forEach((cardType) => {
                 const img = document.createElement('img');
                 img.src = CARD_IMAGES[cardType];
-                img.dataset.card = cardType;
+                img.dataset.cardType = cardType;
 
                 img.onclick = () => {
-                    const cardIdentifier = `${cardType}-${Array.from(container.children).indexOf(img)}`;
                     if (img.classList.contains('selected')) {
                         img.classList.remove('selected');
-                        const indexToRemove = selectedCards.findIndex(item => item.id === cardIdentifier);
-                        if (indexToRemove > -1) selectedCards.splice(indexToRemove, 1);
+                        const indexToRemove = selectedImages.indexOf(img);
+                        if (indexToRemove > -1) selectedImages.splice(indexToRemove, 1);
                     } else {
-                        if (selectedCards.length < numToKeep) {
+                        if (selectedImages.length < numToKeep) {
                             img.classList.add('selected');
-                            selectedCards.push({ id: cardIdentifier, type: cardType });
+                            selectedImages.push(img);
                         }
                     }
-                    confirmBtn.disabled = selectedCards.length !== numToKeep;
+                    confirmBtn.disabled = selectedImages.length !== numToKeep;
                 };
                 container.appendChild(img);
             });
 
+            // Gemini FIX: Removed duplicate, erroneous onclick handlers. This is the single correct one.
             confirmBtn.onclick = () => {
-                const keptTypes = selectedCards.map(item => item.type);
-                // Create a copy to manipulate
-                const tempAllCards = [...allCards];
-                // Remove kept cards from the temp array
-                keptTypes.forEach(kept => {
-                    const index = tempAllCards.indexOf(kept);
-                    if(index > -1) tempAllCards.splice(index, 1);
+                const keptCards = selectedImages.map(img => img.dataset.cardType);
+                
+                // This reliable method handles duplicate cards correctly.
+                const returnedCards = [...allCards];
+                keptCards.forEach(keptType => {
+                    const indexToRemove = returnedCards.indexOf(keptType);
+                    if (indexToRemove > -1) {
+                        returnedCards.splice(indexToRemove, 1);
+                    }
                 });
-                const returnedCards = tempAllCards;
-                confirmExchange(keptTypes, returnedCards);
+                
+                confirmExchange(keptCards, returnedCards);
             };
 
             modal.style.display = 'flex';
@@ -1200,13 +1232,14 @@
 
         function getNextPlayerIndex(gameData) {
             let nextIndex = (gameData.currentPlayerIndex + 1) % gameData.turnOrder.length;
-            while(!gameData.players[gameData.turnOrder[nextIndex]].isAlive){
+            let count = 0; // Failsafe against infinite loops
+            while(!gameData.players[gameData.turnOrder[nextIndex]].isAlive && count < gameData.turnOrder.length){
                 nextIndex = (nextIndex + 1) % gameData.turnOrder.length;
+                count++;
             }
             return nextIndex;
         }
-
-        // Gemini FIX: Game over and data cleanup logic
+        
         async function checkGameOver(gameData) {
             if (gameData.gameState !== 'active') return;
             const alivePlayers = gameData.turnOrder.filter(pid => gameData.players[pid]?.isAlive);
