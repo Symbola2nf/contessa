@@ -25,49 +25,24 @@
             -moz-osx-font-smoothing: grayscale;
         }
         #game-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         }
         #loading-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: var(--dark-bg);
             z-index: 200;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            gap: 20px;
+            display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 20px;
             transition: opacity 0.5s ease;
         }
-        #loading-overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
+        #loading-overlay.hidden { opacity: 0; pointer-events: none; }
         .spinner {
             border: 4px solid rgba(255, 255, 255, 0.2);
             border-left-color: var(--yellow-glow);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            border-radius: 50%; width: 50px; height: 50px;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .ui-overlay {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
         .ui-element {
             pointer-events: auto;
             background-color: var(--dark-ui);
@@ -78,109 +53,65 @@
             -webkit-backdrop-filter: blur(10px);
         }
         .player-info {
-            position: absolute;
-            text-align: center;
-            transition: all 0.3s ease;
-            width: 110px; /* حجم موحد للبداية */
-            z-index: 20;
-            transform: translate(-50%, -50%); /* ✨ تعديل: الآن نستخدم top/left ونترجم 50% دائمًا */
+            position: absolute; text-align: center;
+            transition: all 0.3s ease; width: 110px;
+            z-index: 20; transform: translate(-50%, -50%);
         }
         .player-info .avatar {
             width: 50px; height: 50px;
-            background-color: #4a4a4a;
-            border-radius: 50%;
-            border: 2px solid white;
-            margin: 0 auto 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: bold;
-            overflow: hidden;
+            background-color: #4a4a4a; border-radius: 50%;
+            border: 2px solid white; margin: 0 auto 5px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; font-weight: bold; overflow: hidden;
         }
-        .player-info.is-me .avatar { /* ✨ فئة جديدة للاعب الرئيسي لتمييزه */
-            width: 65px;
-            height: 65px;
-        }
-        .player-info .avatar svg {
-            width: 100%;
-            height: 100%;
-        }
+        .player-info.is-me .avatar { width: 65px; height: 65px; }
+        .player-info .avatar svg { width: 100%; height: 100%; }
         .player-info.current-turn .avatar {
             border-color: var(--yellow-glow);
             box-shadow: 0 0 15px var(--yellow-glow), 0 0 25px var(--yellow-glow);
         }
-        .player-info.eliminated {
-            opacity: 0.4;
-            filter: grayscale(1);
-        }
+        .player-info.eliminated { opacity: 0.4; filter: grayscale(1); }
+        
         .bottom-ui-container {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px 10px;
-            box-sizing: border-box;
-            pointer-events: none;
-            z-index: 10;
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px 10px; box-sizing: border-box;
+            pointer-events: none; z-index: 10;
         }
         .action-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 5px;
-            margin-bottom: 10px;
-            max-width: 95%;
-            width: 100%;
+            display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 5px; margin-bottom: 10px; max-width: 95%; width: 100%;
             pointer-events: auto;
         }
         .action-btn {
             background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            flex-shrink: 0;
-            min-width: 80px;
+            color: white; border: none; padding: 12px; border-radius: 10px;
+            font-size: 13px; font-weight: bold; cursor: pointer;
+            transition: all 0.2s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            flex-shrink: 0; min-width: 80px;
         }
         .action-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.5);
             background: linear-gradient(145deg, #6a6a6a, #4a4a4a);
         }
-        .action-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
         #lobby, #game-over-screen {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.85);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            flex-direction: column;
-            gap: 15px;
-            padding: 15px;
-            overflow-y: auto;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 100; flex-direction: column; gap: 15px;
+            padding: 15px; overflow-y: auto;
         }
         #lobby input, #lobby button, #game-over-screen button {
-            width: 100%;
-            max-width: 300px;
-            text-align: center;
+            width: 100%; max-width: 300px; text-align: center;
         }
         #lobby input { color: black; padding: 10px; border-radius: 8px; border: none; }
-        #lobby button, #game-over-screen button { background: var(--yellow-glow); color: var(--dark-bg); font-weight: bold; padding: 12px; border-radius: 10px; }
+        #lobby button, #game-over-screen button { 
+            background: var(--yellow-glow); color: var(--dark-bg); 
+            font-weight: bold; padding: 12px; border-radius: 10px; border: none; cursor: pointer;
+        }
         
         .modal {
             position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%;
@@ -192,7 +123,8 @@
         }
         .card-selection-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
         .card-selection-container img {
-            width: 80px; height: auto; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 100px; /* ✨ زيادة حجم البطاقة */
+            height: auto; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease;
             border-radius: 8px; border: 2px solid transparent;
         }
         .card-selection-container img:hover { transform: scale(1.05) translateY(-5px); box-shadow: 0 0 15px var(--yellow-glow); }
@@ -203,19 +135,17 @@
             font-size: 24px; font-weight: bold; color: var(--yellow-glow); text-shadow: 0 0 10px var(--yellow-glow); display: none;
         }
         
-        /* ✨ تعديلات للشاشة العرضية (Landscape) */
         @media (orientation: landscape) {
             .bottom-ui-container {
                 bottom: auto; left: auto; top: 50%; right: 15px; transform: translateY(-50%);
-                width: 140px; /* عرض أكبر قليلاً للأزرار */
-                height: auto; padding: 15px 10px; background-color: var(--dark-ui);
+                width: 140px; height: auto; padding: 15px 10px; background-color: var(--dark-ui);
                 border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2);
                 backdrop-filter: blur(10px); flex-direction: column;
             }
             .action-buttons { flex-direction: column; gap: 10px; margin-bottom: 0; }
             .action-btn { width: 100%; }
             .modal-content { max-width: 550px; }
-            .card-selection-container img { width: 90px; }
+            .card-selection-container img { width: 110px; /* ✨ زيادة حجم البطاقة في الوضع العرضي */ }
         }
     </style>
 </head>
@@ -229,32 +159,36 @@
     <div id="game-container"></div>
 
     <div id="lobby" style="display: flex;">
-        <div class="ui-element text-center p-6">
+        <div class="ui-element text-center p-6 max-w-lg w-full">
             <h1 class="text-4xl font-bold text-yellow-300 mb-4">لعبة Coup</h1>
             
             <div id="avatar-customizer" class="mb-4">
-                <p class="mb-2">اختر شخصيتك</p>
-                <div id="avatar-preview" class="w-24 h-24 bg-gray-700 border-2 border-yellow-300 rounded-full overflow-hidden mx-auto mb-2"></div>
-                <div class="grid grid-cols-3 gap-2 items-center max-w-xs mx-auto">
-                    <button id="prev-shirt-btn" class="bg-gray-600 rounded p-1">&lt;</button>
-                    <span class="text-sm">القميص</span>
-                    <button id="next-shirt-btn" class="bg-gray-600 rounded p-1">&gt;</button>
+                <p class="mb-2 font-bold">صمم شخصيتك</p>
+                <div id="avatar-preview" class="w-24 h-24 bg-gray-700 border-2 border-yellow-300 rounded-full overflow-hidden mx-auto mb-3"></div>
+                <div class="grid grid-cols-3 gap-x-3 gap-y-2 items-center max-w-xs mx-auto text-sm">
+                    <button id="prev-hair-btn" class="bg-gray-600 rounded p-1">&lt;</button>
+                    <span>الشعر</span>
+                    <button id="next-hair-btn" class="bg-gray-600 rounded p-1">&gt;</button>
                     
                     <button id="prev-head-btn" class="bg-gray-600 rounded p-1">&lt;</button>
-                    <span class="text-sm">الوجه</span>
+                    <span>لون البشرة</span>
                     <button id="next-head-btn" class="bg-gray-600 rounded p-1">&gt;</button>
                     
                     <button id="prev-eyebrows-btn" class="bg-gray-600 rounded p-1">&lt;</button>
-                    <span class="text-sm">الحواجب</span>
+                    <span>الحواجب</span>
                     <button id="next-eyebrows-btn" class="bg-gray-600 rounded p-1">&gt;</button>
                     
+                    <button id="prev-mouth-btn" class="bg-gray-600 rounded p-1">&lt;</button>
+                    <span>الفم</span>
+                    <button id="next-mouth-btn" class="bg-gray-600 rounded p-1">&gt;</button>
+                    
                     <button id="prev-facialhair-btn" class="bg-gray-600 rounded p-1">&lt;</button>
-                    <span class="text-sm">اللحية</span>
+                    <span>اللحية</span>
                     <button id="next-facialhair-btn" class="bg-gray-600 rounded p-1">&gt;</button>
-
-                    <button id="prev-eyes-btn" class="bg-gray-600 rounded p-1">&lt;</button>
-                    <span class="text-sm">العينين</span>
-                    <button id="next-eyes-btn" class="bg-gray-600 rounded p-1">&gt;</button>
+                    
+                    <button id="prev-accessory-btn" class="bg-gray-600 rounded p-1">&lt;</button>
+                    <span>إكسسوار</span>
+                    <button id="next-accessory-btn" class="bg-gray-600 rounded p-1">&gt;</button>
                 </div>
             </div>
 
@@ -320,7 +254,7 @@
     </div>
 
     <div id="game-over-screen" style="display: none;">
-        <div class="ui-element text-center">
+        <div class="ui-element text-center p-6">
             <h1 class="text-4xl font-bold text-yellow-300 mb-4">انتهت اللعبة!</h1>
             <p id="winner-text" class="text-2xl"></p>
             <p id="cleanup-text" class="text-sm text-gray-400 mt-4"></p>
@@ -333,6 +267,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc, collection, serverTimestamp, runTransaction, arrayUnion, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // --- CONFIGURATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyBQLIKtueG954OYiWz-YDBl_LyUxc_VRT8",
             authDomain: "el-klika.firebaseapp.com",
@@ -347,13 +282,13 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // --- GAME CONSTANTS ---
         const CARD_TYPES = { DUKE: 'Duke', ASSASSIN: 'Assassin', CAPTAIN: 'Captain', AMBASSADOR: 'Ambassador', CONTESSA: 'Contessa' };
         const CARD_TRANSLATIONS = {
             [CARD_TYPES.DUKE]: 'الدوق', [CARD_TYPES.ASSASSIN]: 'القاتل',
             [CARD_TYPES.CAPTAIN]: 'القبطان', [CARD_TYPES.AMBASSADOR]: 'السفير',
             [CARD_TYPES.CONTESSA]: 'الكونتيسا'
         };
-
         const CARD_IMAGES = {
             [CARD_TYPES.DUKE]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020278/duke_nsvvuc.webp',
             [CARD_TYPES.CONTESSA]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020277/contessa_luhbsn.webp',
@@ -362,7 +297,9 @@
             [CARD_TYPES.AMBASSADOR]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020278/ambassador_k44ipg.webp',
             BACK: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020272/back_i5ar84.webp'
         };
+        const TURN_DURATION = 40;
 
+        // --- GAME STATE VARIABLES ---
         let currentUserId = null, currentGameId = null, gameUnsubscribe = null;
         let scene, camera, renderer, clock;
         let playerObjects = {};
@@ -370,23 +307,41 @@
         let textureLoader = new THREE.TextureLoader();
         let texturesPreloaded = false;
         let turnTimerInterval = null;
-        const TURN_DURATION = 40; 
         
+        // --- ✨ AVATAR CUSTOMIZATION (EXPANDED) ---
         const avatarOptions = {
-            shirts: ['#ff5733', '#33ff57', '#3357ff', '#ff33a1', '#a133ff', '#ffffff', '#f0e68c', '#add8e6'],
-            heads: ['#f2d2b2', '#d1a377', '#a07c5b', '#6e513d', '#3c2a21'],
-            eyebrows: ['M 40 18 Q 50 16 60 18', 'M 40 20 L 60 16', 'M 42 17 C 45 15, 55 15, 58 17' ],
-            facialHairs: ['none', 'M 40 38 Q 50 45 60 38', 'M 38 35 C 40 50, 60 50, 62 35 L 62 45 C 55 52, 45 52, 38 45 Z'],
-            eyePatches: ['none', 'M 38 20 C 35 25, 35 30, 38 35 L 52 35 C 55 30, 55 25, 52 20 Z']
+            heads: ['#f2d2b2', '#d1a377', '#a07c5b', '#e0ac69', '#6e513d', '#3c2a21'],
+            hair: [
+                { path: 'none', color: 'none' },
+                { path: 'M 35 15 C 30 0, 70 0, 65 15 L 65 20 C 60 10, 40 10, 35 20 Z', color: '#333333' }, // Spiky Black
+                { path: 'M 35 15 Q 50 5, 65 15 T 60 20 L 40 20 Z', color: '#6e513d' }, // Wavy Brown
+                { path: 'M 30 18 C 30 5, 50 5, 50 18 L 30 18 M 50 18 C 50 5, 70 5, 70 18 L 50 18', color: '#f1c40f' }, // Parted Blonde
+                { path: 'M 25 25 C 20 -5, 80 -5, 75 25 Q 50 35 25 25 Z', color: '#e67e22' } // Afro Ginger
+            ],
+            eyebrows: ['M 40 18 Q 50 16 60 18', 'M 40 20 L 60 16', 'M 42 17 C 45 15, 55 15, 58 17', 'M 40 16 C 45 18, 55 18, 60 16'],
+            mouths: ['M 45 35 Q 50 36 55 35', 'M 45 35 Q 50 40 55 35', 'M 45 38 Q 50 35 55 38', 'M 45 35 C 48 38, 52 38, 55 35 Z'],
+            facialHairs: [
+                { path: 'none', color: 'none' },
+                { path: 'M 40 38 Q 50 45 60 38', color: '#333333' }, // Moustache
+                { path: 'M 38 35 C 40 50, 60 50, 62 35 L 62 45 C 55 52, 45 52, 38 45 Z', color: '#6e513d' }, // Goatee
+                { path: 'M 50 38 L 50 48 M 45 42 L 55 42', color: '#f1c40f' } // Soul Patch
+            ],
+            accessories: [
+                'none', // Nothing
+                '<circle cx="45" cy="25" r="5.5" stroke="#333" stroke-width="1.5" fill="none" /><circle cx="60" cy="25" r="5.5" stroke="#333" stroke-width="1.5" fill="none" /><line x1="50.5" y1="25" x2="54.5" y2="25" stroke="#333" stroke-width="1.5" />', // Glasses
+                'M 38 20 C 35 25, 35 30, 38 35 L 52 35 C 55 30, 55 25, 52 20 Z', // Eye Patch
+            ]
         };
         let currentAvatar = {
-            shirt: Math.floor(Math.random() * avatarOptions.shirts.length),
             head: Math.floor(Math.random() * avatarOptions.heads.length),
+            hair: Math.floor(Math.random() * avatarOptions.hair.length),
             eyebrows: Math.floor(Math.random() * avatarOptions.eyebrows.length),
+            mouth: Math.floor(Math.random() * avatarOptions.mouths.length),
             facialHair: Math.floor(Math.random() * avatarOptions.facialHairs.length),
-            eyePatch: 0
+            accessory: 0,
         };
 
+        // --- DOM ELEMENTS ---
         const loadingOverlay = document.getElementById('loading-overlay');
         const lobbyEl = document.getElementById('lobby');
         const gameIdInput = document.getElementById('game-id-input');
@@ -401,51 +356,56 @@
         const playAgainBtn = document.getElementById('play-again-btn');
         const turnTimerEl = document.getElementById('turn-timer');
         const avatarPreview = document.getElementById('avatar-preview');
-        
-        function generateAvatarSVG({ shirt, head, eyebrows, facialHair, eyePatch }) {
-            const shirtColor = avatarOptions.shirts[shirt];
+
+        // --- AVATAR FUNCTIONS (EXPANDED) ---
+        function generateAvatarSVG({ head, hair, eyebrows, mouth, facialHair, accessory }) {
             const headColor = avatarOptions.heads[head];
+            const hairStyle = avatarOptions.hair[hair];
             const eyebrowPath = avatarOptions.eyebrows[eyebrows];
-            const facialHairPath = avatarOptions.facialHairs[facialHair];
-            const eyePatchPath = avatarOptions.eyePatches[eyePatch];
-            
+            const mouthPath = avatarOptions.mouths[mouth];
+            const facialHairStyle = avatarOptions.facialHairs[facialHair];
+            const accessorySVG = avatarOptions.accessories[accessory];
+
+            const showEyes = accessory !== 2; // Don't show eyes if wearing an eye patch on the left eye
+
             return `
                 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                     <g>
-                        <path d="M 20 90 V 40 C 20 30, 30 30, 40 30 H 60 C 70 30, 80 30, 80 40 V 90 Z" fill="${shirtColor}" />
-                        <circle cx="50" cy="25" r="15" fill="${headColor}" />
-                        <circle cx="45" cy="25" r="1.5" fill="black" />
-                        <circle cx="55" cy="25" r="1.5" fill="black" />
-                        <path d="${eyebrowPath}" stroke="black" stroke-width="2" fill="none" />
-                        ${facialHairPath !== 'none' ? `<path d="${facialHairPath}" fill="#281c12" />` : ''}
-                        ${eyePatchPath !== 'none' ? `<path d="${eyePatchPath}" fill="black" />` : ''}
+                        <rect x="0" y="50" width="100" height="50" fill="#4a4a4a" />
+                        <circle cx="50" cy="45" r="25" fill="${headColor}" />
+                        ${hairStyle.path !== 'none' ? `<path d="${hairStyle.path}" fill="${hairStyle.color}" transform="translate(0, 20)" />` : ''}
+                        ${showEyes ? '<circle cx="42" cy="42" r="2.5" fill="black" /> <circle cx="58" cy="42" r="2.5" fill="black" />' : ''}
+                        <path d="${eyebrowPath}" stroke="black" stroke-width="2.5" fill="none" transform="translate(0, 20)" />
+                        <path d="${mouthPath}" stroke="black" stroke-width="2" fill="none" transform="translate(0, 28)" />
+                        ${facialHairStyle.path !== 'none' ? `<path d="${facialHairStyle.path}" fill="${facialHairStyle.color}" transform="translate(0, 28)" />` : ''}
+                        ${accessorySVG !== 'none' ? `<g transform="translate(0, 18)">${accessorySVG}</g>` : ''}
                     </g>
                 </svg>`;
         }
-
         function updateAvatarPreview() {
             avatarPreview.innerHTML = generateAvatarSVG(currentAvatar);
         }
-
         function cycleAvatarOption(key, direction) {
-            const options = avatarOptions[key.split(/(?=[A-Z])/)[0].toLowerCase() + 's'];
+            const options = avatarOptions[key];
             currentAvatar[key] = (currentAvatar[key] + direction + options.length) % options.length;
             updateAvatarPreview();
         }
 
-        document.getElementById('next-shirt-btn').onclick = () => cycleAvatarOption('shirt', 1);
-        document.getElementById('prev-shirt-btn').onclick = () => cycleAvatarOption('shirt', -1);
         document.getElementById('next-head-btn').onclick = () => cycleAvatarOption('head', 1);
         document.getElementById('prev-head-btn').onclick = () => cycleAvatarOption('head', -1);
+        document.getElementById('next-hair-btn').onclick = () => cycleAvatarOption('hair', 1);
+        document.getElementById('prev-hair-btn').onclick = () => cycleAvatarOption('hair', -1);
         document.getElementById('next-eyebrows-btn').onclick = () => cycleAvatarOption('eyebrows', 1);
         document.getElementById('prev-eyebrows-btn').onclick = () => cycleAvatarOption('eyebrows', -1);
+        document.getElementById('next-mouth-btn').onclick = () => cycleAvatarOption('mouth', 1);
+        document.getElementById('prev-mouth-btn').onclick = () => cycleAvatarOption('mouth', -1);
         document.getElementById('next-facialhair-btn').onclick = () => cycleAvatarOption('facialHair', 1);
         document.getElementById('prev-facialhair-btn').onclick = () => cycleAvatarOption('facialHair', -1);
-        document.getElementById('next-eyes-btn').onclick = () => cycleAvatarOption('eyePatch', 1);
-        document.getElementById('prev-eyes-btn').onclick = () => cycleAvatarOption('eyePatch', -1);
+        document.getElementById('next-accessory-btn').onclick = () => cycleAvatarOption('accessory', 1);
+        document.getElementById('prev-accessory-btn').onclick = () => cycleAvatarOption('accessory', -1);
         
+        // --- INITIALIZATION ---
         updateAvatarPreview();
-
         onAuthStateChanged(auth, user => {
             if (user) {
                 currentUserId = user.uid;
@@ -454,25 +414,33 @@
                 signInAnonymously(auth).catch(err => lobbyError.textContent = `خطأ في المصادقة: ${err.message}`);
             }
         });
-        
         preloadTextures(() => {
             texturesPreloaded = true;
             if (currentUserId) loadingOverlay.classList.add('hidden');
         });
 
+        // --- ✨ GAME ID GENERATOR (TEXT ONLY) ---
+        function generateTextCode(length) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        // --- LOBBY ACTIONS ---
         createGameBtn.addEventListener('click', async () => {
             if (!validateLobbyInput()) return;
-            const newGameId = doc(collection(db, 'games')).id.substring(0, 5).toUpperCase();
+            const newGameId = generateTextCode(5);
             await joinGame(newGameId, true);
         });
-
         joinGameBtn.addEventListener('click', async () => {
             if (!validateLobbyInput()) return;
             const gameId = gameIdInput.value.trim().toUpperCase();
             if (!gameId) { lobbyError.textContent = "الرجاء إدخال رمز اللعبة."; return; }
             await joinGame(gameId, false);
         });
-        
         startGameBtn.addEventListener('click', () => { if(currentGameId) startGame(currentGameId); });
         playAgainBtn.addEventListener('click', () => window.location.reload());
 
@@ -539,7 +507,7 @@
                         const player = gameData.players[pid];
                         if (player) {
                             const li = document.createElement('li');
-                            li.className = 'text-white';
+                            li.className = 'text-white p-1';
                             li.textContent = player.name + (pid === gameData.creatorId ? ' (المضيف)' : '');
                             lobbyPlayersList.appendChild(li);
                         }
@@ -574,18 +542,94 @@
             } catch (error) { lobbyError.textContent = `خطأ في بدء اللعبة: ${error.message}`; }
         }
         
-        // --- GAME STATE RENDERING (MODIFIED) ---
+        // --- 3D SCENE SETUP ---
+        function initThreeJS() {
+            if (scene) return;
+            const container = document.getElementById('game-container');
+            clock = new THREE.Clock();
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a1a);
+            scene.fog = new THREE.Fog(0x1a1a1a, 25, 50);
+
+            camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 18, 22);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambientLight);
+            const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+            pointLight.position.set(0, 15, 10);
+            pointLight.castShadow = true;
+            scene.add(pointLight);
+
+            const tableGeometry = new THREE.CylinderGeometry(8, 8.5, 0.5, 64);
+            const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x3d291a });
+            const table = new THREE.Mesh(tableGeometry, tableMaterial);
+            table.position.y = -0.25;
+            table.receiveShadow = true;
+            scene.add(table);
+
+            window.addEventListener('resize', onWindowResize, false);
+            onWindowResize();
+            animate();
+        }
+        function preloadTextures(callback) {
+            const keys = Object.keys(CARD_IMAGES);
+            if (keys.length === 0) return callback ? callback() : null;
+            let loaded = 0;
+            const total = keys.length;
+            const onAssetLoaded = () => { if (++loaded === total && callback) callback(); };
+            keys.forEach(key => textureLoader.load(CARD_IMAGES[key], t => { cardTextures[key] = t; onAssetLoaded(); }, undefined, onAssetLoaded));
+        }
+        function createCardMesh(cardType, isFaceUp = false) {
+             const cardGeometry = new THREE.BoxGeometry(3.0, 4.15, 0.1);
+             const sideMaterial = new THREE.MeshStandardMaterial({ color: 0x111111 });
+             const materials = [
+                 sideMaterial, sideMaterial, sideMaterial, sideMaterial,
+                 new THREE.MeshStandardMaterial({ map: isFaceUp && cardTextures[cardType] ? cardTextures[cardType] : cardTextures.BACK }),
+                 new THREE.MeshStandardMaterial({ map: cardTextures.BACK })
+             ];
+             const cardMesh = new THREE.Mesh(cardGeometry, materials);
+             cardMesh.castShadow = true;
+             cardMesh.userData = { type: cardType, isFaceUp: isFaceUp };
+             return cardMesh;
+        }
+        function onWindowResize() {
+            if (!camera || !renderer) return;
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            // Re-render the game state to adjust UI element positions after resize
+            getDoc(doc(db, 'games', currentGameId)).then(docSnap => {
+                if (docSnap.exists()) {
+                    renderGameState(docSnap.data());
+                }
+            });
+        }
+        function animate() {
+            requestAnimationFrame(animate);
+            if(renderer) renderer.render(scene, camera);
+        }
+        
+        // --- GAME STATE RENDERING LOGIC (FROM CODE 1 - THE GOOD LAYOUT) ---
         function renderGameState(gameData) {
             if (!scene) return;
 
             const { players, turnOrder, currentPlayerIndex } = gameData;
-            const myIndex = turnOrder.indexOf(currentUserId);
-            if (myIndex === -1) return; // Not in game, do nothing
+            const myId = currentUserId;
+            if (turnOrder.indexOf(myId) === -1) return; // Spectator or not in game
 
             const playerInfosContainer = document.getElementById('player-infos');
             const activePlayerIds = new Set(turnOrder);
 
-            // Cleanup disconnected players
+            // Cleanup disconnected players from UI and Scene
             for (const pid in playerObjects) {
                 if (!activePlayerIds.has(pid)) {
                     if (playerObjects[pid].infoDiv) playerObjects[pid].infoDiv.remove();
@@ -595,8 +639,8 @@
                 }
             }
             
-            // --- ✨ تعديل جذري: منطق جديد لتوزيع اللاعبين ---
-            const opponentsOrder = turnOrder.filter(pid => pid !== currentUserId);
+            const opponentsOrder = turnOrder.filter(pid => pid !== myId);
+            const totalPlayers = turnOrder.length;
 
             turnOrder.forEach((pid) => {
                 const player = players[pid];
@@ -606,25 +650,30 @@
                     playerObjects[pid] = { cards: [], revealedCards: [], infoDiv: null };
                 }
 
-                const isMe = pid === currentUserId;
+                const isMe = pid === myId;
                 let pos3d, screenPos;
 
                 if (isMe) {
-                    pos3d = new THREE.Vector3(0, 3, 10); // موقع اللاعب الرئيسي في الأسفل
-                    screenPos = { x: window.innerWidth / 2, y: window.innerHeight - 80 }; // موقع واجهة اللاعب الرئيسي
+                    pos3d = new THREE.Vector3(0, 3, 10);
+                    // Manually position main player's UI at the bottom center for stability
+                    screenPos = { x: window.innerWidth / 2, y: window.innerHeight - 90 };
                 } else {
-                    // توزيع الخصوم في الأعلى
                     const opponentIndex = opponentsOrder.indexOf(pid);
                     const totalOpponents = opponentsOrder.length;
-                    const spacing = 12; // المسافة بين الخصوم
-                    const xOffset = (opponentIndex - (totalOpponents - 1) / 2) * spacing;
                     
-                    pos3d = new THREE.Vector3(xOffset, 3.5, -9); // موقع الخصوم في الأعلى
+                    // Distribute opponents in a semi-circle at the top
+                    const angle = Math.PI - ( (Math.PI / (totalOpponents + 1)) * (opponentIndex + 1) );
+                    const radius = Math.min(window.innerWidth / 50, 12); // Dynamic radius based on screen width
+                    
+                    const xOffset = Math.cos(angle) * radius;
+                    const zOffset = Math.sin(angle) * radius * -1 - 6;
+
+                    pos3d = new THREE.Vector3(xOffset, 3.5, zOffset);
                     screenPos = toScreenPosition(new THREE.Vector3(pos3d.x, pos3d.y + 2.5, pos3d.z), camera);
                 }
 
-                updateCardGroup(playerObjects[pid].cards, player.cards, pid, 'active', pos3d, isMe);
-                updateCardGroup(playerObjects[pid].revealedCards, player.revealedCards, pid, 'revealed', pos3d, isMe);
+                updateCardGroup(playerObjects[pid].cards, player.cards, 'active', pos3d, isMe);
+                updateCardGroup(playerObjects[pid].revealedCards, player.revealedCards, 'revealed', pos3d, isMe);
         
                 let infoDiv = playerObjects[pid].infoDiv;
                 if (!infoDiv) {
@@ -662,8 +711,7 @@
             updateTurnTimer(gameData);
         }
         
-        // --- ✨ تعديل: دالة تحديث البطاقات مبسطة قليلاً ---
-        function updateCardGroup(meshArray, dataArray, pid, cardGroupType, basePos, isMe) {
+        function updateCardGroup(meshArray, dataArray, cardGroupType, basePos, isMe) {
             while (meshArray.length > dataArray.length) scene.remove(meshArray.pop());
             while (meshArray.length < dataArray.length) {
                 const newMesh = createCardMesh(null, cardGroupType === 'revealed');
@@ -690,7 +738,7 @@
                     targetPos = new THREE.Vector3(basePos.x + offset, basePos.y, basePos.z);
                     targetRot = new THREE.Euler(isMe ? -Math.PI / 8 : 0, 0, 0);
                 } else { // Revealed
-                    targetPos = new THREE.Vector3(basePos.x + offset * 0.8, 0.3, basePos.z + (isMe ? 2 : -2));
+                    targetPos = new THREE.Vector3(basePos.x + offset * 0.8, 0.3, basePos.z + (isMe ? 3 : -3));
                     targetRot = new THREE.Euler(-Math.PI / 2.3, 0, 0);
                 }
         
@@ -699,83 +747,8 @@
             });
         }
         
-        // The rest of your JavaScript code remains unchanged...
-        // ... (Paste all functions from initThreeJS to the end of the script here)
-        // This is omitted for brevity. Make sure to include it.
-                
-        function initThreeJS() {
-            if (scene) return;
-            const container = document.getElementById('game-container');
-            clock = new THREE.Clock();
-            
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a1a1a);
-            scene.fog = new THREE.Fog(0x1a1a1a, 25, 50);
+        // --- GAME FLOW & UPDATES (FROM CODE 2 - THE WORKING LOGIC) ---
 
-            camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 18, 22); // ✨ تعديل الكاميرا لرؤية أفضل
-            camera.lookAt(0, 0, 0);
-
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.shadowMap.enabled = true;
-            container.appendChild(renderer.domElement);
-
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-            scene.add(ambientLight);
-            const pointLight = new THREE.PointLight(0xffffff, 1, 100);
-            pointLight.position.set(0, 15, 10);
-            pointLight.castShadow = true;
-            scene.add(pointLight);
-
-            const tableGeometry = new THREE.CylinderGeometry(8, 8.5, 0.5, 64); // ✨ طاولة أكبر
-            const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x3d291a });
-            const table = new THREE.Mesh(tableGeometry, tableMaterial);
-            table.position.y = -0.25;
-            table.receiveShadow = true;
-            scene.add(table);
-
-            window.addEventListener('resize', onWindowResize, false);
-            onWindowResize();
-            animate();
-        }
-        
-        function preloadTextures(callback) {
-            const keys = Object.keys(CARD_IMAGES);
-            if (keys.length === 0) return callback ? callback() : null;
-            let loaded = 0;
-            const total = keys.length;
-            const onAssetLoaded = () => { if (++loaded === total && callback) callback(); };
-            keys.forEach(key => textureLoader.load(CARD_IMAGES[key], t => { cardTextures[key] = t; onAssetLoaded(); }, undefined, onAssetLoaded));
-        }
-        
-        function createCardMesh(cardType, isFaceUp = false) {
-             const cardGeometry = new THREE.BoxGeometry(3.0, 4.15, 0.1);
-             const sideMaterial = new THREE.MeshStandardMaterial({ color: 0x111111 });
-             const materials = [
-                sideMaterial, sideMaterial, sideMaterial, sideMaterial,
-                new THREE.MeshStandardMaterial({ map: isFaceUp && cardTextures[cardType] ? cardTextures[cardType] : cardTextures.BACK }),
-                new THREE.MeshStandardMaterial({ map: cardTextures.BACK })
-             ];
-             const cardMesh = new THREE.Mesh(cardGeometry, materials);
-             cardMesh.castShadow = true;
-             cardMesh.userData = { type: cardType, isFaceUp: isFaceUp };
-             return cardMesh;
-        }
-
-        function onWindowResize() {
-            if (!camera || !renderer) return;
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            if(renderer) renderer.render(scene, camera);
-        }
-        
         function listenToGameUpdates(gameId) {
             const gameRef = doc(db, 'games', gameId);
             if (gameUnsubscribe) gameUnsubscribe();
@@ -785,16 +758,22 @@
                     const gameData = docSnap.data();
                     if (!scene) return;
                     renderGameState(gameData);
+                    
                     const myPlayerData = gameData.players[currentUserId];
                     if (!myPlayerData || !myPlayerData.isAlive) {
                         hideAllModals();
                         checkGameOver(gameData);
                         return;
                     }
+                    
                     const myUpdate = gameData.playerUpdates ? gameData.playerUpdates[currentUserId] : null;
-                    if (myUpdate) handlePlayerUpdate(gameData, myUpdate);
-                    else if (gameData.pendingAction) handlePendingAction(gameData);
-                    else hideAllModals();
+                    if (myUpdate) {
+                        handlePlayerUpdate(gameData, myUpdate);
+                    } else if (gameData.pendingAction) {
+                        handlePendingAction(gameData);
+                    } else {
+                        hideAllModals();
+                    }
                     checkGameOver(gameData);
                 } else {
                     if (gameUnsubscribe) gameUnsubscribe();
@@ -812,10 +791,10 @@
 
             actionsContainer.innerHTML = '';
             if (!shouldShow) {
-                 if(myTurn && (gameData.pendingAction || (gameData.playerUpdates && gameData.playerUpdates[currentUserId]))) {
+                if(myTurn && (gameData.pendingAction || (gameData.playerUpdates && gameData.playerUpdates[currentUserId]))) {
                     actionsContainer.innerHTML = `<p class="text-gray-400 text-xs animate-pulse p-2">في انتظار ردود اللاعبين...</p>`;
-                 }
-                 return;
+                }
+                return;
             }
 
             const myCoins = me.coins;
@@ -844,6 +823,7 @@
                     if (!gameSnap.exists()) return;
                     const gameData = gameSnap.data();
                     if (gameData.turnOrder[gameData.currentPlayerIndex] !== currentUserId || gameData.pendingAction) return;
+                    
                     const updates = {
                         [`players.${currentUserId}.coins`]: gameData.players[currentUserId].coins + 1,
                         log: arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> نفذ الوقت وأخذ 'دخل' تلقائيًا.`),
@@ -888,7 +868,7 @@
                 const gameData = gameSnap.data();
                 const actorName = gameData.players[currentUserId].name;
                 
-                let logMessage = `<strong>${actorName}</strong> ينوي القيام بـ: <strong>${actionType}</strong>`;
+                let logMessage = `<strong>${actorName}</strong> ينوي القيام بـ: <strong>${CARD_TRANSLATIONS[actionType] || actionType}</strong>`;
                 if (targetId) logMessage += ` ضد <strong>${gameData.players[targetId].name}</strong>.`;
                 
                 const updates = { log: arrayUnion(logMessage), justUsedForeignAid: null };
@@ -896,7 +876,7 @@
                 const unchallengable = ['Income', 'Coup'];
                 if (unchallengable.includes(actionType)) {
                     Object.assign(updates, getActionEffects(gameData, { actorId: currentUserId, actionType, targetId }));
-                    if (actionType !== 'Coup') { // Coup has its own turn-ending logic inside mustReveal
+                    if (actionType !== 'Coup') {
                         updates.currentPlayerIndex = getNextPlayerIndex(gameData);
                         updates.turnStartTime = serverTimestamp();
                     }
@@ -906,21 +886,290 @@
                 await updateDoc(gameRef, updates);
             } catch (error) { console.error("Error initiating action:", error); }
         }
-        
-        function hideModal(modalId) { const modal = document.getElementById(modalId); if(modal) modal.style.display = 'none'; }
-        function hideAllModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
 
-        function getNextPlayerIndex(gameData) {
-            let nextIndex = gameData.currentPlayerIndex;
-            const len = gameData.turnOrder.length;
-            if (len === 0) return 0;
-            for (let i = 1; i <= len; i++) {
-                nextIndex = (gameData.currentPlayerIndex + i) % len;
-                if (gameData.players[gameData.turnOrder[nextIndex]]?.isAlive) return nextIndex;
+        function handlePendingAction(gameData) {
+            const { pendingAction, players } = gameData;
+            if (!pendingAction) { hideModal('interaction-modal'); return; }
+
+            const me = players[currentUserId];
+            const modal = document.getElementById('interaction-modal');
+            const buttonsContainer = document.getElementById('modal-buttons');
+            buttonsContainer.innerHTML = '';
+
+            // Responding to another player's action
+            if (pendingAction.type === 'ACTION' && pendingAction.actorId !== currentUserId && me.isAlive && !pendingAction.responses[currentUserId]) {
+                const actorName = players[pendingAction.actorId].name;
+                document.getElementById('modal-title').textContent = `حركة من ${actorName}!`;
+                document.getElementById('modal-text').textContent = `${actorName} يقوم بحركة '${CARD_TRANSLATIONS[pendingAction.actionType] || pendingAction.actionType}'.`;
+
+                buttonsContainer.appendChild(createModalBtn('تحدي!', () => respondToAction('challenge')));
+
+                const amITarget = pendingAction.targetId === currentUserId;
+                if (pendingAction.actionType === 'Foreign Aid') {
+                    buttonsContainer.appendChild(createModalBtn('أمنع (بالدوق)', () => respondToAction('block', 'BlockForeignAid')));
+                }
+                if (amITarget && pendingAction.actionType === 'Steal') {
+                    buttonsContainer.appendChild(createModalBtn('أمنع (بالقبطان/السفير)', () => respondToAction('block', 'BlockSteal')));
+                }
+                if (amITarget && pendingAction.actionType === 'Assassinate') {
+                    buttonsContainer.appendChild(createModalBtn('أمنع (بالكونتيسا)', () => respondToAction('block', 'BlockAssassination')));
+                }
+
+                buttonsContainer.appendChild(createModalBtn('تجاهل', () => respondToAction('pass')));
+                modal.style.display = 'flex';
+                return;
             }
-            return gameData.currentPlayerIndex; // Should only happen if one player left
+
+            // Responding to someone blocking your action
+            if (pendingAction.type === 'BLOCK' && pendingAction.actorId === currentUserId && me.isAlive && !pendingAction.responses[currentUserId]) {
+                const blockerName = players[pendingAction.blockerId].name;
+                document.getElementById('modal-title').textContent = `${blockerName} يمنع حركتك!`;
+                document.getElementById('modal-text').textContent = `${blockerName} يدعي أن لديه '${CARD_TRANSLATIONS[pendingAction.blockCard]}' لمنع حركتك.`;
+                
+                buttonsContainer.appendChild(createModalBtn('تحدى المنع!', () => respondToAction('challenge_block')));
+                buttonsContainer.appendChild(createModalBtn('اقبل المنع', () => respondToAction('pass_block')));
+                modal.style.display = 'flex';
+                return;
+            }
+
+            hideModal('interaction-modal');
+        }
+
+        async function respondToAction(responseType, blockType = null) {
+            hideModal('interaction-modal');
+            const gameRef = doc(db, 'games', currentGameId);
+            
+            await runTransaction(db, async (transaction) => {
+                const gameSnap = await transaction.get(gameRef);
+                if (!gameSnap.exists()) return;
+                let gameData = gameSnap.data();
+                let { pendingAction, players, turnOrder } = gameData;
+                
+                if (!pendingAction) return;
+
+                const updates = {};
+                const me = players[currentUserId];
+
+                if (pendingAction.type === 'ACTION') {
+                    if (responseType === 'pass') {
+                        updates[`pendingAction.responses.${currentUserId}`] = 'pass';
+                        const aliveOpponents = turnOrder.filter(pid => players[pid].isAlive && pid !== pendingAction.actorId);
+                        const allPassed = aliveOpponents.every(pid => (pendingAction.responses[pid] === 'pass' || pid === currentUserId));
+                        
+                        if (allPassed) {
+                            updates.log = arrayUnion(`الجميع تجاهل. <strong>${players[pendingAction.actorId].name}</strong> نجح في حركته.`);
+                            Object.assign(updates, getActionEffects(gameData, pendingAction));
+                            
+                            if (pendingAction.actionType === 'Foreign Aid') {
+                                updates.log = arrayUnion(`<strong>${players[pendingAction.actorId].name}</strong> حصل على دور إضافي للمساعدة الأجنبية.`);
+                                updates.turnStartTime = serverTimestamp();
+                                updates.justUsedForeignAid = pendingAction.actorId;
+                            } else if (pendingAction.actionType !== 'Exchange' && pendingAction.actionType !== 'Assassinate' && pendingAction.actionType !== 'Coup') {
+                                updates.currentPlayerIndex = getNextPlayerIndex(gameData);
+                                updates.turnStartTime = serverTimestamp();
+                            }
+                            updates.pendingAction = null;
+                        }
+                    } else if (responseType === 'challenge') {
+                        await resolveChallenge(transaction, gameData, pendingAction, currentUserId);
+                        return;
+                    } else if (responseType === 'block') {
+                        const blockCardMap = { 'BlockForeignAid': CARD_TYPES.DUKE, 'BlockAssassination': CARD_TYPES.CONTESSA, 'BlockSteal': [CARD_TYPES.CAPTAIN, CARD_TYPES.AMBASSADOR] };
+                        const blockCard = Array.isArray(blockCardMap[blockType]) ? (me.cards.includes(CARD_TYPES.CAPTAIN) ? CARD_TYPES.CAPTAIN : CARD_TYPES.AMBASSADOR) : blockCardMap[blockType];
+                        
+                        updates.pendingAction = {
+                            type: 'BLOCK', actorId: pendingAction.actorId, actionType: pendingAction.actionType,
+                            targetId: pendingAction.targetId, blockerId: currentUserId,
+                            blockCard: blockCard, responses: {}
+                        };
+                        updates.log = arrayUnion(`<strong>${me.name}</strong> يمنع الحركة!`);
+                    }
+                }
+                else if (pendingAction.type === 'BLOCK') {
+                    if (responseType === 'challenge_block') {
+                        await resolveBlockChallenge(transaction, gameData, pendingAction, currentUserId);
+                        return;
+                    } else if (responseType === 'pass_block') {
+                        updates.log = arrayUnion(`<strong>${me.name}</strong> قبل المنع. الحركة فشلت.`);
+                        updates.pendingAction = null;
+                        updates.currentPlayerIndex = getNextPlayerIndex(gameData);
+                        updates.turnStartTime = serverTimestamp();
+                    }
+                }
+                
+                transaction.update(gameRef, updates);
+            });
+        }
+
+        async function resolveChallenge(transaction, gameData, action, challengerId) {
+            const gameRef = doc(db, 'games', currentGameId);
+            let { players, deck } = gameData;
+            const actor = players[action.actorId];
+            const challenger = players[challengerId];
+            const updates = {};
+            const claimCard = { 'Tax': CARD_TYPES.DUKE, 'Assassinate': CARD_TYPES.ASSASSIN, 'Steal': CARD_TYPES.CAPTAIN, 'Exchange': CARD_TYPES.AMBASSADOR }[action.actionType];
+
+            updates.log = arrayUnion(`<strong>${challenger.name}</strong> يتحدى <strong>${actor.name}</strong>!`);
+
+            if (actor.cards.includes(claimCard)) { // Challenge Failed
+                updates.log.push(`تحدي فاشل! <strong>${actor.name}</strong> كان صادقًا. <strong>${challenger.name}</strong> يخسر نفوذًا.`);
+                updates[`playerUpdates.${challengerId}`] = { type: 'mustReveal', reason: 'خسرت التحدي.' };
+                
+                // Swap card
+                const cardIndex = actor.cards.indexOf(claimCard);
+                const revealedCard = actor.cards.splice(cardIndex, 1)[0];
+                actor.cards.push(deck.pop());
+                deck.push(revealedCard);
+                updates[`players.${action.actorId}.cards`] = actor.cards;
+                updates.deck = shuffle(deck);
+                updates.log.push(`${actor.name} أظهر بطاقة ${CARD_TRANSLATIONS[revealedCard]} وسحب واحدة جديدة.`);
+
+                // Action succeeds
+                Object.assign(updates, getActionEffects({ ...gameData, deck, players }, action));
+                updates.pendingAction = null; 
+
+            } else { // Challenge Succeeded
+                updates.log.push(`تحدي ناجح! <strong>${actor.name}</strong> كان يكذب ويخسر نفوذًا.`);
+                updates[`playerUpdates.${action.actorId}`] = { type: 'mustReveal', reason: 'تم كشف كذبتك.' };
+                updates.pendingAction = null; 
+                updates.currentPlayerIndex = getNextPlayerIndex(gameData);
+                updates.turnStartTime = serverTimestamp();
+            }
+            transaction.update(gameRef, updates);
+        }
+
+        async function resolveBlockChallenge(transaction, gameData, action, challengerId) {
+            const gameRef = doc(db, 'games', currentGameId);
+            let { players, deck } = gameData;
+            const blocker = players[action.blockerId];
+            const challenger = players[challengerId]; 
+            const updates = {};
+            const blockClaim = action.blockCard;
+
+            updates.log = arrayUnion(`<strong>${challenger.name}</strong> يتحدى منع <strong>${blocker.name}</strong>!`);
+
+            if (blocker.cards.includes(blockClaim)) { // Challenge Failed (Blocker was truthful)
+                updates.log.push(`تحدي فاشل! <strong>${blocker.name}</strong> كان صادقًا. <strong>${challenger.name}</strong> يخسر نفوذًا.`);
+                updates[`playerUpdates.${challengerId}`] = { type: 'mustReveal', reason: 'خسرت تحدي المنع.' };
+                
+                // Swap card for blocker
+                const cardIndex = blocker.cards.indexOf(blockClaim);
+                const revealedCard = blocker.cards.splice(cardIndex, 1)[0];
+                blocker.cards.push(deck.pop());
+                deck.push(revealedCard);
+                updates[`players.${action.blockerId}.cards`] = blocker.cards;
+                updates.deck = shuffle(deck);
+                updates.log.push(`${blocker.name} أظهر بطاقة ${CARD_TRANSLATIONS[revealedCard]} وسحب واحدة جديدة.`);
+                
+                // Block succeeds, turn ends
+                updates.pendingAction = null;
+                updates.currentPlayerIndex = getNextPlayerIndex(gameData);
+                updates.turnStartTime = serverTimestamp();
+            } else { // Challenge Succeeded (Blocker was bluffing)
+                updates.log.push(`تحدي ناجح! <strong>${blocker.name}</strong> كان يكذب ويخسر نفوذًا.`);
+                updates[`playerUpdates.${action.blockerId}`] = { type: 'mustReveal', reason: 'تم كشف كذبة المنع.' };
+                
+                // Action now goes through
+                Object.assign(updates, getActionEffects(gameData, action));
+                updates.pendingAction = null; 
+            }
+            transaction.update(gameRef, updates);
+        }
+
+        function getActionEffects(gameData, action) {
+            const { actorId, actionType, targetId } = action;
+            const updates = {};
+            const actorCoins = gameData.players[actorId].coins;
+            
+            switch (actionType) {
+                case 'Income': updates[`players.${actorId}.coins`] = actorCoins + 1; break;
+                case 'Foreign Aid': updates[`players.${actorId}.coins`] = actorCoins + 2; break;
+                case 'Tax': updates[`players.${actorId}.coins`] = actorCoins + 3; break;
+                case 'Coup':
+                    updates[`players.${actorId}.coins`] = actorCoins - 7;
+                    updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
+                    break;
+                case 'Steal':
+                    const targetCoins = gameData.players[targetId].coins;
+                    const stolenAmount = Math.min(2, targetCoins);
+                    updates[`players.${actorId}.coins`] = actorCoins + stolenAmount;
+                    updates[`players.${targetId}.coins`] = targetCoins - stolenAmount;
+                    break;
+                case 'Assassinate':
+                    updates[`players.${actorId}.coins`] = actorCoins - 3;
+                    updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم اغتيالك!' };
+                    break;
+                case 'Exchange':
+                    const newDeck = [...gameData.deck];
+                    const drawnCards = [newDeck.pop(), newDeck.pop()].filter(Boolean); // Filter out undefined if deck runs out
+                    updates[`playerUpdates.${actorId}`] = { type: 'exchange', cards: drawnCards };
+                    updates.deck = newDeck;
+                    break;
+            }
+            return updates;
         }
         
+        function handlePlayerUpdate(gameData, update) {
+            hideAllModals();
+            if (update.type === 'mustReveal') {
+                showRevealCardModal(gameData, update.reason);
+            } else if (update.type === 'exchange') {
+                showExchangeModal(gameData, update.cards);
+            }
+        }
+
+        async function revealCard(cardIndex) {
+            hideModal('reveal-card-modal');
+            await runTransaction(db, async (transaction) => {
+                const gameRef = doc(db, 'games', currentGameId);
+                const gameSnap = await transaction.get(gameRef);
+                const gameData = gameSnap.data();
+                const player = gameData.players[currentUserId];
+
+                const cardToReveal = player.cards.splice(cardIndex, 1)[0];
+                player.revealedCards.push(cardToReveal);
+
+                const updates = {};
+                let logMessage = `<strong>${player.name}</strong> يكشف ويخسر <strong>${CARD_TRANSLATIONS[cardToReveal]}</strong>.`;
+                if (player.cards.length === 0) {
+                    player.isAlive = false;
+                    logMessage += ` <strong>${player.name}</strong> تم إقصاؤه!`;
+                }
+
+                updates[`players.${currentUserId}`] = player;
+                updates[`playerUpdates.${currentUserId}`] = null;
+                
+                // If the reveal was NOT caused by losing a challenge, the turn ends.
+                const wasChaotic = gameData.playerUpdates && gameData.playerUpdates[currentUserId];
+                if (!wasChaotic) {
+                    updates.currentPlayerIndex = getNextPlayerIndex(gameData);
+                    updates.turnStartTime = serverTimestamp();
+                }
+
+                updates.log = arrayUnion(logMessage);
+                transaction.update(gameRef, updates);
+            });
+        }
+
+        async function confirmExchange(keptCards, returnedCards) {
+             hideModal('exchange-modal');
+             await runTransaction(db, async (transaction) => {
+                 const gameRef = doc(db, 'games', currentGameId);
+                 const gameData = await transaction.get(gameRef).then(snap => snap.data());
+                 
+                 const updates = {
+                     [`players.${currentUserId}.cards`]: keptCards,
+                     [`playerUpdates.${currentUserId}`]: null,
+                     deck: shuffle([...gameData.deck, ...returnedCards]),
+                     log: arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> قام بتبديل بطاقاته.`),
+                     currentPlayerIndex: getNextPlayerIndex(gameData),
+                     turnStartTime: serverTimestamp()
+                 };
+                 transaction.update(gameRef, updates);
+             });
+        }
+        
+        // --- GAME OVER & CLEANUP ---
         async function checkGameOver(gameData) {
             if (gameData.gameState !== 'active') return;
             const alivePlayers = gameData.turnOrder.filter(pid => gameData.players[pid]?.isAlive);
@@ -933,29 +1182,29 @@
                 
                 try {
                     await updateDoc(doc(db, 'games', currentGameId), { gameState: 'finished', log: arrayUnion(`انتهت اللعبة! الفائز هو <strong>${winnerName}</strong>.`) });
-                    showGameOverScreen(`الفائز هو ${winnerName}!`, "سيتم حذف بيانات هذه اللعبة بعد قليل.");
-                    setTimeout(() => deleteGameData(currentGameId), 10000); // Cleanup after 10s
+                    showGameOverScreen(`الفائز هو ${winnerName}!`, "سيتم حذف بيانات هذه اللعبة بعد 15 ثانية.");
+                    setTimeout(() => deleteGameData(currentGameId), 15000);
                 } catch(e) { console.error("Error finishing game:", e); }
             }
         }
-        
         function showGameOverScreen(winnerText, cleanupText) {
-             document.getElementById('winner-text').textContent = winnerText;
-             document.getElementById('cleanup-text').textContent = cleanupText;
-             document.getElementById('game-over-screen').style.display = 'flex';
-        }
-
+              document.getElementById('winner-text').textContent = winnerText;
+              document.getElementById('cleanup-text').textContent = cleanupText;
+              document.getElementById('game-over-screen').style.display = 'flex';
+         }
         async function deleteGameData(gameId) {
             if (!gameId || !currentUserId) return;
             try {
                 const gameRef = doc(db, 'games', gameId);
                 const gameSnap = await getDoc(gameRef);
+                // Only the creator can delete the game data to prevent accidental deletion
                 if (gameSnap.exists() && gameSnap.data().creatorId === currentUserId) {
                     await deleteDoc(gameRef);
                 }
             } catch (error) { console.error("Error deleting game data:", error); }
         }
         
+        // --- UTILITY AND UI HELPER FUNCTIONS ---
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -963,31 +1212,114 @@
             }
             return array;
         }
-
         function toScreenPosition(vector, camera) {
             const width = window.innerWidth, height = window.innerHeight;
             const widthHalf = width / 2, heightHalf = height / 2;
             const projected = vector.clone().project(camera);
             return { x: (projected.x * widthHalf) + widthHalf, y: -(projected.y * heightHalf) + heightHalf };
         }
-        
-        var handlePendingAction = function(gameData) { /* ... NO CHANGE ... */ }
-        var respondToAction = async function(responseType, blockType = null) { /* ... NO CHANGE ... */ }
-        var resolveChallenge = async function(transaction, gameData, action, challengerId) { /* ... NO CHANGE ... */ }
-        var resolveBlockChallenge = async function(transaction, gameData, action, challengerId) { /* ... NO CHANGE ... */ }
-        var getActionEffects = function(gameData, action) { /* ... NO CHANGE ... */ }
-        var handlePlayerUpdate = function(gameData, update) { /* ... NO CHANGE ... */ }
-        var revealCard = async function(cardIndex) { /* ... NO CHANGE ... */ }
-        var confirmExchange = async function(keptCards, returnedCards) { /* ... NO CHANGE ... */ }
-        var showRevealCardModal = function(gameData, reason) { /* ... NO CHANGE ... */ }
-        var showExchangeModal = function(gameData, drawnCards) { /* ... NO CHANGE ... */ }
-        var addActionBtn = function(text, onClick, disabled = false) { /* ... NO CHANGE ... */ }
-        var createModalBtn = function(text, onClick) { /* ... NO CHANGE ... */ }
-        var showTargetSelection = function(actionType) { /* ... NO CHANGE ... */ }
+        function hideModal(modalId) { const modal = document.getElementById(modalId); if(modal) modal.style.display = 'none'; }
+        function hideAllModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+        function getNextPlayerIndex(gameData) {
+            let nextIndex = gameData.currentPlayerIndex;
+            const len = gameData.turnOrder.length;
+            if (len === 0) return 0;
+            for (let i = 1; i <= len; i++) {
+                nextIndex = (gameData.currentPlayerIndex + i) % len;
+                if (gameData.players[gameData.turnOrder[nextIndex]]?.isAlive) return nextIndex;
+            }
+            return gameData.currentPlayerIndex;
+        }
+        function addActionBtn(text, onClick, disabled = false) {
+            const btn = document.createElement('button');
+            btn.className = 'action-btn';
+            btn.textContent = text;
+            btn.disabled = disabled;
+            btn.onclick = onClick;
+            document.getElementById('action-buttons').appendChild(btn);
+        }
+        function createModalBtn(text, onClick) {
+            const btn = document.createElement('button');
+            btn.className = 'action-btn';
+            btn.textContent = text;
+            btn.onclick = onClick;
+            return btn;
+        }
+        function showRevealCardModal(gameData, reason) {
+            const modal = document.getElementById('reveal-card-modal');
+            const container = document.getElementById('reveal-cards-container');
+            const myData = gameData.players[currentUserId];
+            
+            document.getElementById('reveal-title').textContent = reason;
+            container.innerHTML = '';
 
-        // NOTE: From `handlePendingAction` to `showTargetSelection`, the functions are identical to your
-        // previous code. They are omitted here for brevity. You must ensure they are present in your final script.
-        // I've left them in the final code block for you to copy.
+            myData.cards.forEach((cardType, index) => {
+                const img = document.createElement('img');
+                img.src = CARD_IMAGES[cardType];
+                img.onclick = () => revealCard(index);
+                container.appendChild(img);
+            });
+            modal.style.display = 'flex';
+        }
+        function showExchangeModal(gameData, drawnCards) {
+            const modal = document.getElementById('exchange-modal');
+            const container = document.getElementById('exchange-cards-container');
+            const myData = gameData.players[currentUserId];
+            const confirmBtn = document.getElementById('confirm-exchange-btn');
+            
+            const allCards = [...myData.cards, ...drawnCards];
+            let selectedImages = [];
+            
+            container.innerHTML = '';
+            const numToKeep = myData.cards.length;
+            document.getElementById('exchange-text').textContent = `لديك ${allCards.length} بطاقات. اختر ${numToKeep} للاحتفاظ بها.`;
+            
+            allCards.forEach((cardType) => {
+                const img = document.createElement('img');
+                img.src = CARD_IMAGES[cardType];
+                img.dataset.cardType = cardType;
+
+                img.onclick = () => {
+                    if (img.classList.contains('selected')) {
+                        img.classList.remove('selected');
+                        selectedImages.splice(selectedImages.indexOf(img), 1);
+                    } else if (selectedImages.length < numToKeep) {
+                        img.classList.add('selected');
+                        selectedImages.push(img);
+                    }
+                    confirmBtn.disabled = selectedImages.length !== numToKeep;
+                };
+                container.appendChild(img);
+            });
+
+            confirmBtn.onclick = () => {
+                const keptCards = selectedImages.map(img => img.dataset.cardType);
+                const returnedCards = allCards.filter(card => !keptCards.includes(card) || (keptCards.splice(keptCards.indexOf(card), 1) && false));
+                confirmExchange(selectedImages.map(img => img.dataset.cardType), returnedCards);
+            };
+            modal.style.display = 'flex';
+        }
+        function showTargetSelection(actionType) {
+            const modal = document.getElementById('target-selection-modal');
+            const list = document.getElementById('target-player-list');
+            list.innerHTML = '';
+            
+            getDoc(doc(db, 'games', currentGameId)).then(docSnap => {
+                const gameData = docSnap.data();
+                gameData.turnOrder.forEach(pid => {
+                    if (pid !== currentUserId && gameData.players[pid].isAlive) {
+                        const btn = createModalBtn(gameData.players[pid].name, () => {
+                            hideModal('target-selection-modal');
+                            initiateAction(actionType, pid);
+                        });
+                        list.appendChild(btn);
+                    }
+                });
+                modal.style.display = 'flex';
+            });
+            
+            document.getElementById('cancel-target-btn').onclick = () => hideModal('target-selection-modal');
+        }
 
     </script>
 </body>
