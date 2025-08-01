@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة Coup 3D</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ui-element {
+            pointer-events: auto;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 8px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        .player-info {
+            position: absolute;
+            text-align: center;
+            transform: translateX(-50%);
+            transition: all 0.3s ease;
+        }
+        .player-info .avatar {
+            width: 60px;
+            height: 60px;
+            background-color: #4a4a4a;
+            border-radius: 50%;
+            border: 2px solid white;
+            margin: 0 auto 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .player-info.current-turn {
+            transform: translateX(-50%) scale(1.1);
+            border: 2px solid #fde047;
+            box-shadow: 0 0 20px #fde047, 0 0 30px #fde047;
+        }
+        .player-info.eliminated {
+            opacity: 0.4;
+            filter: grayscale(1);
+        }
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            max-width: 90%;
+        }
+        .action-btn { /* FIX: Renamed for clarity */
+            background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            background: linear-gradient(145deg, #6a6a6a, #4a4a4a);
+        }
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #lobby, #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            flex-direction: column;
+            gap: 20px;
+        }
+        #lobby input {
+            color: black;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            width: 250px;
+            text-align: center;
+        }
+        #lobby button {
+             background: #fde047;
+             color: #1a1a1a;
+             font-weight: bold;
+         }
+        .message-log {
+            position: absolute;
+            bottom: 150px; /* Adjusted position */
+            left: 20px;
+            width: 350px;
+            height: 180px;
+            background-color: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            padding: 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column-reverse; /* To show newest messages at the bottom */
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .message-log p { margin: 2px 0; line-height: 1.4; }
+        .modal {
+            position: fixed;
+            z-index: 50;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #2d2d2d;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid #fde047;
+            width: 90%;
+            max-width: 500px;
+        }
+        .card-selection-container img {
+             width: 100px;
+             height: auto;
+             cursor: pointer;
+             transition: transform 0.2s ease, box-shadow 0.2s ease;
+             border-radius: 8px;
+             border: 2px solid transparent;
+        }
+        .card-selection-container img:hover {
+             transform: scale(1.05) translateY(-5px);
+             box-shadow: 0 0 15px #fde047;
+        }
+        .card-selection-container img.selected {
+            border-color: #fde047;
+            box-shadow: 0 0 20px #fde047;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container"></div>
+
+    <div id="lobby" style="display: flex;">
+        <div class="ui-element text-center">
+            <h1 class="text-4xl font-bold text-yellow-300 mb-4">لعبة Coup</h1>
+            <p class="mb-2">أدخل اسمك:</p>
+            <input type="text" id="player-name-input" placeholder="اسم اللاعب" class="mb-4">
+            <p class="mb-2">أدخل رمز اللعبة للانضمام أو أنشئ لعبة جديدة</p>
+            <input type="text" id="game-id-input" placeholder="رمز اللعبة">
+            <div class="flex gap-4 mt-4 justify-center">
+                <button id="join-game-btn" class="action-btn">الانضمام للعبة</button>
+                <button id="create-game-btn" class="action-btn">إنشاء لعبة جديدة</button>
+            </div>
+            <button id="start-game-btn" class="action-btn mt-4" style="display: none;">ابدأ اللعبة</button>
+            <p id="lobby-error" class="text-red-500 mt-4"></p>
+            <div class="mt-4">
+                <h3 class="text-lg font-bold mb-2">اللاعبون في الغرفة: <span id="game-id-display"></span></h3>
+                <ul id="lobby-players-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="ui-overlay" class="ui-overlay" style="display: none;">
+        <div id="player-infos" class="w-full h-full absolute"></div>
+        <div class="absolute top-4 right-4 ui-element">
+            <p>رمز اللعبة: <strong id="game-id-ingame"></strong></p>
+        </div>
+        <div id="message-log" class="message-log ui-element"></div>
+        <div id="action-buttons" class="action-buttons"></div>
+    </div>
+    
+    <div id="interaction-modal" class="modal">
+        <div class="modal-content ui-element">
+            <h3 id="modal-title" class="text-2xl mb-4"></h3>
+            <p id="modal-text" class="mb-6"></p>
+            <div id="modal-timer" class="mb-4"></div>
+            <div id="modal-buttons" class="flex justify-center gap-4 flex-wrap"></div>
+        </div>
+    </div>
+    
+    <div id="target-selection-modal" class="modal">
+        <div class="modal-content ui-element">
+            <h3 class="text-2xl mb-4">اختر لاعبًا</h3>
+            <div id="target-player-list" class="flex flex-col gap-2"></div>
+            <button id="cancel-target-btn" class="mt-4 action-btn">إلغاء</button>
+        </div>
+    </div>
+
+    <div id="reveal-card-modal" class="modal">
+        <div class="modal-content ui-element">
+            <h3 id="reveal-title" class="text-2xl mb-4"></h3>
+            <p id="reveal-text" class="mb-4">اختر بطاقة لتخسرها.</p>
+            <div id="reveal-cards-container" class="flex justify-center gap-4 mb-4 card-selection-container"></div>
+        </div>
+    </div>
+    
+    <div id="exchange-modal" class="modal">
+        <div class="modal-content ui-element">
+            <h3 class="text-2xl mb-4">تبديل البطاقات (السفير)</h3>
+            <p id="exchange-text" class="mb-4">لديك 4 بطاقات. اختر 2 للاحتفاظ بهما.</p>
+            <div id="exchange-cards-container" class="flex justify-center gap-4 mb-4 card-selection-container"></div>
+            <button id="confirm-exchange-btn" class="action-btn" disabled>تأكيد</button>
+        </div>
+    </div>
+
+    <div id="game-over-screen" style="display: none;"> <div class="ui-element text-center">
+            <h1 class="text-4xl font-bold text-yellow-300 mb-4">انتهت اللعبة!</h1>
+            <p id="winner-text" class="text-2xl"></p>
+            <button id="play-again-btn" class="mt-6 action-btn">العب مرة أخرى</button>
+        </div>
+    </div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc, collection, serverTimestamp, runTransaction, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // FIX: Corrected firebaseConfig, especially storageBucket.
+        const firebaseConfig = {
+            apiKey: "AIzaSyBQLIKtueG954OYiWz-YDBl_LyUxc_VRT8",
+            authDomain: "el-klika.firebaseapp.com",
+            projectId: "el-klika",
+            storageBucket: "el-klika.appspot.com", // Corrected URL
+            messagingSenderId: "357776786294",
+            appId: "1:357776786294:web:8cb4ec7eabe2895a133057",
+            measurementId: "G-0VZ35M4V50"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const CARD_TYPES = { DUKE: 'Duke', ASSASSIN: 'Assassin', CAPTAIN: 'Captain', AMBASSADOR: 'Ambassador', CONTESSA: 'Contessa' };
+        const CARD_TRANSLATIONS = {
+            [CARD_TYPES.DUKE]: 'الدوق', [CARD_TYPES.ASSASSIN]: 'القاتل',
+            [CARD_TYPES.CAPTAIN]: 'القبطان', [CARD_TYPES.AMBASSADOR]: 'السفير',
+            [CARD_TYPES.CONTESSA]: 'الكونتيسا'
+        };
+        const CARD_IMAGES = {
+            [CARD_TYPES.DUKE]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754009220/duke_lag0l2.png',
+            [CARD_TYPES.CONTESSA]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754009251/contessa_cxsqzf.png',
+            [CARD_TYPES.ASSASSIN]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754009250/assasin_k8epdg.png',
+            [CARD_TYPES.CAPTAIN]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754009235/captain_chjshh.png',
+            [CARD_TYPES.AMBASSADOR]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754009472/ambassador_n12xtv.png',
+            BACK: 'https://i.imgur.com/K1m4b0a.png'
+        };
+
+        let currentUserId = null, currentGameId = null, gameUnsubscribe = null;
+        let scene, camera, renderer, clock, raycaster, mouse;
+        let playerObjects = {}, cardTextures = {};
+        let textureLoader = new THREE.TextureLoader();
+        let interactionTimeout;
+
+        // --- UI ELEMENTS ---
+        const lobbyEl = document.getElementById('lobby');
+        const gameIdInput = document.getElementById('game-id-input');
+        const playerNameInput = document.getElementById('player-name-input');
+        const joinGameBtn = document.getElementById('join-game-btn');
+        const createGameBtn = document.getElementById('create-game-btn');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const lobbyError = document.getElementById('lobby-error');
+        const lobbyPlayersList = document.getElementById('lobby-players-list');
+        const messageLog = document.getElementById('message-log');
+        const gameIdDisplay = document.getElementById('game-id-display');
+        const gameIdIngame = document.getElementById('game-id-ingame');
+        const playAgainBtn = document.getElementById('play-again-btn');
+        
+        // --- AUTH ---
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                currentUserId = user.uid;
+            } else {
+                signInAnonymously(auth).catch(err => console.error("Anonymous sign-in failed:", err));
+            }
+        });
+
+        // --- LOBBY LOGIC ---
+        createGameBtn.addEventListener('click', async () => {
+            if (!validateLobbyInput()) return;
+            const newGameId = doc(collection(db, 'games')).id.substring(0, 5).toUpperCase();
+            await joinGame(newGameId, true);
+        });
+
+        joinGameBtn.addEventListener('click', async () => {
+            if (!validateLobbyInput()) return;
+            const gameId = gameIdInput.value.trim().toUpperCase();
+            if (!gameId) {
+                lobbyError.textContent = "الرجاء إدخال رمز اللعبة.";
+                return;
+            }
+            await joinGame(gameId, false);
+        });
+        
+        startGameBtn.addEventListener('click', async () => {
+             if(currentGameId) await startGame(currentGameId);
+        });
+        
+        // ADDED: Play again button functionality
+        playAgainBtn.addEventListener('click', () => {
+            window.location.reload();
+        });
+
+        function validateLobbyInput() {
+            if (!currentUserId) { lobbyError.textContent = "جاري المصادقة، يرجى الانتظار..."; return false; }
+            if (!playerNameInput.value.trim()) { lobbyError.textContent = "الرجاء إدخال اسمك."; return false; }
+            lobbyError.textContent = '';
+            return true;
+        }
+
+        async function joinGame(gameId, isCreating) {
+            const gameRef = doc(db, 'games', gameId);
+            
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const gameSnap = await transaction.get(gameRef);
+
+                    if (!isCreating && !gameSnap.exists()) {
+                        throw new Error("اللعبة غير موجودة.");
+                    }
+
+                    const gameData = gameSnap.exists() ? gameSnap.data() : null;
+
+                    if (isCreating) {
+                        const initialDeck = [];
+                        Object.values(CARD_TYPES).forEach(type => { for (let i = 0; i < 3; i++) initialDeck.push(type); });
+                        
+                        const newGameData = {
+                            players: {}, deck: shuffle(initialDeck), discardPile: [], gameState: 'waiting',
+                            currentPlayerIndex: 0, turnOrder: [], log: [`اللعبة ${gameId} تم إنشاؤها.`],
+                            createdAt: serverTimestamp(), creatorId: currentUserId
+                        };
+                        transaction.set(gameRef, newGameData);
+                        // Add current player immediately after creation
+                        addPlayerToGame(transaction, gameRef, newGameData);
+                    } else {
+                        if (Object.keys(gameData.players).length >= 6 && !gameData.players[currentUserId]) {
+                            throw new Error("هذه اللعبة ممتلئة.");
+                        }
+                        if (gameData.gameState !== 'waiting' && !gameData.players[currentUserId]) {
+                            throw new Error("لا يمكن الانضمام، اللعبة بدأت بالفعل.");
+                        }
+                        if (!gameData.players[currentUserId]) {
+                           addPlayerToGame(transaction, gameRef, gameData);
+                        }
+                    }
+                });
+                currentGameId = gameId;
+                listenToLobbyUpdates(gameId);
+            } catch (error) {
+                lobbyError.textContent = error.message;
+            }
+        }
+        
+        function addPlayerToGame(transaction, gameRef, gameData) {
+            const playerUpdate = {
+                [`players.${currentUserId}`]: {
+                    name: playerNameInput.value.trim(), coins: 2, cards: [],
+                    isAlive: true, revealedCards: [], mustReveal: false, exchangeInfo: null
+                },
+                turnOrder: arrayUnion(currentUserId),
+                log: arrayUnion(`${playerNameInput.value.trim()} انضم للعبة.`)
+            };
+            if (gameData.players && Object.keys(gameData.players).length > 0) {
+                 transaction.update(gameRef, playerUpdate);
+            } else {
+                 // For the very first player in a new game
+                 transaction.set(gameRef, playerUpdate, { merge: true });
+            }
+        }
+        
+        function listenToLobbyUpdates(gameId) {
+            const gameRef = doc(db, 'games', gameId);
+            if (gameUnsubscribe) gameUnsubscribe();
+            
+            gameIdDisplay.textContent = `(${gameId})`;
+            gameIdIngame.textContent = gameId;
+
+            gameUnsubscribe = onSnapshot(gameRef, (docSnap) => {
+                if (!docSnap.exists()) return;
+                const gameData = docSnap.data();
+                
+                if (gameData.gameState === 'waiting') {
+                    lobbyPlayersList.innerHTML = '';
+                    gameData.turnOrder.forEach(pid => {
+                        const player = gameData.players[pid];
+                        if (player) {
+                            const li = document.createElement('li');
+                            li.textContent = player.name + (pid === gameData.creatorId ? ' (المضيف)' : '');
+                            lobbyPlayersList.appendChild(li);
+                        }
+                    });
+                    
+                    if (currentUserId === gameData.creatorId && gameData.turnOrder.length >= 2) {
+                        startGameBtn.style.display = 'block';
+                    } else {
+                        startGameBtn.style.display = 'none';
+                    }
+                } else {
+                    if (lobbyEl.style.display !== 'none') {
+                        lobbyEl.style.display = 'none';
+                        document.getElementById('ui-overlay').style.display = 'flex';
+                        preloadTextures(() => {
+                            initThreeJS();
+                            listenToGameUpdates(gameId);
+                        });
+                    }
+                }
+            });
+        }
+
+        async function startGame(gameId) {
+            const gameRef = doc(db, 'games', gameId);
+            await runTransaction(db, async (transaction) => {
+                const gameSnap = await transaction.get(gameRef);
+                if (!gameSnap.exists()) throw new Error("Game not found");
+
+                let gameData = gameSnap.data();
+                if (gameData.gameState !== 'waiting') return;
+
+                let { deck, players, turnOrder } = gameData;
+                
+                turnOrder.forEach(pid => {
+                    players[pid].cards.push(deck.pop());
+                    players[pid].cards.push(deck.pop());
+                });
+
+                transaction.update(gameRef, {
+                    players, deck, gameState: 'active',
+                    log: arrayUnion("بدأت اللعبة! تم توزيع البطاقات.")
+                });
+            });
+        }
+        
+        function listenToGameUpdates(gameId) {
+            const gameRef = doc(db, 'games', gameId);
+            if (gameUnsubscribe) gameUnsubscribe();
+            
+            gameUnsubscribe = onSnapshot(gameRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const gameData = docSnap.data();
+                    renderGameState(gameData);
+                    
+                    const myPlayerData = gameData.players[currentUserId];
+                    if(myPlayerData?.mustReveal){
+                        showRevealCardModal(gameData);
+                    } else if (myPlayerData?.exchangeInfo) {
+                        showExchangeModal(gameData);
+                    } else {
+                        handlePendingAction(gameData);
+                    }
+                    checkGameOver(gameData);
+                }
+            });
+        }
+
+
+        // --- 3D SCENE --- (No major changes here)
+        function initThreeJS() {
+            // ... (your existing initThreeJS function is good)
+            const container = document.getElementById('game-container');
+            clock = new THREE.Clock();
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a1a);
+            scene.fog = new THREE.Fog(0x1a1a1a, 25, 50);
+
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 15, 22);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            const pointLight = new THREE.PointLight(0xffffff, 0.9, 100);
+            pointLight.position.set(0, 15, 10);
+            pointLight.castShadow = true;
+            scene.add(pointLight);
+
+            const tableGeometry = new THREE.CylinderGeometry(12, 13, 0.5, 64);
+            const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x3d291a });
+            const table = new THREE.Mesh(tableGeometry, tableMaterial);
+            table.position.y = -0.25;
+            table.receiveShadow = true;
+            scene.add(table);
+            
+            const deckGeometry = new THREE.BoxGeometry(2.5, 3.5, 0.5);
+            const deckMaterial = new THREE.MeshStandardMaterial({ map: cardTextures.BACK });
+            const deckMesh = new THREE.Mesh(deckGeometry, deckMaterial);
+            deckMesh.position.set(-5, 0.5, 0);
+            deckMesh.name = "deck";
+            scene.add(deckMesh);
+
+            window.addEventListener('resize', onWindowResize, false);
+            animate();
+        }
+
+        function preloadTextures(callback) {
+            // ... (your existing preloadTextures function is good)
+            const keys = Object.keys(CARD_IMAGES);
+            let loaded = 0;
+            keys.forEach(key => {
+                textureLoader.load(CARD_IMAGES[key], texture => {
+                    cardTextures[key] = texture;
+                    if (++loaded === keys.length) callback();
+                });
+            });
+        }
+
+        function createCardMesh(cardType, isClickable = false) {
+            // ... (your existing createCardMesh function is good)
+             const cardGeometry = new THREE.BoxGeometry(2.5, 3.5, 0.1);
+            const materials = [
+                new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
+                new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
+                new THREE.MeshStandardMaterial({ map: cardTextures[cardType] || cardTextures.BACK }),
+                new THREE.MeshStandardMaterial({ map: cardTextures.BACK })
+            ];
+            const cardMesh = new THREE.Mesh(cardGeometry, materials);
+            cardMesh.castShadow = true;
+            cardMesh.userData = { type: cardType, isClickable };
+            return cardMesh;
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if(renderer) renderer.render(scene, camera);
+        }
+        
+        // --- GAME STATE RENDERING ---
+        function renderGameState(gameData) {
+            // ... (Your existing renderGameState function is mostly good, just minor adjustments for clarity)
+            if (!scene) return;
+            
+            const playerIds = gameData.turnOrder;
+            const myIndex = playerIds.indexOf(currentUserId);
+            
+            document.getElementById('player-infos').innerHTML = '';
+            Object.values(playerObjects).forEach(pObj => pObj.cards.forEach(card => scene.remove(card)));
+            playerObjects = {};
+            scene.children.filter(c => c.name === 'revealedCard').forEach(c => scene.remove(c));
+
+            playerIds.forEach((pid, index) => {
+                const player = gameData.players[pid];
+                if (!player) return;
+
+                const relativeIndex = (index - myIndex + playerIds.length) % playerIds.length;
+                const angle = (relativeIndex / playerIds.length) * Math.PI * 2;
+                
+                const isMe = pid === currentUserId;
+                const radius = isMe ? 15 : 16;
+                const yPos = isMe ? 2 : 4;
+
+                const x = Math.sin(angle) * radius;
+                const z = Math.cos(angle) * radius;
+                
+                playerObjects[pid] = { cards: [], infoElement: null };
+
+                // Render hand cards
+                player.cards.forEach((cardType, i) => {
+                    const cardMesh = createCardMesh(isMe ? cardType : 'BACK');
+                    const cardOffset = (i - (player.cards.length - 1) / 2) * 3.0;
+                    
+                    if (isMe) {
+                        cardMesh.position.set(cardOffset, yPos, z);
+                        cardMesh.rotation.x = -Math.PI / 8;
+                    } else {
+                        cardMesh.position.set(x + cardOffset * 0.3, yPos, z);
+                        cardMesh.lookAt(camera.position);
+                    }
+                    scene.add(cardMesh);
+                    playerObjects[pid].cards.push(cardMesh);
+                });
+                
+                // Render revealed cards
+                player.revealedCards.forEach((cardType, i) => {
+                    const cardMesh = createCardMesh(cardType);
+                    cardMesh.name = 'revealedCard';
+                    const pos = new THREE.Vector3(x, 0.5, z);
+                        const cardOffset = (i - (player.revealedCards.length - 1) / 2) * 3.0;
+
+                    if (isMe) {
+                        pos.set(cardOffset, 0.5, 10);
+                    } else {
+                        // Position revealed cards in front of the player
+                           const direction = new THREE.Vector3(x, 0, z).normalize();
+                           pos.add(direction.multiplyScalar(4));
+                           pos.x += cardOffset;
+                    }
+                    cardMesh.position.copy(pos);
+                    cardMesh.rotation.y = Math.atan2(camera.position.x - pos.x, camera.position.z - pos.z);
+                    scene.add(cardMesh);
+                });
+
+                // Render UI Info
+                const screenPos = toScreenPosition(new THREE.Vector3(x, yPos + (isMe ? 1.5 : 4), z), camera);
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'player-info ui-element';
+                if (!player.isAlive) infoDiv.classList.add('eliminated');
+                const isCurrentTurn = gameData.turnOrder[gameData.currentPlayerIndex] === pid;
+                if (isCurrentTurn && gameData.gameState === 'active' && player.isAlive) {
+                    infoDiv.classList.add('current-turn');
+                }
+                infoDiv.style.left = `${screenPos.x}px`;
+                infoDiv.style.top = `${screenPos.y}px`;
+                infoDiv.innerHTML = `<div class="avatar">${player.name.charAt(0)}</div><div class="font-bold">${player.name}</div><div>💰 ${player.coins}</div>`;
+                document.getElementById('player-infos').appendChild(infoDiv);
+                playerObjects[pid].infoElement = infoDiv;
+            });
+            
+            updateActionButtons(gameData);
+            updateMessageLog(gameData);
+        }
+        
+        function updateActionButtons(gameData) {
+            // ... (Your existing updateActionButtons function is good)
+            const actionsContainer = document.getElementById('action-buttons');
+            actionsContainer.innerHTML = '';
+            
+            const myTurn = gameData.turnOrder[gameData.currentPlayerIndex] === currentUserId;
+            const amIAlive = gameData.players[currentUserId]?.isAlive;
+            const actionPending = gameData.pendingAction || gameData.players[currentUserId]?.mustReveal;
+
+            if (gameData.gameState !== 'active' || !myTurn || !amIAlive || actionPending) {
+                return;
+            }
+
+            const myCoins = gameData.players[currentUserId].coins;
+            
+            if (myCoins >= 10) {
+                addActionBtn('انقلاب (إجباري)', () => showTargetSelection('Coup'));
+                return;
+            }
+            
+            addActionBtn('دخل (1💰)', () => initiateAction('Income'));
+            addActionBtn('مساعدة أجنبية (2💰)', () => initiateAction('Foreign Aid'));
+            addActionBtn('ضرائب (الدوق، 3💰)', () => initiateAction('Tax'));
+            addActionBtn('سرقة (القبطان، 2💰)', () => showTargetSelection('Steal'));
+            addActionBtn('اغتيال (القاتل، 3💰)', () => showTargetSelection('Assassinate'), myCoins < 3);
+            addActionBtn('تبديل (السفير)', () => initiateAction('Exchange'));
+            if (myCoins >= 7) {
+                addActionBtn('انقلاب (7💰)', () => showTargetSelection('Coup'));
+            }
+        }
+        
+        function updateMessageLog(gameData) {
+            // ... (Your existing updateMessageLog function is good)
+            messageLog.innerHTML = '';
+            if(!gameData.log) return;
+            gameData.log.slice().reverse().forEach(msg => {
+                const p = document.createElement('p');
+                p.innerHTML = msg; // Use innerHTML to allow for bold tags etc.
+                messageLog.appendChild(p);
+            });
+            // messageLog.scrollTop = 0; // Already handled by flex-direction: column-reverse
+        }
+
+        // --- CORE GAME FLOW --- (Heavily modified and completed)
+        
+        async function initiateAction(actionType, targetId = null) {
+            const gameRef = doc(db, 'games', currentGameId);
+            const gameSnap = await getDoc(gameRef);
+            const gameData = gameSnap.data();
+            const actorName = gameData.players[currentUserId].name;
+            
+            let logMessage = `<strong>${actorName}</strong> ينوي القيام بـ: <strong>${actionType}</strong>`;
+            if(targetId) {
+                const targetName = gameData.players[targetId].name;
+                logMessage += ` ضد <strong>${targetName}</strong>.`;
+            }
+
+            // Un-challengable actions (Income, Coup) are resolved immediately
+            const unchallengable = ['Income', 'Coup'];
+            if(unchallengable.includes(actionType)){
+                await executeSuccessfulAction(gameData, { actorId: currentUserId, actionType, targetId });
+                return;
+            }
+
+            const pendingAction = {
+                actorId: currentUserId, actionType: actionType, targetId: targetId,
+                responses: {}, isResolved: false, createdAt: Date.now()
+            };
+            
+            await updateDoc(gameRef, {
+                pendingAction: pendingAction,
+                log: arrayUnion(logMessage)
+            });
+        }
+        
+        function handlePendingAction(gameData) {
+            const { pendingAction } = gameData;
+            if (!pendingAction || pendingAction.isResolved) {
+                hideModal('interaction-modal');
+                if (interactionTimeout) clearTimeout(interactionTimeout);
+                return;
+            }
+
+            const amIActor = pendingAction.actorId === currentUserId;
+            const amITarget = pendingAction.targetId === currentUserId;
+            const amIAlive = gameData.players[currentUserId]?.isAlive;
+            
+            if (!amIAlive) return;
+
+            if (pendingAction.responses[currentUserId]) {
+                hideModal('interaction-modal');
+                // You've responded, show a waiting message
+                document.getElementById('action-buttons').innerHTML = '<p class="text-gray-400">في انتظار بقية اللاعبين...</p>';
+                return;
+            }
+            
+            const actorName = gameData.players[pendingAction.actorId].name;
+
+            if (amIActor) {
+                document.getElementById('action-buttons').innerHTML = `<p class="text-yellow-300 animate-pulse">في انتظار ردود اللاعبين على حركة <strong>${pendingAction.actionType}</strong>...</p>`;
+                // Actor is responsible for timeout
+                if (!interactionTimeout) checkActionTimeout(gameData); 
+                return;
+            }
+
+            // Show modal to other players
+            const modal = document.getElementById('interaction-modal');
+            const buttonsContainer = document.getElementById('modal-buttons');
+            buttonsContainer.innerHTML = '';
+            
+            document.getElementById('modal-title').textContent = `حركة من ${actorName}!`;
+            document.getElementById('modal-text').textContent = `${actorName} يقوم بـ ${pendingAction.actionType}.`;
+            
+            const challengableActions = ['Tax', 'Assassinate', 'Steal', 'Exchange', 'Block'];
+            if (challengableActions.includes(pendingAction.actionType)) {
+                buttonsContainer.appendChild(createModalBtn('تحدي!', () => respondToAction('challenge')));
+            }
+
+            if (pendingAction.actionType === 'Foreign Aid') {
+                buttonsContainer.appendChild(createModalBtn('أمنع (بالدوق)', () => respondToAction('block', 'BlockForeignAid')));
+            }
+            if (amITarget && pendingAction.actionType === 'Steal') {
+                buttonsContainer.appendChild(createModalBtn('أمنع (بالقبطان أو السفير)', () => respondToAction('block', 'BlockSteal')));
+            }
+            if (amITarget && pendingAction.actionType === 'Assassinate') {
+                buttonsContainer.appendChild(createModalBtn('أمنع (بالكونتيسا)', () => respondToAction('block', 'BlockAssassination')));
+            }
+
+            buttonsContainer.appendChild(createModalBtn('تجاهل', () => respondToAction('pass')));
+            modal.style.display = 'flex';
+        }
+
+        async function respondToAction(responseType, blockActionType = null) {
+            hideModal('interaction-modal');
+            const gameRef = doc(db, 'games', currentGameId);
+            
+            await runTransaction(db, async (transaction) => {
+                const gameSnap = await transaction.get(gameRef);
+                if (!gameSnap.exists()) throw new Error("Game not found");
+                const gameData = gameSnap.data();
+                
+                if (!gameData.pendingAction || gameData.pendingAction.isResolved) return;
+
+                if (responseType === 'block') {
+                    // Block is a new action that can itself be challenged
+                    const blockerName = gameData.players[currentUserId].name;
+                    const originalActorName = gameData.players[gameData.pendingAction.actorId].name;
+                    const newLog = `<strong>${blockerName}</strong> يحاول منع حركة <strong>${originalActorName}</strong>!`;
+                    
+                    const newPendingAction = {
+                        actorId: currentUserId, // The blocker is the new actor
+                        actionType: 'Block', // Generic block action type
+                        blockType: blockActionType, // Specific block (e.g., 'BlockSteal')
+                        originalAction: gameData.pendingAction, // Nest original action
+                        responses: {}, isResolved: false, createdAt: Date.now()
+                    };
+                    transaction.update(gameRef, {
+                        pendingAction: newPendingAction,
+                        log: arrayUnion(newLog)
+                    });
+
+                } else if (responseType === 'challenge') {
+                    // First challenge stops everything. Resolve it immediately.
+                    await resolveChallenge(gameData, currentUserId);
+                    // Since resolveChallenge is now part of this transaction, we don't need a separate update.
+                    // The state change will be handled inside resolveChallenge. We just need to stop here.
+                    // This logic is moved into checkActionTimeout for simplicity. We just record the response.
+                    transaction.update(gameRef, { [`pendingAction.responses.${currentUserId}`]: 'challenge' });
+
+                } else { // pass
+                    transaction.update(gameRef, { [`pendingAction.responses.${currentUserId}`]: 'pass' });
+                }
+            });
+        }
+        
+        // This function is called periodically by the actor to check if everyone has responded or timed out.
+        async function checkActionTimeout(gameData) {
+            if (interactionTimeout) clearTimeout(interactionTimeout);
+            
+            const { pendingAction, players, turnOrder } = gameData;
+            const actorId = pendingAction.originalAction ? pendingAction.originalAction.actorId : pendingAction.actorId;
+            const potentialResponders = turnOrder.filter(pid => 
+                pid !== pendingAction.actorId && // The one performing the action/block doesn't respond to themself
+                pid !== actorId && // The original actor doesn't respond to a block
+                players[pid].isAlive
+            );
+
+            // Special case for blocks: the original actor is the only one who can challenge
+            if (pendingAction.actionType === 'Block') {
+                 if (pendingAction.responses[actorId]) {
+                    await resolveAction(gameData);
+                    return;
+                 }
+            } else {
+                 const hasEveryoneResponded = potentialResponders.every(pid => pendingAction.responses[pid]);
+                 const challengerId = Object.keys(pendingAction.responses).find(pid => pendingAction.responses[pid] === 'challenge');
+
+                 if (challengerId || hasEveryoneResponded) {
+                     await resolveAction(gameData);
+                     return;
+                 }
+            }
+           
+            // If we are here, set a timeout to check again
+            interactionTimeout = setTimeout(async () => {
+                const freshSnap = await getDoc(doc(db, 'games', currentGameId));
+                if (freshSnap.exists()) {
+                    // Pass fresh data to avoid stale data issues
+                    checkActionTimeout(freshSnap.data());
+                }
+            }, 2000); // Check every 2 seconds
+        }
+        
+        async function resolveAction(gameData) {
+            if (interactionTimeout) clearTimeout(interactionTimeout);
+            interactionTimeout = null;
+
+            const { pendingAction } = gameData;
+            
+            const challengerId = Object.keys(pendingAction.responses).find(pid => pendingAction.responses[pid] === 'challenge');
+            
+            if (challengerId) {
+                await resolveChallenge(gameData, challengerId);
+            } else {
+                // No challenge, action/block succeeds
+                if(pendingAction.actionType === 'Block') {
+                    // The block succeeded, so the original action fails.
+                    const blockerName = gameData.players[pendingAction.actorId].name;
+                    await updateDoc(doc(db, 'games', currentGameId), {
+                        pendingAction: null,
+                        log: arrayUnion(`<strong>${blockerName}</strong> نجح في المنع. تم إلغاء الحركة الأصلية.`),
+                        currentPlayerIndex: (gameData.currentPlayerIndex + 1) % gameData.turnOrder.length,
+                    });
+                } else {
+                    await executeSuccessfulAction(gameData, pendingAction);
+                }
+            }
+        }
+        
+        // ADDED: Full challenge logic
+        async function resolveChallenge(gameData, challengerId) {
+            await runTransaction(db, async (transaction) => {
+                const gameRef = doc(db, 'games', currentGameId);
+                const freshSnap = await transaction.get(gameRef);
+                const freshGameData = freshSnap.data();
+
+                const { pendingAction, players, deck } = freshGameData;
+                const { actorId, actionType } = pendingAction;
+                const actor = players[actorId];
+                const challenger = players[challengerId];
+                
+                let logMessage = `<strong>${challenger.name}</strong> يتحدى <strong>${actor.name}</strong>!`;
+                
+                const cardToClaim = {
+                    'Tax': CARD_TYPES.DUKE, 'Assassinate': CARD_TYPES.ASSASSIN,
+                    'Steal': CARD_TYPES.CAPTAIN, 'Exchange': CARD_TYPES.AMBASSADOR,
+                    'Block': { // Block claims
+                        'BlockForeignAid': CARD_TYPES.DUKE,
+                        'BlockSteal': [CARD_TYPES.CAPTAIN, CARD_TYPES.AMBASSADOR],
+                        'BlockAssassination': CARD_TYPES.CONTESSA
+                    }[pendingAction.blockType]
+                }[actionType];
+
+                const actorHasCard = Array.isArray(cardToClaim)
+                    ? actor.cards.some(c => cardToClaim.includes(c))
+                    : actor.cards.includes(cardToClaim);
+                    
+                const updates = {};
+                let actionSucceeds = false;
+
+                if (actorHasCard) {
+                    logMessage += ` <strong>${actor.name}</strong> كان صادقًا! <strong>${challenger.name}</strong> يخسر نفوذًا.`;
+                    updates[`players.${challengerId}.mustReveal`] = { reason: 'خسرت التحدي.' };
+                    actionSucceeds = true;
+
+                    // Actor swaps the card
+                    const cardToSwap = Array.isArray(cardToClaim) ? actor.cards.find(c => cardToClaim.includes(c)) : cardToClaim;
+                    const cardIndex = actor.cards.indexOf(cardToSwap);
+                    const newCard = deck.pop();
+                    actor.cards.splice(cardIndex, 1, newCard);
+                    deck.push(cardToSwap);
+
+                    updates[`players.${actorId}.cards`] = actor.cards;
+                    updates.deck = shuffle(deck);
+                    logMessage += ` ${actor.name} يسحب بطاقة جديدة.`;
+                    
+                } else {
+                    logMessage += ` <strong>${actor.name}</strong> كان يكذب! <strong>${actor.name}</strong> يخسر نفوذًا.`;
+                    updates[`players.${actorId}.mustReveal`] = { reason: 'تم كشف كذبتك.' };
+                    actionSucceeds = false; // Action is cancelled
+                }
+                
+                updates.log = arrayUnion(logMessage);
+                updates.pendingAction = null; // Challenge resolved, clear action
+
+                // If challenge was lost but action was true, we need to execute it after reveal.
+                // This is complex. A simpler way: just let the turn pass. Re-executing is tricky.
+                // For now, if actor wins challenge, action succeeds immediately. If challenger must reveal, the game pauses for them.
+                if (actionSucceeds) {
+                    // The action will be executed after the loser reveals their card.
+                    // To simplify, let's execute the action's effect here, but delay turn change.
+                    const actionUpdates = getActionEffects(freshGameData, pendingAction);
+                    Object.assign(updates, actionUpdates);
+                } else {
+                    // Turn moves on if the actor lost the challenge.
+                    updates.currentPlayerIndex = (freshGameData.currentPlayerIndex + 1) % freshGameData.turnOrder.length;
+                }
+                
+                transaction.update(gameRef, updates);
+            });
+        }
+        
+        // ADDED: Full action execution logic
+        async function executeSuccessfulAction(gameData, action) {
+             await runTransaction(db, async (transaction) => {
+                const gameRef = doc(db, 'games', currentGameId);
+                const updates = getActionEffects(gameData, action);
+                updates.log = arrayUnion(`<strong>${gameData.players[action.actorId].name}</strong> نجح في حركة <strong>${action.actionType}</strong>.`);
+                updates.pendingAction = null;
+                updates.currentPlayerIndex = (gameData.currentPlayerIndex + 1) % gameData.turnOrder.length;
+                transaction.update(gameRef, updates);
+            });
+        }
+
+        function getActionEffects(gameData, action) {
+            const { actorId, actionType, targetId } = action;
+            const { players, deck } = gameData;
+            const updates = {};
+            
+            switch (actionType) {
+                case 'Income':
+                    updates[`players.${actorId}.coins`] = players[actorId].coins + 1;
+                    break;
+                case 'Foreign Aid':
+                    updates[`players.${actorId}.coins`] = players[actorId].coins + 2;
+                    break;
+                case 'Tax':
+                    updates[`players.${actorId}.coins`] = players[actorId].coins + 3;
+                    break;
+                case 'Coup':
+                    updates[`players.${actorId}.coins`] = players[actorId].coins - (players[actorId].coins >= 10 ? 10 : 7);
+                    updates[`players.${targetId}.mustReveal`] = { reason: `تم الانقلاب عليك من قبل ${players[actorId].name}!`};
+                    break;
+                case 'Steal':
+                    const targetCoins = players[targetId].coins;
+                    const stolenAmount = Math.min(2, targetCoins);
+                    updates[`players.${actorId}.coins`] = players[actorId].coins + stolenAmount;
+                    updates[`players.${targetId}.coins`] = targetCoins - stolenAmount;
+                    break;
+                case 'Assassinate':
+                    updates[`players.${actorId}.coins`] = players[actorId].coins - 3;
+                    updates[`players.${targetId}.mustReveal`] = { reason: `تم اغتيالك من قبل ${players[actorId].name}!`};
+                    break;
+                case 'Exchange':
+                    const drawnCards = [deck.pop(), deck.pop()];
+                    updates[`players.${actorId}.exchangeInfo`] = { cards: drawnCards };
+                    updates.deck = deck;
+                    break;
+            }
+            return updates;
+        }
+
+        // --- UTILITY & UI FUNCTIONS ---
+        // ADDED: Functions for card modals
+        function showRevealCardModal(gameData) {
+            hideAllModals();
+            const modal = document.getElementById('reveal-card-modal');
+            const container = document.getElementById('reveal-cards-container');
+            const myData = gameData.players[currentUserId];
+            
+            document.getElementById('reveal-title').textContent = myData.mustReveal.reason;
+            container.innerHTML = '';
+
+            myData.cards.forEach((cardType, index) => {
+                const img = document.createElement('img');
+                img.src = CARD_IMAGES[cardType];
+                img.onclick = () => revealCard(index);
+                container.appendChild(img);
+            });
+
+            modal.style.display = 'flex';
+        }
+
+        async function revealCard(cardIndex) {
+            hideModal('reveal-card-modal');
+            const gameRef = doc(db, 'games', currentGameId);
+            await runTransaction(db, async (transaction) => {
+                const gameSnap = await transaction.get(gameRef);
+                const gameData = gameSnap.data();
+                const player = gameData.players[currentUserId];
+
+                const cardToReveal = player.cards[cardIndex];
+                player.cards.splice(cardIndex, 1);
+                player.revealedCards.push(cardToReveal);
+
+                const updates = {};
+                updates[`players.${currentUserId}.cards`] = player.cards;
+                updates[`players.${currentUserId}.revealedCards`] = player.revealedCards;
+                updates[`players.${currentUserId}.mustReveal`] = null; // Clear the flag
+                
+                let logMessage = `<strong>${player.name}</strong> يكشف ويخسر بطاقة <strong>${CARD_TRANSLATIONS[cardToReveal]}</strong>.`;
+
+                if (player.cards.length === 0) {
+                    updates[`players.${currentUserId}.isAlive`] = false;
+                    logMessage += ` <strong>${player.name}</strong> تم إقصاؤه من اللعبة!`;
+                }
+                
+                // If revealing was the last part of a turn, move to the next player
+                if (!gameData.pendingAction) {
+                    updates.currentPlayerIndex = (gameData.currentPlayerIndex + 1) % gameData.turnOrder.length;
+                }
+                
+                updates.log = arrayUnion(logMessage);
+                transaction.update(gameRef, updates);
+            });
+        }
+        
+        function showExchangeModal(gameData) {
+            hideAllModals();
+            const modal = document.getElementById('exchange-modal');
+            const container = document.getElementById('exchange-cards-container');
+            const myData = gameData.players[currentUserId];
+            const confirmBtn = document.getElementById('confirm-exchange-btn');
+            
+            const allCards = [...myData.cards, ...myData.exchangeInfo.cards];
+            let selectedCards = [];
+            
+            container.innerHTML = '';
+            document.getElementById('exchange-text').textContent = `لديك ${allCards.length} بطاقات. اختر ${myData.cards.length} للاحتفاظ بها.`;
+            
+            allCards.forEach((cardType) => {
+                const img = document.createElement('img');
+                img.src = CARD_IMAGES[cardType];
+                img.dataset.card = cardType;
+
+                img.onclick = () => {
+                    if (img.classList.contains('selected')) {
+                        img.classList.remove('selected');
+                        selectedCards = selectedCards.filter(c => c !== cardType);
+                    } else {
+                        if (selectedCards.length < myData.cards.length) {
+                            img.classList.add('selected');
+                            selectedCards.push(cardType);
+                        }
+                    }
+                    confirmBtn.disabled = selectedCards.length !== myData.cards.length;
+                };
+                container.appendChild(img);
+            });
+
+            confirmBtn.onclick = () => {
+                const returnedCards = allCards.filter(c => !selectedCards.includes(c));
+                confirmExchange(selectedCards, returnedCards);
+            };
+
+            modal.style.display = 'flex';
+        }
+        
+        async function confirmExchange(keptCards, returnedCards) {
+             hideModal('exchange-modal');
+             const gameRef = doc(db, 'games', currentGameId);
+             await runTransaction(db, async (transaction) => {
+                const gameSnap = await transaction.get(gameRef);
+                const gameData = gameSnap.data();
+                
+                const updates = {};
+                updates[`players.${currentUserId}.cards`] = keptCards;
+                updates[`players.${currentUserId}.exchangeInfo`] = null;
+                updates.deck = shuffle([...gameData.deck, ...returnedCards]);
+                updates.log = arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> قام بتبديل بطاقاته.`);
+                updates.currentPlayerIndex = (gameData.currentPlayerIndex + 1) % gameData.turnOrder.length;
+
+                transaction.update(gameRef, updates);
+             });
+        }
+
+
+        function addActionBtn(text, onClick, disabled = false) {
+            const btn = document.createElement('button');
+            btn.className = 'action-btn'; // FIX: Use consistent class
+            btn.textContent = text;
+            btn.disabled = disabled;
+            btn.onclick = onClick;
+            document.getElementById('action-buttons').appendChild(btn);
+        }
+        
+        function createModalBtn(text, onClick) {
+            const btn = document.createElement('button');
+            btn.className = 'action-btn'; // FIX: Use consistent class
+            btn.textContent = text;
+            btn.onclick = onClick;
+            return btn;
+        }
+
+        function showTargetSelection(actionType) {
+            const modal = document.getElementById('target-selection-modal');
+            const list = document.getElementById('target-player-list');
+            list.innerHTML = '';
+            
+            getDoc(doc(db, 'games', currentGameId)).then(docSnap => {
+                const gameData = docSnap.data();
+                gameData.turnOrder.forEach(pid => {
+                    if (pid !== currentUserId && gameData.players[pid].isAlive) {
+                        const btn = createModalBtn(gameData.players[pid].name, () => {
+                            hideModal('target-selection-modal');
+                            initiateAction(actionType, pid);
+                        });
+                        list.appendChild(btn);
+                    }
+                });
+                modal.style.display = 'flex';
+            });
+            
+            document.getElementById('cancel-target-btn').onclick = () => hideModal('target-selection-modal');
+        }
+
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if(modal) modal.style.display = 'none';
+        }
+
+        function hideAllModals() {
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+        }
+        
+        function checkGameOver(gameData) {
+            const alivePlayers = gameData.turnOrder.filter(pid => gameData.players[pid]?.isAlive);
+            if (alivePlayers.length <= 1 && gameData.gameState === 'active') {
+                const winnerId = alivePlayers.length === 1 ? alivePlayers[0] : null;
+                const winnerName = winnerId ? gameData.players[winnerId].name : "لا أحد";
+                
+                if (gameUnsubscribe) gameUnsubscribe();
+                
+                document.getElementById('winner-text').textContent = `الفائز هو ${winnerName}!`;
+                document.getElementById('game-over-screen').style.display = 'flex';
+                updateDoc(doc(db, 'games', currentGameId), { gameState: 'finished', log: arrayUnion(`انتهت اللعبة! الفائز هو <strong>${winnerName}</strong>.`) });
+            }
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function toScreenPosition(vector, camera) {
+            var width = window.innerWidth, height = window.innerHeight;
+            var widthHalf = width / 2, heightHalf = height / 2;
+
+            vector.project(camera);
+            
+            vector.x = ( vector.x * widthHalf ) + widthHalf;
+            vector.y = - ( vector.y * heightHalf ) + heightHalf;
+            
+            return { x: vector.x, y: vector.y };
+        }
+    </script>
+</body>
+</html>
