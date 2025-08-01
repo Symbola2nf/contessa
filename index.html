@@ -1203,7 +1203,8 @@
                     buttonsContainer.appendChild(createModalBtn('أمنع (بالدوق)', () => respondToAction('block', 'BlockForeignAid')));
                 }
                 if (amITarget && pendingAction.actionType === 'Steal') {
-                    buttonsContainer.appendChild(createModalBtn('أمنع (بالقبطان/السفير)', () => respondToAction('block', 'BlockSteal')));
+                    buttonsContainer.appendChild(createModalBtn('أمنع (بالقبطان)', () => respondToAction('block', 'BlockStealCaptain')));
+                    buttonsContainer.appendChild(createModalBtn('أمنع (بالسفير)', () => respondToAction('block', 'BlockStealAmbassador')));
                 }
                 if (amITarget && pendingAction.actionType === 'Assassinate') {
                     buttonsContainer.appendChild(createModalBtn('أمنع (بالكونتيسا)', () => respondToAction('block', 'BlockAssassination')));
@@ -1267,8 +1268,13 @@
                         await resolveChallenge(transaction, gameData, pendingAction, currentUserId);
                         return;
                     } else if (responseType === 'block') {
-                        const blockCardMap = { 'BlockForeignAid': CARD_TYPES.DUKE, 'BlockAssassination': CARD_TYPES.CONTESSA, 'BlockSteal': [CARD_TYPES.CAPTAIN, CARD_TYPES.AMBASSADOR] };
-                        const blockCard = Array.isArray(blockCardMap[blockType]) ? (me.cards.includes(CARD_TYPES.CAPTAIN) ? CARD_TYPES.CAPTAIN : CARD_TYPES.AMBASSADOR) : blockCardMap[blockType];
+                        const blockCardMap = { 
+                            'BlockForeignAid': CARD_TYPES.DUKE, 
+                            'BlockAssassination': CARD_TYPES.CONTESSA, 
+                            'BlockStealCaptain': CARD_TYPES.CAPTAIN,
+                            'BlockStealAmbassador': CARD_TYPES.AMBASSADOR
+                        };
+                        const blockCard = blockCardMap[blockType];
                         
                         updates.pendingAction = {
                             type: 'BLOCK',
