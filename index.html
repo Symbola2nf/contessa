@@ -453,7 +453,7 @@
         };
 
         let currentUserId = null, currentGameId = null, gameUnsubscribe = null;
-        let scene, camera, renderer, clock;
+        let scene, camera, renderer, clock, table;
         let playerObjects = {};
         let cardTextures = {};
         let textureLoader = new THREE.TextureLoader();
@@ -707,7 +707,7 @@
                     if (lobbyEl.style.display !== 'none') {
                         lobbyEl.style.display = 'none';
                         document.getElementById('ui-overlay').style.display = 'flex';
-                        initThreeJS();
+                        initThreeJS(docSnap.data().turnOrder.length); // Pass player count
                         listenToGameUpdates(gameId); 
                     }
                 }
@@ -778,19 +778,19 @@
         }
 
 
-        // --- 3D SCENE (MODIFIED FOR MOBILE LAYOUT) ---
-        function initThreeJS() {
+        // --- 3D SCENE (UPDATED FOR 4+ PLAYERS) ---
+        function initThreeJS(playerCount) {
             if (scene) return;
             const container = document.getElementById('game-container');
             clock = new THREE.Clock();
             
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x1a1a1a);
-            scene.fog = new THREE.Fog(0x1a1a1a, 25, 50);
+            scene.fog = new THREE.Fog(0x1a1a1a, 35, 60);
 
-            // **MODIFIED:** Camera setup for a better mobile view
+            // **UPDATED:** Camera pulled back for a wider view
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 18, 22); // Pulled back and up for a better overview
+            camera.position.set(0, 24, 26); 
             camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -806,10 +806,11 @@
             pointLight.castShadow = true;
             scene.add(pointLight);
 
-            // **MODIFIED:** Smaller table for a more compact view
-            const tableGeometry = new THREE.CylinderGeometry(6, 6.5, 0.5, 64);
+            // **UPDATED:** Table size is now larger to accommodate more players
+            const tableRadius = playerCount > 4 ? 8 : 6.5;
+            const tableGeometry = new THREE.CylinderGeometry(tableRadius, tableRadius + 0.5, 0.5, 64);
             const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x3d291a });
-            const table = new THREE.Mesh(tableGeometry, tableMaterial);
+            table = new THREE.Mesh(tableGeometry, tableMaterial);
             table.position.y = -0.25;
             table.receiveShadow = true;
             scene.add(table);
@@ -847,7 +848,6 @@
         }
         
         function createCardMesh(cardType, isFaceUp = false) {
-             // **MODIFIED:** Slightly smaller cards
              const cardGeometry = new THREE.BoxGeometry(3.0, 4.15, 0.1);
              const materials = [
                      new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
@@ -873,7 +873,7 @@
             if(renderer) renderer.render(scene, camera);
         }
         
-        // --- GAME STATE RENDERING ---
+        // --- GAME STATE RENDERING (UPDATED) ---
         function renderGameState(gameData) {
             if (!scene) return;
 
@@ -886,18 +886,17 @@
             // Clean up disconnected players
             for (const pid in playerObjects) {
                 if (!activePlayerIds.has(pid)) {
-                    if (playerObjects[pid].infoDiv) {
-                        playerObjects[pid].infoDiv.remove();
-                    }
-                    if (playerObjects[pid].cards) {
-                        playerObjects[pid].cards.forEach(c => scene.remove(c));
-                    }
-                    if (playerObjects[pid].revealedCards) {
-                        playerObjects[pid].revealedCards.forEach(c => scene.remove(c));
-                    }
+                    if (playerObjects[pid].infoDiv) playerObjects[pid].infoDiv.remove();
+                    if (playerObjects[pid].cards) playerObjects[pid].cards.forEach(c => scene.remove(c));
+                    if (playerObjects[pid].revealedCards) playerObjects[pid].revealedCards.forEach(c => scene.remove(c));
                     delete playerObjects[pid];
                 }
             }
+            
+            const numPlayers = turnOrder.length;
+            // **UPDATED:** Dynamic radius to spread players out
+            const radius = numPlayers > 4 ? 12 : 9.5;
+
 
             turnOrder.forEach((pid, index) => {
                 const player = players[pid];
@@ -907,22 +906,19 @@
                     playerObjects[pid] = { cards: [], revealedCards: [], infoDiv: null };
                 }
 
-                const relativeIndex = (index - myIndex + turnOrder.length) % turnOrder.length;
+                const relativeIndex = (index - myIndex + numPlayers) % numPlayers;
                 const isMe = (relativeIndex === 0);
                 
-                // **MODIFIED:** Unified layout logic with adjusted radius for better visibility on mobile
-                const radius = 8.5; // A consistent radius for all players
-                const yPos = isMe ? 2.5 : 1.5; // Keep self slightly higher, lower others
-                const angle = (relativeIndex / turnOrder.length) * Math.PI * 2;
-                // Position players around the circle
+                const yPos = isMe ? 2.5 : 1.5;
+                const angle = (relativeIndex / numPlayers) * Math.PI * 2;
                 const x = Math.sin(angle) * radius;
                 const z = Math.cos(angle) * radius;
 
                 updateCardGroup(playerObjects[pid].cards, player.cards, pid, 'active', { x, y: yPos, z }, angle, isMe);
-                updateCardGroup(playerObjects[pid].revealedCards, player.revealedCards, pid, 'revealed', { x, y: yPos, z }, angle, isMe);
+                updateCardGroup(playerObjects[pid].revealedCards, player.revealedCards, pid, 'revealed', { x, y: yPos, z }, angle, isMe, numPlayers);
         
-                // **MODIFIED:** Adjusted UI offset to match new 3D positions
-                const screenPos = toScreenPosition(new THREE.Vector3(x, yPos + 3.8, z), camera);
+                // **UPDATED:** Increased vertical offset for UI element to avoid overlap
+                const screenPos = toScreenPosition(new THREE.Vector3(x, yPos + 4.5, z), camera);
                 
                 let infoDiv = playerObjects[pid].infoDiv;
                 if (!infoDiv) {
@@ -964,7 +960,7 @@
             updateTurnTimer(gameData);
         }
         
-        function updateCardGroup(meshArray, dataArray, pid, cardGroupType, basePos, angle, isMe) {
+        function updateCardGroup(meshArray, dataArray, pid, cardGroupType, basePos, angle, isMe, numPlayers) {
             while (meshArray.length > dataArray.length) {
                 scene.remove(meshArray.pop());
             }
@@ -988,13 +984,12 @@
                 }
         
                 let targetPos, targetRot;
-                // **MODIFIED:** Adjusted card offset for smaller cards
                 const cardOffsetMultiplier = 3.5;
                 
                 if (cardGroupType === 'active') {
                     const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier;
                     if (isMe) {
-                        targetPos = new THREE.Vector3(cardOffset, basePos.y, basePos.z + 2); // Pull my cards closer to me
+                        targetPos = new THREE.Vector3(cardOffset, basePos.y, basePos.z + 2);
                         targetRot = new THREE.Euler(-Math.PI / 8, 0, 0);
                     } else {
                         targetPos = new THREE.Vector3(basePos.x, basePos.y, basePos.z);
@@ -1007,13 +1002,13 @@
                         targetPos.z += Math.cos(offsetAngle) * cardOffset * 0.3;
                     }
                 } else { 
-                    // **MODIFIED:** Adjusted revealed card positioning for the smaller table
-                    const tableRadius = 4;
+                    // **UPDATED:** positioning for revealed cards on the larger table
+                    const tableRadius = numPlayers > 4 ? 6.5 : 5;
                     const tablePos = new THREE.Vector3(basePos.x, 0.2, basePos.z).normalize().multiplyScalar(tableRadius);
                     const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier;
                     
                     const perpendicularAngle = angle - Math.PI / 2;
-                    const offsetVec = new THREE.Vector3(Math.sin(perpendicularAngle), 0, Math.cos(perpendicularAngle)).multiplyScalar(cardOffset * 0.5); // reduced spread
+                    const offsetVec = new THREE.Vector3(Math.sin(perpendicularAngle), 0, Math.cos(perpendicularAngle)).multiplyScalar(cardOffset * 0.5);
 
                     targetPos = tablePos.add(offsetVec);
                     targetPos.y = 0.3;
@@ -1044,7 +1039,6 @@
             actionsContainer.innerHTML = '';
             const myCoins = me.coins;
             
-            // **NEW** Check for Foreign Aid restriction
             const justUsedFA = gameData.justUsedForeignAid === currentUserId;
 
             if (myCoins >= 10) {
@@ -1053,7 +1047,6 @@
             }
             
             addActionBtn('دخل (1💰)', () => initiateAction('Income'));
-            // **MODIFIED** Disable Foreign Aid button if just used
             addActionBtn('مساعدة أجنبية (2💰)', () => initiateAction('Foreign Aid'), justUsedFA);
             if (myCoins >= 7) addActionBtn('انقلاب (7💰)', () => showTargetSelection('Coup'));
             addActionBtn('اغتيال (3💰)', () => showTargetSelection('Assassinate'), myCoins < 3);
@@ -1079,7 +1072,7 @@
                 updates.log = arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> نفذ الوقت وأخذ 'دخل' تلقائيًا.`);
                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
                 updates.turnStartTime = serverTimestamp();
-                updates.justUsedForeignAid = null; // Reset flag on forced turn end
+                updates.justUsedForeignAid = null; 
                 transaction.update(gameRef, updates);
             });
         }
@@ -1122,14 +1115,12 @@
             let logMessage = `<strong>${actorName}</strong> ينوي القيام بـ: <strong>${actionType}</strong>`;
             if (targetId) logMessage += ` ضد <strong>${gameData.players[targetId].name}</strong>.`;
             
-            // **MODIFIED** Reset Foreign Aid flag at the start of any new action
             const updates = { log: arrayUnion(logMessage), justUsedForeignAid: null };
 
             const unchallengable = ['Income', 'Coup'];
             if (unchallengable.includes(actionType)) {
                 if (actionType === 'Coup') {
                     const target = gameData.players[targetId];
-                    // Rule adjustment for Coup on rich player
                     if (target.cards.length > 1 && gameData.players[currentUserId].coins >= 10) {
                         updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
                         updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
@@ -1308,11 +1299,10 @@
                             updates.log = arrayUnion(`الجميع تجاهل. <strong>${players[pendingAction.actorId].name}</strong> نجح في حركة <strong>${CARD_TRANSLATIONS[pendingAction.actionType] || pendingAction.actionType}</strong>.`);
                             Object.assign(updates, getActionEffects(gameData, pendingAction));
                             
-                            // **MODIFIED** Handle Foreign Aid bonus turn
                             if (pendingAction.actionType === 'Foreign Aid') {
                                 updates.log = arrayUnion(`<strong>${players[pendingAction.actorId].name}</strong> يلعب مرة أخرى.`);
                                 updates.turnStartTime = serverTimestamp();
-                                updates.justUsedForeignAid = pendingAction.actorId; // Set flag
+                                updates.justUsedForeignAid = pendingAction.actorId;
                             } else if (pendingAction.actionType !== 'Exchange' && pendingAction.actionType !== 'Assassinate') {
                                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
                                 updates.turnStartTime = serverTimestamp();
