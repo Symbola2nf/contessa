@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+
+<html dir="rtl" lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>لعبة Coup 3D</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, user-scalable=no" name="viewport"/>
+<title>لعبة Coup 3D</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<style>:root {
             --yellow-glow: #fde047;
             --dark-bg: #1a1a1a;
             --dark-ui: rgba(0, 0, 0, 0.7);
@@ -297,110 +297,112 @@
                 padding: 6px 12px;
             }
         }
-    </style>
+.bottom-ui-container {
+    z-index: 10;
+}
+.player-info {
+    transform: translateX(-50%) translateY(-140px);
+    z-index: 20;
+}
+@media (max-width: 768px) {
+    .player-info {
+        width: 90px;
+    }
+    .player-info .avatar {
+        width: 45px;
+        height: 45px;
+    }
+}</style>
 </head>
 <body>
-    
-    <div id="loading-overlay">
-        <div class="spinner"></div>
-        <p>جاري تحميل اللعبة...</p>
-    </div>
-
-    <div id="game-container"></div>
-
-    <div id="lobby" style="display: flex;">
-        <div class="ui-element text-center">
-            <h1 class="text-4xl font-bold text-yellow-300 mb-4">لعبة Coup</h1>
-            
-            <!-- NEW: Avatar Customizer -->
-            <div id="avatar-customizer">
-                <p class="mb-2">اختر شخصيتك</p>
-                <div id="avatar-preview"></div>
-                <div class="avatar-controls">
-                    <button id="prev-shirt-btn">&lt;</button>
-                    <button>القميص</button>
-                    <button id="next-shirt-btn">&gt;</button>
-                </div>
-                 <div class="avatar-controls">
-                    <button id="prev-head-btn">&lt;</button>
-                    <button>الوجه</button>
-                    <button id="next-head-btn">&gt;</button>
-                </div>
-            </div>
-
-            <p class="mb-2">أدخل اسمك:</p>
-            <input type="text" id="player-name-input" placeholder="اسم اللاعب" class="mb-4">
-            <p class="mb-2">أدخل رمز اللعبة للانضمام أو أنشئ لعبة جديدة</p>
-            <input type="text" id="game-id-input" placeholder="رمز اللعبة">
-            <div class="flex gap-4 mt-4 justify-center">
-                <button id="join-game-btn" class="action-btn">الانضمام للعبة</button>
-                <button id="create-game-btn" class="action-btn">إنشاء لعبة جديدة</button>
-            </div>
-            <button id="start-game-btn" class="action-btn mt-4" style="display: none;">ابدأ اللعبة</button>
-            <p id="lobby-error" class="text-red-500 mt-4"></p>
-            <div class="mt-4">
-                <h3 class="text-lg font-bold mb-2">اللاعبون في الغرفة: <span id="game-id-display"></span></h3>
-                <ul id="lobby-players-list"></ul>
-            </div>
-        </div>
-    </div>
-
-    <div id="ui-overlay" class="ui-overlay" style="display: none;">
-        <div id="player-infos" class="w-full h-full absolute"></div>
-        <div id="turn-timer" class="ui-element"></div>
-        <div class="absolute top-4 right-4 ui-element top-right-ui">
-            <p>رمز اللعبة: <strong id="game-id-ingame"></strong></p>
-        </div>
-        <div class="bottom-ui-container">
-            <div id="message-log" class="message-log"></div>
-            <div id="action-buttons" class="action-buttons"></div>
-        </div>
-    </div>
-    
-    <div id="interaction-modal" class="modal">
-        <div class="modal-content ui-element">
-            <h3 id="modal-title" class="text-2xl mb-4"></h3>
-            <p id="modal-text" class="mb-6"></p>
-            <div id="modal-buttons" class="flex justify-center gap-4 flex-wrap"></div>
-        </div>
-    </div>
-    
-    <div id="target-selection-modal" class="modal">
-        <div class="modal-content ui-element">
-            <h3 class="text-2xl mb-4">اختر لاعبًا</h3>
-            <div id="target-player-list" class="flex flex-col gap-2"></div>
-            <button id="cancel-target-btn" class="mt-4 action-btn">إلغاء</button>
-        </div>
-    </div>
-
-    <div id="reveal-card-modal" class="modal">
-        <div class="modal-content ui-element">
-            <h3 id="reveal-title" class="text-2xl mb-4"></h3>
-            <p id="reveal-text" class="mb-4">اختر بطاقة لتخسرها.</p>
-            <div id="reveal-cards-container" class="flex justify-center gap-4 mb-4 card-selection-container"></div>
-        </div>
-    </div>
-    
-    <div id="exchange-modal" class="modal">
-        <div class="modal-content ui-element">
-            <h3 class="text-2xl mb-4">تبديل البطاقات (السفير)</h3>
-            <p id="exchange-text" class="mb-4">لديك 4 بطاقات. اختر 2 للاحتفاظ بهما.</p>
-            <div id="exchange-cards-container" class="flex justify-center gap-4 mb-4 card-selection-container"></div>
-            <button id="confirm-exchange-btn" class="action-btn" disabled>تأكيد</button>
-        </div>
-    </div>
-
-    <div id="game-over-screen" style="display: none;">
-        <div class="ui-element text-center">
-            <h1 class="text-4xl font-bold text-yellow-300 mb-4">انتهت اللعبة!</h1>
-            <p id="winner-text" class="text-2xl"></p>
-            <p id="cleanup-text" class="text-sm text-gray-400 mt-4"></p>
-            <button id="play-again-btn" class="mt-6 action-btn">العودة للردهة</button>
-        </div>
-    </div>
-
-
-    <script type="module">
+<div id="loading-overlay">
+<div class="spinner"></div>
+<p>جاري تحميل اللعبة...</p>
+</div>
+<div id="game-container"></div>
+<div id="lobby" style="display: flex;">
+<div class="ui-element text-center">
+<h1 class="text-4xl font-bold text-yellow-300 mb-4">لعبة Coup</h1>
+<!-- NEW: Avatar Customizer -->
+<div id="avatar-customizer">
+<p class="mb-2">اختر شخصيتك</p>
+<div id="avatar-preview"></div>
+<div class="avatar-controls">
+<button id="prev-shirt-btn">&lt;</button>
+<button>القميص</button>
+<button id="next-shirt-btn">&gt;</button>
+</div>
+<div class="avatar-controls">
+<button id="prev-head-btn">&lt;</button>
+<button>الوجه</button>
+<button id="next-head-btn">&gt;</button>
+</div>
+</div>
+<p class="mb-2">أدخل اسمك:</p>
+<input class="mb-4" id="player-name-input" placeholder="اسم اللاعب" type="text"/>
+<p class="mb-2">أدخل رمز اللعبة للانضمام أو أنشئ لعبة جديدة</p>
+<input id="game-id-input" placeholder="رمز اللعبة" type="text"/>
+<div class="flex gap-4 mt-4 justify-center">
+<button class="action-btn" id="join-game-btn">الانضمام للعبة</button>
+<button class="action-btn" id="create-game-btn">إنشاء لعبة جديدة</button>
+</div>
+<button class="action-btn mt-4" id="start-game-btn" style="display: none;">ابدأ اللعبة</button>
+<p class="text-red-500 mt-4" id="lobby-error"></p>
+<div class="mt-4">
+<h3 class="text-lg font-bold mb-2">اللاعبون في الغرفة: <span id="game-id-display"></span></h3>
+<ul id="lobby-players-list"></ul>
+</div>
+</div>
+</div>
+<div class="ui-overlay" id="ui-overlay" style="display: none;">
+<div class="w-full h-full absolute" id="player-infos"></div>
+<div class="ui-element" id="turn-timer"></div>
+<div class="absolute top-4 right-4 ui-element top-right-ui">
+<p>رمز اللعبة: <strong id="game-id-ingame"></strong></p>
+</div>
+<div class="bottom-ui-container">
+<div class="message-log" id="message-log"></div>
+<div class="action-buttons" id="action-buttons"></div>
+</div>
+</div>
+<div class="modal" id="interaction-modal">
+<div class="modal-content ui-element">
+<h3 class="text-2xl mb-4" id="modal-title"></h3>
+<p class="mb-6" id="modal-text"></p>
+<div class="flex justify-center gap-4 flex-wrap" id="modal-buttons"></div>
+</div>
+</div>
+<div class="modal" id="target-selection-modal">
+<div class="modal-content ui-element">
+<h3 class="text-2xl mb-4">اختر لاعبًا</h3>
+<div class="flex flex-col gap-2" id="target-player-list"></div>
+<button class="mt-4 action-btn" id="cancel-target-btn">إلغاء</button>
+</div>
+</div>
+<div class="modal" id="reveal-card-modal">
+<div class="modal-content ui-element">
+<h3 class="text-2xl mb-4" id="reveal-title"></h3>
+<p class="mb-4" id="reveal-text">اختر بطاقة لتخسرها.</p>
+<div class="flex justify-center gap-4 mb-4 card-selection-container" id="reveal-cards-container"></div>
+</div>
+</div>
+<div class="modal" id="exchange-modal">
+<div class="modal-content ui-element">
+<h3 class="text-2xl mb-4">تبديل البطاقات (السفير)</h3>
+<p class="mb-4" id="exchange-text">لديك 4 بطاقات. اختر 2 للاحتفاظ بهما.</p>
+<div class="flex justify-center gap-4 mb-4 card-selection-container" id="exchange-cards-container"></div>
+<button class="action-btn" disabled="" id="confirm-exchange-btn">تأكيد</button>
+</div>
+</div>
+<div id="game-over-screen" style="display: none;">
+<div class="ui-element text-center">
+<h1 class="text-4xl font-bold text-yellow-300 mb-4">انتهت اللعبة!</h1>
+<p class="text-2xl" id="winner-text"></p>
+<p class="text-sm text-gray-400 mt-4" id="cleanup-text"></p>
+<button class="mt-6 action-btn" id="play-again-btn">العودة للردهة</button>
+</div>
+</div>
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc, collection, serverTimestamp, runTransaction, arrayUnion, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -1607,4 +1609,4 @@
 
     </script>
 </body>
-</html>=
+</html>
