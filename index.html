@@ -931,9 +931,10 @@
                     avatarDiv.textContent = player.name.charAt(0);
                 }
 
-                infoDiv.innerHTML = ''; // Clear previous content
+                // ⚠️ Avoid direct innerHTML assignment: infoDiv.innerHTML = ''; // Clear previous content
                 infoDiv.appendChild(avatarDiv);
-                infoDiv.innerHTML += `<div class="font-bold">${player.name}</div><div>💰 ${player.coins}</div>`;
+                // ⚠️ Removed innerHTML += to prevent avatar/name disappearing.
+
             });
         
             updateActionButtons(gameData);
