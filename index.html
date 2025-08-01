@@ -300,6 +300,21 @@
                     <button>الوجه</button>
                     <button id="next-head-btn">&gt;</button>
                 </div>
+                <div class="avatar-controls">
+                    <button id="prev-eyebrows-btn">&lt;</button>
+                    <button>الحواجب</button>
+                    <button id="next-eyebrows-btn">&gt;</button>
+                </div>
+                <div class="avatar-controls">
+                    <button id="prev-facialhair-btn">&lt;</button>
+                    <button>اللحية</button>
+                    <button id="next-facialhair-btn">&gt;</button>
+                </div>
+                <div class="avatar-controls">
+                    <button id="prev-eyes-btn">&lt;</button>
+                    <button>العينين</button>
+                    <button id="next-eyes-btn">&gt;</button>
+                </div>
             </div>
 
             <p class="mb-2">أدخل اسمك:</p>
@@ -418,14 +433,20 @@
         let turnTimerInterval = null;
         const TURN_DURATION = 40; 
         
-        // --- AVATAR CUSTOMIZATION DATA ---
+        // --- AVATAR CUSTOMIZATION DATA (EXPANDED) ---
         const avatarOptions = {
             shirts: ['#ff5733', '#33ff57', '#3357ff', '#ff33a1', '#a133ff', '#ffffff', '#f0e68c', '#add8e6'],
-            heads: ['#f2d2b2', '#d1a377', '#a07c5b', '#6e513d', '#3c2a21']
+            heads: ['#f2d2b2', '#d1a377', '#a07c5b', '#6e513d', '#3c2a21'],
+            eyebrows: ['M 40 18 Q 50 16 60 18', 'M 40 20 L 60 16', 'M 42 17 C 45 15, 55 15, 58 17' ],
+            facialHairs: ['none', 'M 40 38 Q 50 45 60 38', 'M 38 35 C 40 50, 60 50, 62 35 L 62 45 C 55 52, 45 52, 38 45 Z'],
+            eyePatches: ['none', 'M 38 20 C 35 25, 35 30, 38 35 L 52 35 C 55 30, 55 25, 52 20 Z']
         };
         let currentAvatar = {
             shirt: 0,
-            head: 0
+            head: 0,
+            eyebrows: 0,
+            facialHair: 0,
+            eyePatch: 0
         };
 
         // --- UI ELEMENTS ---
@@ -444,17 +465,28 @@
         const turnTimerEl = document.getElementById('turn-timer');
         const avatarPreview = document.getElementById('avatar-preview');
         
-        // --- AVATAR LOGIC ---
-        function generateAvatarSVG({ shirt, head }) {
+        // --- AVATAR LOGIC (EXPANDED) ---
+        function generateAvatarSVG({ shirt, head, eyebrows, facialHair, eyePatch }) {
             const shirtColor = avatarOptions.shirts[shirt];
             const headColor = avatarOptions.heads[head];
+            const eyebrowPath = avatarOptions.eyebrows[eyebrows];
+            const facialHairPath = avatarOptions.facialHairs[facialHair];
+            const eyePatchPath = avatarOptions.eyePatches[eyePatch];
+            
             return `
                 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                     <g>
                         <path d="M 20 90 V 40 C 20 30, 30 30, 40 30 H 60 C 70 30, 80 30, 80 40 V 90 Z" fill="${shirtColor}" />
                         <circle cx="50" cy="25" r="15" fill="${headColor}" />
+                        
                         <circle cx="45" cy="25" r="1.5" fill="black" />
                         <circle cx="55" cy="25" r="1.5" fill="black" />
+                        
+                        <path d="${eyebrowPath}" stroke="black" stroke-width="2" fill="none" />
+                        
+                        ${facialHairPath !== 'none' ? `<path d="${facialHairPath}" fill="#281c12" />` : ''}
+
+                        ${eyePatchPath !== 'none' ? `<path d="${eyePatchPath}" fill="black" />` : ''}
                     </g>
                 </svg>
             `;
@@ -464,22 +496,18 @@
             avatarPreview.innerHTML = generateAvatarSVG(currentAvatar);
         }
 
-        document.getElementById('next-shirt-btn').onclick = () => {
-            currentAvatar.shirt = (currentAvatar.shirt + 1) % avatarOptions.shirts.length;
-            updateAvatarPreview();
-        };
-        document.getElementById('prev-shirt-btn').onclick = () => {
-            currentAvatar.shirt = (currentAvatar.shirt - 1 + avatarOptions.shirts.length) % avatarOptions.shirts.length;
-            updateAvatarPreview();
-        };
-        document.getElementById('next-head-btn').onclick = () => {
-            currentAvatar.head = (currentAvatar.head + 1) % avatarOptions.heads.length;
-            updateAvatarPreview();
-        };
-        document.getElementById('prev-head-btn').onclick = () => {
-            currentAvatar.head = (currentAvatar.head - 1 + avatarOptions.heads.length) % avatarOptions.heads.length;
-            updateAvatarPreview();
-        };
+        document.getElementById('next-shirt-btn').onclick = () => { currentAvatar.shirt = (currentAvatar.shirt + 1) % avatarOptions.shirts.length; updateAvatarPreview(); };
+        document.getElementById('prev-shirt-btn').onclick = () => { currentAvatar.shirt = (currentAvatar.shirt - 1 + avatarOptions.shirts.length) % avatarOptions.shirts.length; updateAvatarPreview(); };
+        document.getElementById('next-head-btn').onclick = () => { currentAvatar.head = (currentAvatar.head + 1) % avatarOptions.heads.length; updateAvatarPreview(); };
+        document.getElementById('prev-head-btn').onclick = () => { currentAvatar.head = (currentAvatar.head - 1 + avatarOptions.heads.length) % avatarOptions.heads.length; updateAvatarPreview(); };
+        // NEW LISTENERS
+        document.getElementById('next-eyebrows-btn').onclick = () => { currentAvatar.eyebrows = (currentAvatar.eyebrows + 1) % avatarOptions.eyebrows.length; updateAvatarPreview(); };
+        document.getElementById('prev-eyebrows-btn').onclick = () => { currentAvatar.eyebrows = (currentAvatar.eyebrows - 1 + avatarOptions.eyebrows.length) % avatarOptions.eyebrows.length; updateAvatarPreview(); };
+        document.getElementById('next-facialhair-btn').onclick = () => { currentAvatar.facialHair = (currentAvatar.facialHair + 1) % avatarOptions.facialHairs.length; updateAvatarPreview(); };
+        document.getElementById('prev-facialhair-btn').onclick = () => { currentAvatar.facialHair = (currentAvatar.facialHair - 1 + avatarOptions.facialHairs.length) % avatarOptions.facialHairs.length; updateAvatarPreview(); };
+        document.getElementById('next-eyes-btn').onclick = () => { currentAvatar.eyePatch = (currentAvatar.eyePatch + 1) % avatarOptions.eyePatches.length; updateAvatarPreview(); };
+        document.getElementById('prev-eyes-btn').onclick = () => { currentAvatar.eyePatch = (currentAvatar.eyePatch - 1 + avatarOptions.eyePatches.length) % avatarOptions.eyePatches.length; updateAvatarPreview(); };
+        
         updateAvatarPreview();
 
 
@@ -568,6 +596,7 @@
                             pendingAction: null,
                             playerUpdates: {},
                             turnStartTime: null,
+                            justUsedForeignAid: null, // **NEW** For Foreign Aid logic
                         };
                         transaction.set(gameRef, newGameData);
                     } else {
@@ -694,7 +723,7 @@
         }
 
 
-        // --- 3D SCENE ---
+        // --- 3D SCENE (MODIFIED FOR MOBILE LAYOUT) ---
         function initThreeJS() {
             if (scene) return;
             const container = document.getElementById('game-container');
@@ -704,9 +733,9 @@
             scene.background = new THREE.Color(0x1a1a1a);
             scene.fog = new THREE.Fog(0x1a1a1a, 25, 50);
 
-            // **MODIFIED:** Camera setup for mobile-first view
+            // **MODIFIED:** Camera setup for a better mobile view
             camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 14, 17);
+            camera.position.set(0, 16, 19); // Pulled back and up slightly
             camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -722,8 +751,8 @@
             pointLight.castShadow = true;
             scene.add(pointLight);
 
-            // **MODIFIED:** Smaller table for a more compact, centered view
-            const tableGeometry = new THREE.CylinderGeometry(7, 7.5, 0.5, 64);
+            // **MODIFIED:** Smaller table for a more compact view
+            const tableGeometry = new THREE.CylinderGeometry(6, 6.5, 0.5, 64);
             const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x3d291a });
             const table = new THREE.Mesh(tableGeometry, tableMaterial);
             table.position.y = -0.25;
@@ -763,12 +792,13 @@
         }
         
         function createCardMesh(cardType, isFaceUp = false) {
-             const cardGeometry = new THREE.BoxGeometry(3.2, 4.4, 0.1);
+             // **MODIFIED:** Slightly smaller cards
+             const cardGeometry = new THREE.BoxGeometry(3.0, 4.15, 0.1);
              const materials = [
-                 new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
-                 new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
-                 new THREE.MeshStandardMaterial({ map: isFaceUp && cardTextures[cardType] ? cardTextures[cardType] : cardTextures.BACK }),
-                 new THREE.MeshStandardMaterial({ map: cardTextures.BACK })
+                   new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
+                   new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }),
+                   new THREE.MeshStandardMaterial({ map: isFaceUp && cardTextures[cardType] ? cardTextures[cardType] : cardTextures.BACK }),
+                   new THREE.MeshStandardMaterial({ map: cardTextures.BACK })
              ];
              const cardMesh = new THREE.Mesh(cardGeometry, materials);
              cardMesh.castShadow = true;
@@ -776,7 +806,6 @@
              return cardMesh;
         }
 
-        // **MODIFIED:** Simplified resize logic for a single mobile-first layout
         function onWindowResize() {
             if (!camera || !renderer) return;
             camera.aspect = window.innerWidth / window.innerHeight;
@@ -799,7 +828,6 @@
             
             const activePlayerIds = new Set(turnOrder);
 
-            // FIX: More robustly remove objects and UI for players who have left
             for (const pid in playerObjects) {
                 if (!activePlayerIds.has(pid)) {
                     if (playerObjects[pid].infoDiv) {
@@ -826,11 +854,10 @@
                 const relativeIndex = (index - myIndex + turnOrder.length) % turnOrder.length;
                 const isMe = (relativeIndex === 0);
                 
-                // **MODIFIED:** Unified layout logic for mobile-first design.
-                // Removed desktop/mobile split for a single, consistent experience.
+                // **MODIFIED:** Unified layout logic with adjusted radius for mobile
                 const angle = (relativeIndex / turnOrder.length) * Math.PI * 2;
-                const radius = isMe ? 9 : 10.5; // Reduced radius to bring players closer
-                const yPos = isMe ? 2.5 : 3.5; // Adjusted height for player cards
+                const radius = isMe ? 8 : 9.5; // Reduced radius to bring players closer
+                const yPos = isMe ? 2.5 : 3.5;
                 const x = Math.sin(angle) * radius;
                 const z = Math.cos(angle) * radius;
         
@@ -839,8 +866,6 @@
         
                 const screenPos = toScreenPosition(new THREE.Vector3(x, yPos + 4.5, z), camera);
                 
-                // FIX: This is the core fix for the disappearing UI.
-                // Instead of wiping the container, we get or create the specific player's div.
                 let infoDiv = playerObjects[pid].infoDiv;
                 if (!infoDiv) {
                     infoDiv = document.createElement('div');
@@ -848,7 +873,6 @@
                     playerObjects[pid].infoDiv = infoDiv;
                 }
                 
-                // Update class names and styles without removing the element from the DOM
                 let newClassName = 'player-info ui-element';
                 if (!player.isAlive) newClassName += ' eliminated';
                 if (turnOrder[currentPlayerIndex] === pid && player.isAlive) {
@@ -861,7 +885,6 @@
                 infoDiv.style.left = `${screenPos.x}px`;
                 infoDiv.style.top = `${screenPos.y}px`;
 
-                // Update the content (innerHTML) only if it has changed
                 const avatarDiv = document.createElement('div');
                 avatarDiv.className = 'avatar';
                 if (player.avatar) {
@@ -907,7 +930,8 @@
                 }
         
                 let targetPos, targetRot;
-                const cardOffsetMultiplier = 3.8;
+                // **MODIFIED:** Adjusted card offset for smaller cards
+                const cardOffsetMultiplier = 3.5;
                 
                 if (cardGroupType === 'active') {
                     const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier;
@@ -925,8 +949,8 @@
                         targetPos.z += Math.cos(offsetAngle) * cardOffset * 0.3;
                     }
                 } else { 
-                    // **MODIFIED:** Simplified revealed card positioning for the smaller table
-                    const tableRadius = 4.5;
+                    // **MODIFIED:** Adjusted revealed card positioning for the smaller table
+                    const tableRadius = 4;
                     const tablePos = new THREE.Vector3(basePos.x, 0.2, basePos.z).normalize().multiplyScalar(tableRadius);
                     const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier;
                     
@@ -954,7 +978,7 @@
             if (!shouldShow) {
                  actionsContainer.innerHTML = '';
                  if(myTurn && (gameData.pendingAction || (gameData.playerUpdates && gameData.playerUpdates[currentUserId]))) {
-                    actionsContainer.innerHTML = `<p class="text-gray-400 animate-pulse">في انتظار ردود اللاعبين...</p>`;
+                   actionsContainer.innerHTML = `<p class="text-gray-400 animate-pulse">في انتظار ردود اللاعبين...</p>`;
                  }
                  return;
             }
@@ -962,13 +986,17 @@
             actionsContainer.innerHTML = '';
             const myCoins = me.coins;
             
+            // **NEW** Check for Foreign Aid restriction
+            const justUsedFA = gameData.justUsedForeignAid === currentUserId;
+
             if (myCoins >= 10) {
                 addActionBtn('انقلاب (إجباري)', () => showTargetSelection('Coup'));
                 return;
             }
             
             addActionBtn('دخل (1💰)', () => initiateAction('Income'));
-            addActionBtn('مساعدة أجنبية (2💰)', () => initiateAction('Foreign Aid'));
+            // **MODIFIED** Disable Foreign Aid button if just used
+            addActionBtn('مساعدة أجنبية (2💰)', () => initiateAction('Foreign Aid'), justUsedFA);
             if (myCoins >= 7) addActionBtn('انقلاب (7💰)', () => showTargetSelection('Coup'));
             addActionBtn('اغتيال (3💰)', () => showTargetSelection('Assassinate'), myCoins < 3);
             addActionBtn('ضرائب (الدوق)', () => initiateAction('Tax'));
@@ -993,6 +1021,7 @@
                 updates.log = arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> نفذ الوقت وأخذ 'دخل' تلقائيًا.`);
                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
                 updates.turnStartTime = serverTimestamp();
+                updates.justUsedForeignAid = null; // Reset flag on forced turn end
                 transaction.update(gameRef, updates);
             });
         }
@@ -1035,20 +1064,28 @@
             let logMessage = `<strong>${actorName}</strong> ينوي القيام بـ: <strong>${actionType}</strong>`;
             if (targetId) logMessage += ` ضد <strong>${gameData.players[targetId].name}</strong>.`;
             
-            const updates = { log: arrayUnion(logMessage) };
+            // **MODIFIED** Reset Foreign Aid flag at the start of any new action
+            const updates = { log: arrayUnion(logMessage), justUsedForeignAid: null };
 
             const unchallengable = ['Income', 'Coup'];
             if (unchallengable.includes(actionType)) {
                 if (actionType === 'Coup') {
                     const target = gameData.players[targetId];
-                    if (target && target.coins >= 10) {
+                    // Rule adjustment for Coup on rich player
+                    if (target.cards.length > 1 && gameData.players[currentUserId].coins >= 10) {
+                         updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
+                         updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
+                    } else if (target.cards.length === 1 && gameData.players[currentUserId].coins >= 10) {
                         updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
-                        updates[`players.${targetId}.coins`] = 0;
-                        updates.log = arrayUnion(`<strong>${actorName}</strong> انقلب على <strong>${target.name}</strong>، الذي خسر كل عملاته بدلاً من نفوذه.`);
+                        updates[`players.${targetId}`].coins = 0;
+                        updates.log = arrayUnion(`<strong>${actorName}</strong> انقلب على <strong>${target.name}</strong>، الذي خسر كل عملاته بدلاً من نفوذه الأخير.`);
                         updates.currentPlayerIndex = getNextPlayerIndex(gameData);
                         updates.turnStartTime = serverTimestamp();
                         await updateDoc(gameRef, updates);
                         return;
+                    } else { // Normal Coup
+                         updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7;
+                         updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' };
                     }
                 }
                 
@@ -1107,10 +1144,10 @@
         }
         
         function showGameOverScreen(winnerText, cleanupText) {
-             document.getElementById('winner-text').textContent = winnerText;
-             document.getElementById('cleanup-text').textContent = cleanupText;
-             document.getElementById('game-over-screen').style.display = 'flex';
-        }
+              document.getElementById('winner-text').textContent = winnerText;
+              document.getElementById('cleanup-text').textContent = cleanupText;
+              document.getElementById('game-over-screen').style.display = 'flex';
+         }
 
         async function deleteGameData(gameId) {
             if (!gameId) return;
@@ -1212,9 +1249,11 @@
                             updates.log = arrayUnion(`الجميع تجاهل. <strong>${players[pendingAction.actorId].name}</strong> نجح في حركة <strong>${CARD_TRANSLATIONS[pendingAction.actionType] || pendingAction.actionType}</strong>.`);
                             Object.assign(updates, getActionEffects(gameData, pendingAction));
                             
+                            // **MODIFIED** Handle Foreign Aid bonus turn
                             if (pendingAction.actionType === 'Foreign Aid') {
                                 updates.log = arrayUnion(`<strong>${players[pendingAction.actorId].name}</strong> يلعب مرة أخرى.`);
                                 updates.turnStartTime = serverTimestamp();
+                                updates.justUsedForeignAid = pendingAction.actorId; // Set flag
                             } else if (pendingAction.actionType !== 'Exchange' && pendingAction.actionType !== 'Assassinate') {
                                 updates.currentPlayerIndex = getNextPlayerIndex(gameData);
                                 updates.turnStartTime = serverTimestamp();
@@ -1401,12 +1440,12 @@
                  const gameData = await transaction.get(gameRef).then(snap => snap.data());
                  
                  const updates = {
-                     [`players.${currentUserId}.cards`]: keptCards,
-                     [`playerUpdates.${currentUserId}`]: null,
-                     deck: shuffle([...gameData.deck, ...returnedCards]),
-                     log: arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> قام بتبديل بطاقاته.`),
-                     currentPlayerIndex: getNextPlayerIndex(gameData),
-                     turnStartTime: serverTimestamp()
+                       [`players.${currentUserId}.cards`]: keptCards,
+                       [`playerUpdates.${currentUserId}`]: null,
+                       deck: shuffle([...gameData.deck, ...returnedCards]),
+                       log: arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> قام بتبديل بطاقاته.`),
+                       currentPlayerIndex: getNextPlayerIndex(gameData),
+                       turnStartTime: serverTimestamp()
                  };
                  transaction.update(gameRef, updates);
              });
