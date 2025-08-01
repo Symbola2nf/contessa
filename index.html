@@ -71,7 +71,7 @@
         .ui-element {
             pointer-events: auto;
             background-color: var(--dark-ui);
-            padding: 8px 16px;
+            padding: 6px 12px; /* Mobile Style */
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
@@ -82,11 +82,11 @@
             text-align: center;
             transform: translateX(-50%);
             transition: all 0.3s ease;
-            width: 120px; 
+            width: 90px; /* Mobile Style */
             z-index: 20;
         }
         .player-info .avatar {
-            width: 60px; height: 60px;
+            width: 45px; height: 45px; /* Mobile Style */
             background-color: #4a4a4a;
             border-radius: 50%;
             border: 2px solid white;
@@ -127,7 +127,7 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 10px;
+            gap: 5px; /* Mobile Style */
             margin-bottom: 10px;
             max-width: 95%;
             width: 100%;
@@ -137,14 +137,15 @@
             background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 12px; /* Mobile Style */
             border-radius: 10px;
-            font-size: 14px;
+            font-size: 13px; /* Mobile Style */
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             flex-shrink: 0;
+            min-width: 80px; /* Mobile Style */
         }
         .action-btn:hover:not(:disabled) {
             transform: translateY(-2px);
@@ -199,7 +200,7 @@
         }
         .modal-content {
             background-color: #2d2d2d;
-            padding: 20px;
+            padding: 15px; /* Mobile Style */
             border-radius: 15px;
             text-align: center;
             border: 1px solid var(--yellow-glow);
@@ -213,7 +214,7 @@
             gap: 10px;
         }
         .card-selection-container img {
-            width: 80px;
+            width: 70px; /* Mobile Style */
             height: auto;
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -270,34 +271,6 @@
             border-radius: 8px;
             padding: 5px 10px;
             font-size: 12px;
-        }
-
-        /* Mobile Responsiveness */
-        @media (max-width: 768px) {
-            .action-btn {
-                padding: 12px;
-                font-size: 13px;
-                min-width: 80px;
-            }
-            .action-buttons {
-                gap: 5px;
-            }
-            .player-info {
-                width: 90px;
-            }
-            .player-info .avatar {
-                width: 45px;
-                height: 45px;
-            }
-            .modal-content {
-                padding: 15px;
-            }
-            .card-selection-container img {
-                width: 70px;
-            }
-            .ui-element {
-                padding: 6px 12px;
-            }
         }
     </style>
 </head>
@@ -731,8 +704,9 @@
             scene.background = new THREE.Color(0x1a1a1a);
             scene.fog = new THREE.Fog(0x1a1a1a, 25, 50);
 
-            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 15, 22);
+            // **MODIFIED:** Camera setup for mobile-first view
+            camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 14, 17);
             camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -748,7 +722,8 @@
             pointLight.castShadow = true;
             scene.add(pointLight);
 
-            const tableGeometry = new THREE.CylinderGeometry(8, 8.5, 0.5, 64);
+            // **MODIFIED:** Smaller table for a more compact, centered view
+            const tableGeometry = new THREE.CylinderGeometry(7, 7.5, 0.5, 64);
             const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x3d291a });
             const table = new THREE.Mesh(tableGeometry, tableMaterial);
             table.position.y = -0.25;
@@ -801,17 +776,10 @@
              return cardMesh;
         }
 
+        // **MODIFIED:** Simplified resize logic for a single mobile-first layout
         function onWindowResize() {
             if (!camera || !renderer) return;
             camera.aspect = window.innerWidth / window.innerHeight;
-            if (window.innerWidth < 768) {
-                camera.fov = 70;
-                camera.position.set(0, 16, 15); 
-            } else {
-                camera.fov = 50;
-                camera.position.set(0, 15, 22);
-            }
-            camera.lookAt(0,0,0);
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
@@ -856,23 +824,15 @@
                 }
 
                 const relativeIndex = (index - myIndex + turnOrder.length) % turnOrder.length;
+                const isMe = (relativeIndex === 0);
                 
-                let x, z, yPos, angle;
-                let isMe = (relativeIndex === 0);
-
-                if (window.innerWidth < 768) {
-                    const radius = isMe ? 11 : 12;
-                    yPos = isMe ? 2.5 : 4;
-                    angle = (relativeIndex / turnOrder.length) * Math.PI * 2;
-                    x = Math.sin(angle) * radius;
-                    z = Math.cos(angle) * radius;
-                } else {
-                    const radius = isMe ? 12 : 13;
-                    yPos = isMe ? 3 : 4;
-                    angle = (relativeIndex / turnOrder.length) * Math.PI * 2;
-                    x = Math.sin(angle) * radius;
-                    z = Math.cos(angle) * radius;
-                }
+                // **MODIFIED:** Unified layout logic for mobile-first design.
+                // Removed desktop/mobile split for a single, consistent experience.
+                const angle = (relativeIndex / turnOrder.length) * Math.PI * 2;
+                const radius = isMe ? 9 : 10.5; // Reduced radius to bring players closer
+                const yPos = isMe ? 2.5 : 3.5; // Adjusted height for player cards
+                const x = Math.sin(angle) * radius;
+                const z = Math.cos(angle) * radius;
         
                 updateCardGroup(playerObjects[pid].cards, player.cards, pid, 'active', { x, y: yPos, z }, angle, isMe);
                 updateCardGroup(playerObjects[pid].revealedCards, player.revealedCards, pid, 'revealed', { x, y: yPos, z }, angle, isMe);
@@ -965,7 +925,8 @@
                         targetPos.z += Math.cos(offsetAngle) * cardOffset * 0.3;
                     }
                 } else { 
-                    const tableRadius = isMe ? 5 : 4.5;
+                    // **MODIFIED:** Simplified revealed card positioning for the smaller table
+                    const tableRadius = 4.5;
                     const tablePos = new THREE.Vector3(basePos.x, 0.2, basePos.z).normalize().multiplyScalar(tableRadius);
                     const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier;
                     
