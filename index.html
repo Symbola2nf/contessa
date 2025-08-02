@@ -3,19 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>لعبة Coup 3D</title>
+    <title>CONTESSA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <style>
         :root {
             --yellow-glow: #fde047;
-            --dark-bg: #1a1a1a;
-            --dark-ui: rgba(0, 0, 0, 0.7);
+            --dark-bg: #111118;
+            --dark-ui: rgba(10, 10, 15, 0.75);
+            --title-font: 'Cinzel Decorative', cursive;
+            --body-font: 'Cairo', sans-serif;
         }
         body {
-            font-family: 'Cairo', sans-serif;
+            font-family: var(--body-font);
             overflow: hidden;
             background-color: var(--dark-bg);
             color: white;
@@ -41,7 +46,7 @@
             align-items: center;
             flex-direction: column;
             gap: 20px;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.8s ease;
         }
         #loading-overlay.hidden {
             opacity: 0;
@@ -51,8 +56,8 @@
             border: 4px solid rgba(255, 255, 255, 0.2);
             border-left-color: var(--yellow-glow);
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             animation: spin 1s linear infinite;
         }
         @keyframes spin {
@@ -71,326 +76,224 @@
         .ui-element {
             pointer-events: auto;
             background-color: var(--dark-ui);
-            padding: 6px 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(253, 224, 71, 0.3);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.5);
         }
-        /* MODIFIED: Smaller player info box for mobile */
         .player-info {
             position: absolute;
             text-align: center;
             transform: translateX(-50%);
-            transition: all 0.3s ease;
-            width: 80px; /* Reduced from 90px */
+            transition: all 0.4s ease;
+            width: 100px;
             z-index: 20;
-            font-size: 11px; /* Added to shrink text */
+            font-size: 12px;
         }
         .player-info .avatar {
-            width: 40px; height: 40px; /* Reduced from 45px */
+            width: 45px; height: 45px;
             background-color: #4a4a4a;
             border-radius: 50%;
-            border: 2px solid white;
+            border: 3px solid white;
             margin: 0 auto 5px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px; /* Reduced from 24px */
+            font-size: 24px;
             font-weight: bold;
             overflow: hidden;
+            transition: all 0.3s ease;
         }
-        .player-info .avatar svg {
-            width: 100%;
-            height: 100%;
-        }
+        .player-info .avatar svg { width: 100%; height: 100%; }
         .player-info.current-turn .avatar {
             border-color: var(--yellow-glow);
-            box-shadow: 0 0 15px var(--yellow-glow), 0 0 25px var(--yellow-glow);
+            box-shadow: 0 0 20px var(--yellow-glow), 0 0 30px var(--yellow-glow);
+            transform: scale(1.1);
         }
-        .player-info.eliminated {
-            opacity: 0.4;
-            filter: grayscale(1);
-        }
+        .player-info.eliminated { opacity: 0.4; filter: grayscale(1); }
         .bottom-ui-container {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px 10px;
+            bottom: 0; left: 0; width: 100%;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 15px 10px;
             box-sizing: border-box;
             pointer-events: none;
             z-index: 10;
         }
         .action-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 5px;
-            margin-bottom: 10px;
-            max-width: 95%;
-            width: 100%;
-            pointer-events: auto;
+            display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 8px; margin-bottom: 10px; max-width: 98%;
+            width: 100%; pointer-events: auto;
         }
         .action-btn {
             background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            flex-shrink: 0;
-            min-width: 80px;
+            color: white; border: none; padding: 12px 16px;
+            border-radius: 12px; font-size: 14px; font-weight: bold;
+            cursor: pointer; transition: all 0.2s ease;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            flex-shrink: 0; min-width: 90px;
         }
         .action-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(253, 224, 71, 0.3);
             background: linear-gradient(145deg, #6a6a6a, #4a4a4a);
         }
-        .action-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        #lobby, #game-over-screen {
-            position: absolute;
-            top: 0; left: 0;
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        #lobby, #game-over-screen, .modal {
+            position: fixed; top: 0; left: 0;
             width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            flex-direction: column;
-            gap: 15px;
-            padding: 15px;
-            overflow-y: auto;
+            background: radial-gradient(circle, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.95) 100%);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 100; flex-direction: column;
+            gap: 20px; padding: 15px;
+            opacity: 0; animation: fadeIn 0.5s forwards;
+        }
+        @keyframes fadeIn { to { opacity: 1; } }
+        #lobby .lobby-content {
+            background-color: var(--dark-ui);
+            padding: 25px; border-radius: 20px;
+            border: 1px solid rgba(253, 224, 71, 0.3);
+            box-shadow: 0 10px 50px rgba(0,0,0,0.6);
+            width: 100%; max-width: 450px;
+            max-height: 95vh; overflow-y: auto;
         }
         #lobby input {
-            color: black;
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
-            width: 100%;
-            max-width: 300px;
-            text-align: center;
+            color: black; padding: 12px; border-radius: 10px;
+            border: none; width: 100%; text-align: center;
+            background-color: #eee;
         }
         #lobby button, #game-over-screen button {
-            background: var(--yellow-glow);
-            color: var(--dark-bg);
+            background: var(--yellow-glow); color: var(--dark-bg);
             font-weight: bold;
         }
-        .message-log {
-            display: none !important;
-        }
-        .modal {
-            position: fixed;
-            z-index: 50;
-            left: 0; top: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.7);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            padding: 15px;
-        }
+        .modal { display: none; }
         .modal-content {
             background-color: #2d2d2d;
-            padding: 15px;
-            border-radius: 15px;
-            text-align: center;
-            border: 1px solid var(--yellow-glow);
-            width: 100%;
-            max-width: 450px;
+            padding: 25px; border-radius: 20px;
+            text-align: center; border: 1px solid var(--yellow-glow);
+            width: 100%; max-width: 500px;
+            animation: slideInUp 0.5s ease;
         }
+        @keyframes slideInUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .card-selection-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
         }
         .card-selection-container img {
-            width: 70px;
-            height: auto;
-            cursor: pointer;
+            width: 80px; height: auto; cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
-            border-radius: 8px;
-            border: 2px solid transparent;
+            border-radius: 8px; border: 2px solid transparent;
         }
         .card-selection-container img:hover {
-            transform: scale(1.05) translateY(-5px);
-            box-shadow: 0 0 15px var(--yellow-glow);
+            transform: scale(1.1) translateY(-8px);
+            box-shadow: 0 0 20px var(--yellow-glow);
         }
         .card-selection-container img.selected {
             border-color: var(--yellow-glow);
-            box-shadow: 0 0 20px var(--yellow-glow);
+            box-shadow: 0 0 25px var(--yellow-glow);
+            transform: scale(1.1);
         }
         #turn-timer {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            transform: none;
-            font-size: 24px;
-            font-weight: bold;
+            position: absolute; top: 20px;
+            left: 50%; transform: translateX(-50%);
+            font-size: 28px; font-weight: bold;
             color: var(--yellow-glow);
-            text-shadow: 0 0 10px var(--yellow-glow);
+            text-shadow: 0 0 15px var(--yellow-glow);
             display: none;
         }
         .top-right-ui {
-            display: none !important;
+            position: absolute; top: 15px; right: 15px;
+            display: flex; gap: 10px;
         }
+        .icon-btn {
+            background: var(--dark-ui); border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white; width: 40px; height: 40px;
+            border-radius: 50%; font-size: 18px;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .icon-btn:hover { background-color: var(--yellow-glow); color: var(--dark-bg); }
         #avatar-customizer {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-            width: 100%;
-            max-width: 350px;
+            display: flex; flex-direction: column; align-items: center;
+            gap: 15px; margin-bottom: 20px; width: 100%; max-width: 350px;
         }
         #avatar-preview {
-            width: 120px;
-            height: 120px;
-            background-color: #2a2a2a;
-            border: 3px solid var(--yellow-glow);
-            border-radius: 50%;
-            overflow: hidden;
+            width: 120px; height: 120px;
+            background-color: #2a2a2a; border: 3px solid var(--yellow-glow);
+            border-radius: 50%; overflow: hidden;
             box-shadow: 0 0 15px rgba(253, 224, 71, 0.5);
         }
         #avatar-controls-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            width: 100%;
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 10px; width: 100%;
         }
         .avatar-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
             background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            padding: 5px;
+            border-radius: 8px; padding: 5px;
         }
-        .avatar-controls .label {
-            flex-grow: 1;
-            text-align: center;
-            font-weight: bold;
-            font-size: 14px;
-        }
+        .avatar-controls .label { flex-grow: 1; text-align: center; font-weight: bold; font-size: 14px; }
         .avatar-controls button {
-            background-color: #4a4a4a;
-            border: 1px solid #6a6a6a;
-            color: white;
-            border-radius: 6px;
-            padding: 6px 12px;
-            font-size: 16px;
-            font-weight: bold;
-            line-height: 1;
+            background-color: #4a4a4a; border: 1px solid #6a6a6a;
+            color: white; border-radius: 6px; padding: 6px 12px;
+            font-size: 16px; font-weight: bold; line-height: 1;
         }
-        
-        /* MODIFIED: Desktop enhancements */
+        #how-to-play-content { text-align: right; max-height: 60vh; overflow-y: auto; padding-right: 10px; }
+        #how-to-play-content h4 { font-weight: bold; color: var(--yellow-glow); margin-top: 1rem; }
         @media (min-width: 1024px) and (orientation: landscape) {
-            .player-info {
-                width: 120px; /* Larger UI box for player info */
-                font-size: 14px;
-            }
-            .player-info .avatar {
-                width: 55px; height: 55px; /* Balanced avatar size */
-                font-size: 28px;
-            }
-            .action-btn {
-                padding: 14px;
-                font-size: 14px;
-                min-width: 90px;
-            }
-            .modal-content {
-                padding: 25px;
-                max-width: 500px;
-            }
-            .card-selection-container img {
-                width: 90px;
-            }
-            #turn-timer {
-                font-size: 28px;
-            }
-            .bottom-ui-container {
-                 padding: 20px;
-            }
-            .action-buttons {
-                gap: 10px;
-            }
+            .player-info { width: 140px; font-size: 16px; }
+            .player-info .avatar { width: 60px; height: 60px; font-size: 32px; }
+            .action-btn { padding: 14px 20px; font-size: 16px; min-width: 120px; }
+            .modal-content { padding: 30px; max-width: 550px; }
+            .card-selection-container img { width: 100px; }
         }
     </style>
 </head>
 <body>
-    
     <div id="loading-overlay">
         <div class="spinner"></div>
-        <p>جاري تحميل اللعبة...</p>
+        <p>تحميل CONTESSA...</p>
     </div>
 
     <div id="game-container"></div>
 
     <div id="lobby" style="display: flex;">
-        <div class="ui-element text-center">
-            <h1 class="text-4xl font-bold text-yellow-300 mb-4">لعبة Coup</h1>
+        <div class="lobby-content text-center">
+            <h1 class="text-6xl mb-6" style="font-family: var(--title-font); color: var(--yellow-glow); text-shadow: 0 0 15px var(--yellow-glow);">CONTESSA</h1>
             
             <div id="avatar-customizer">
-                <p class="mb-2 text-lg">صمم شخصيتك</p>
+                <p class="mb-2 text-lg">اصنع شخصيتك</p>
                 <div id="avatar-preview"></div>
                 <div id="avatar-controls-grid">
-                    <div class="avatar-controls">
-                        <button id="prev-skin-btn">&lt;</button>
-                        <span class="label">لون البشرة</span>
-                        <button id="next-skin-btn">&gt;</button>
-                    </div>
-                    <div class="avatar-controls">
-                        <button id="prev-hair-style-btn">&lt;</button>
-                        <span class="label">الشعر</span>
-                        <button id="next-hair-style-btn">&gt;</button>
-                    </div>
-                     <div class="avatar-controls">
-                        <button id="prev-hair-color-btn">&lt;</button>
-                        <span class="label">لون الشعر</span>
-                        <button id="next-hair-color-btn">&gt;</button>
-                    </div>
-                    <div class="avatar-controls">
-                        <button id="prev-eyes-btn">&lt;</button>
-                        <span class="label">العيون</span>
-                        <button id="next-eyes-btn">&gt;</button>
-                    </div>
-                    <div class="avatar-controls">
-                        <button id="prev-facial-hair-btn">&lt;</button>
-                        <span class="label">اللحية</span>
-                        <button id="next-facial-hair-btn">&gt;</button>
-                    </div>
-                    <div class="avatar-controls">
-                        <button id="prev-shirt-color-btn">&lt;</button>
-                        <span class="label">القميص</span>
-                        <button id="next-shirt-color-btn">&gt;</button>
-                    </div>
+                    <div class="avatar-controls"><button id="prev-skin-btn">&lt;</button><span class="label">لون البشرة</span><button id="next-skin-btn">&gt;</button></div>
+                    <div class="avatar-controls"><button id="prev-hair-style-btn">&lt;</button><span class="label">الشعر</span><button id="next-hair-style-btn">&gt;</button></div>
+                    <div class="avatar-controls"><button id="prev-hair-color-btn">&lt;</button><span class="label">لون الشعر</span><button id="next-hair-color-btn">&gt;</button></div>
+                    <div class="avatar-controls"><button id="prev-eyes-btn">&lt;</button><span class="label">العيون</span><button id="next-eyes-btn">&gt;</button></div>
+                    <div class="avatar-controls"><button id="prev-facial-hair-btn">&lt;</button><span class="label">اللحية</span><button id="next-facial-hair-btn">&gt;</button></div>
+                    <div class="avatar-controls"><button id="prev-shirt-color-btn">&lt;</button><span class="label">القميص</span><button id="next-shirt-color-btn">&gt;</button></div>
                 </div>
             </div>
 
             <p class="mb-2">أدخل اسمك:</p>
             <input type="text" id="player-name-input" placeholder="اسم اللاعب" class="mb-4">
-            <p class="mb-2">أدخل رمز اللعبة للانضمام أو أنشئ لعبة جديدة</p>
-            <input type="text" id="game-id-input" placeholder="رمز اللعبة">
+            <p class="mb-2">أدخل كود اللعبة أو اصنع واحدة جديدة</p>
+            <input type="text" id="game-id-input" placeholder="كود اللعبة">
             <div class="flex gap-4 mt-4 justify-center">
-                <button id="join-game-btn" class="action-btn">الانضمام للعبة</button>
-                <button id="create-game-btn" class="action-btn">إنشاء لعبة جديدة</button>
+                <button id="join-game-btn" class="action-btn">ادخل للعبة</button>
+                <button id="create-game-btn" class="action-btn">اصنع لعبة</button>
             </div>
-            <button id="start-game-btn" class="action-btn mt-4" style="display: none;">ابدأ اللعبة</button>
+            <button id="start-game-btn" class="action-btn mt-4" style="display: none;">ابدا اللعبة</button>
+             <button id="how-to-play-btn-lobby" class="action-btn mt-4" style="background: transparent; border: 1px solid var(--yellow-glow); color: var(--yellow-glow);">كيفية اللعب</button>
             <p id="lobby-error" class="text-red-500 mt-4"></p>
             <div class="mt-4">
-                <h3 class="text-lg font-bold mb-2">اللاعبون في الغرفة: <span id="game-id-display"></span></h3>
+                <h3 class="text-lg font-bold mb-2">اللاعبين في الغرفة: <span id="game-id-display"></span></h3>
                 <ul id="lobby-players-list"></ul>
+            </div>
+            <div id="share-info" class="mt-4 p-4 border border-dashed border-gray-500 rounded-lg" style="display: none;">
+                <h3 class="text-lg font-bold mb-2 text-yellow-300">ابعت لصحابك!</h3>
+                <p class="mb-2">انسخ الرابط ولا امسح الكود:</p>
+                <input type="text" id="share-link-input" readonly class="w-full text-center bg-gray-800 text-white p-2 rounded mb-3 cursor-pointer" onclick="this.select(); document.execCommand('copy');">
+                <canvas id="qr-code-canvas" class="mx-auto bg-white p-1 rounded"></canvas>
             </div>
         </div>
     </div>
@@ -398,76 +301,128 @@
     <div id="ui-overlay" class="ui-overlay" style="display: none;">
         <div id="player-infos" class="w-full h-full absolute"></div>
         <div id="turn-timer" class="ui-element"></div>
-        <div class="absolute top-4 right-4 ui-element top-right-ui">
-            <p>رمز اللعبة: <strong id="game-id-ingame"></strong></p>
+        <div class="top-right-ui">
+             <button id="how-to-play-btn-ingame" class="icon-btn"><i class="fas fa-question"></i></button>
+             <button id="sfx-btn" class="icon-btn"><i class="fas fa-volume-up"></i></button>
+             <button id="music-btn" class="icon-btn"><i class="fas fa-music"></i></button>
         </div>
         <div class="bottom-ui-container">
-            <div id="message-log" class="message-log"></div>
             <div id="action-buttons" class="action-buttons"></div>
         </div>
     </div>
     
-    <div id="interaction-modal" class="modal">
-        <div class="modal-content ui-element">
-            <h3 id="modal-title" class="text-2xl mb-4"></h3>
-            <p id="modal-text" class="mb-6"></p>
-            <div id="modal-buttons" class="flex justify-center gap-4 flex-wrap"></div>
-        </div>
-    </div>
-    
-    <div id="target-selection-modal" class="modal">
-        <div class="modal-content ui-element">
-            <h3 class="text-2xl mb-4">اختر لاعبًا</h3>
-            <div id="target-player-list" class="flex flex-col gap-2"></div>
-            <button id="cancel-target-btn" class="mt-4 action-btn">إلغاء</button>
-        </div>
-    </div>
-
-    <div id="reveal-card-modal" class="modal">
-        <div class="modal-content ui-element">
-            <h3 id="reveal-title" class="text-2xl mb-4"></h3>
-            <p id="reveal-text" class="mb-4">اختر بطاقة لتخسرها.</p>
-            <div id="reveal-cards-container" class="flex justify-center gap-4 mb-4 card-selection-container"></div>
-        </div>
-    </div>
-    
-    <div id="exchange-modal" class="modal">
-        <div class="modal-content ui-element">
-            <h3 class="text-2xl mb-4">تبديل البطاقات (السفير)</h3>
-            <p id="exchange-text" class="mb-4">لديك 4 بطاقات. اختر 2 للاحتفاظ بهما.</p>
-            <div id="exchange-cards-container" class="flex justify-center gap-4 mb-4 card-selection-container"></div>
-            <button id="confirm-exchange-btn" class="action-btn" disabled>تأكيد</button>
-        </div>
-    </div>
+    <div id="interaction-modal" class="modal"><div class="modal-content ui-element"><h3 id="modal-title" class="text-2xl mb-4"></h3><p id="modal-text" class="mb-6"></p><div id="modal-buttons" class="flex justify-center gap-4 flex-wrap"></div></div></div>
+    <div id="target-selection-modal" class="modal"><div class="modal-content ui-element"><h3 class="text-2xl mb-4">خير واحد</h3><div id="target-player-list" class="flex flex-col gap-2"></div><button id="cancel-target-btn" class="mt-4 action-btn">إلغاء</button></div></div>
+    <div id="reveal-card-modal" class="modal"><div class="modal-content ui-element"><h3 id="reveal-title" class="text-2xl mb-4"></h3><p id="reveal-text" class="mb-4">خير ورقة باش تخسرها.</p><div id="reveal-cards-container" class="flex justify-center gap-4 mb-4 card-selection-container"></div></div></div>
+    <div id="exchange-modal" class="modal"><div class="modal-content ui-element"><h3 class="text-2xl mb-4">تبديل الورق (السفير)</h3><p id="exchange-text" class="mb-4">عندك 4 ورقات. خير 2 باش تخليهم.</p><div id="exchange-cards-container" class="flex justify-center gap-4 mb-4 card-selection-container"></div><button id="confirm-exchange-btn" class="action-btn" disabled>تأكيد</button></div></div>
+    <div id="how-to-play-modal" class="modal"><div class="modal-content ui-element"><h3 class="text-2xl mb-4">كيفية اللعب</h3><div id="how-to-play-content"><p>الهدف هو تكون آخر واحد حي.</p><h4>الدور تاعك:</h4><p>في دورك، تقدر دير حركة وحدة برك.</p><h4>الحركات:</h4><ul><li><strong>دخل:</strong> تدي قطعة نقدية وحدة. مايقدر حتى واحد يحبسك.</li><li><strong>هز زوز:</strong> تدي زوج قطع. أي واحد عندو الدوق يقدر يحبسك.</li><li><strong>انقلاب:</strong> بـ7 قطع، تقدر تدير انقلاب على واحد وتخليه يخسر ورقة بالسيف.</li></ul><h4>حركات الشخصيات:</h4><p>تقدر تستعمل قدرة الشخصيات لي عندك، بصح الناس قادرة تتحداك.</p><ul><li><strong>الدوق:</strong> ياخذ 3 قطع (ضريبة). يحبس حركة "هز زوز".</li><li><strong>القاتل:</strong> بـ3 قطع، يغتال لاعب ويخليه يخسر ورقة.</li><li><strong>القبطان:</strong> يسرق قطعتين من لاعب. يحبس حركة السرقة.</li><li><strong>السفير:</strong> يبدل الورق تاعو مع زوج ورقات من الكوتشة. يحبس حركة السرقة.</li><li><strong>الكونتيسا:</strong> تحبس حركة الاغتيال.</li></ul><h4>التحدي:</h4><p>إذا شكيت في واحد بلي يكذب على الشخصية لي عندو، تقدر تتحداه. إذا كان عندو الصح، تخسر ورقة. إذا كان يكذب، هو لي يخسر ورقة.</p><h4>خسارة الورق:</h4><p>كي تخسر كل وراقك، تخرج من اللعبة.</p></div><button id="close-how-to-play-btn" class="mt-6 action-btn">فهمت</button></div></div>
 
     <div id="game-over-screen" style="display: none;">
         <div class="ui-element text-center">
-            <h1 class="text-4xl font-bold text-yellow-300 mb-4">انتهت اللعبة!</h1>
+            <h1 class="text-5xl font-bold text-yellow-300 mb-4" style="font-family: var(--title-font);">كملت اللعبة!</h1>
             <p id="winner-text" class="text-2xl"></p>
-            <p id="cleanup-text" class="text-sm text-gray-400 mt-4"></p>
-            <button id="play-again-btn" class="mt-6 action-btn">العودة للردهة</button>
+            <button id="play-again-btn" class="mt-6 action-btn">العب مرة أخرى</button>
         </div>
     </div>
-
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc, collection, serverTimestamp, runTransaction, arrayUnion, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // --- PASTE FIREBASE CONFIG HERE ---
         const firebaseConfig = {
-             apiKey: "AIzaSyBQLIKtueG954OYiWz-YDBl_LyUxc_VRT8",
-             authDomain: "el-klika.firebaseapp.com",
-             projectId: "el-klika",
-             storageBucket: "el-klika.appspot.com",
-             messagingSenderId: "357776786294",
-             appId: "1:357776786294:web:8cb4ec7eabe2895a133057",
-             measurementId: "G-0VZ35M4V50"
+            apiKey: "AIzaSyBQLIKtueG954OYiWz-YDBl_LyUxc_VRT8",
+            authDomain: "el-klika.firebaseapp.com",
+            projectId: "el-klika",
+            storageBucket: "el-klika.appspot.com",
+            messagingSenderId: "357776786294",
+            appId: "1:357776786294:web:8cb4ec7eabe2895a133057",
+            measurementId: "G-0VZ35M4V50"
         };
+        // --- END OF FIREBASE CONFIG ---
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // --- AUDIO MANAGER ---
+        const audioManager = {
+            sfxEnabled: true,
+            musicEnabled: true,
+            sounds: {},
+            music: null,
+            init() {
+                this.sfxEnabled = localStorage.getItem('sfxEnabled') === 'false' ? false : true;
+                this.musicEnabled = localStorage.getItem('musicEnabled') === 'false' ? false : true;
+
+                // FIXED: Replaced broken audio links with working ones
+                const soundFiles = {
+                    click: 'https://cdn.pixabay.com/audio/2022/03/15/audio_24319409a8.mp3',
+                    deal: 'https://cdn.pixabay.com/audio/2022/03/10/audio_c9b13396b2.mp3',
+                    coin: 'https://cdn.pixabay.com/audio/2022/03/10/audio_132579371a.mp3',
+                    challenge: 'https://cdn.pixabay.com/audio/2022/10/28/audio_2c8a3936cf.mp3',
+                    win: 'https://cdn.pixabay.com/audio/2022/01/20/audio_b84f31b8b1.mp3',
+                    lose: 'https://cdn.pixabay.com/audio/2021/08/04/audio_c33280c4b3.mp3',
+                };
+                Object.keys(soundFiles).forEach(key => {
+                    this.sounds[key] = new Tone.Player(soundFiles[key]).toDestination();
+                });
+
+                this.music = new Tone.Player({
+                    url: "https://cdn.pixabay.com/audio/2023/10/23/audio_53843138b1.mp3",
+                    loop: true,
+                    volume: -18 // Lowered volume slightly
+                }).toDestination();
+
+                this.updateUI();
+                if (this.musicEnabled) {
+                    // Preload music buffer
+                    Tone.loaded().then(() => {
+                        this.playMusic();
+                    });
+                }
+            },
+            play(sound) {
+                if (this.sfxEnabled && this.sounds[sound] && Tone.context.state === 'running') {
+                    // Check if buffer is loaded before playing
+                    if (this.sounds[sound].loaded) {
+                        this.sounds[sound].start();
+                    }
+                }
+            },
+            playMusic() {
+                if (this.musicEnabled && this.music.loaded && Tone.context.state === 'running') {
+                    this.music.start();
+                }
+            },
+            toggleSfx() {
+                this.sfxEnabled = !this.sfxEnabled;
+                localStorage.setItem('sfxEnabled', this.sfxEnabled);
+                this.updateUI();
+            },
+            toggleMusic() {
+                this.musicEnabled = !this.musicEnabled;
+                localStorage.setItem('musicEnabled', this.musicEnabled);
+                if (this.musicEnabled) {
+                     if (Tone.context.state !== 'running') {
+                        Tone.start().then(() => this.playMusic());
+                    } else {
+                        this.playMusic();
+                    }
+                } else {
+                    this.music.stop();
+                }
+                this.updateUI();
+            },
+            updateUI() {
+                const sfxBtn = document.getElementById('sfx-btn').querySelector('i');
+                const musicBtn = document.getElementById('music-btn').querySelector('i');
+                sfxBtn.className = this.sfxEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
+                musicBtn.className = this.musicEnabled ? 'fas fa-music' : 'fas fa-music-slash';
+            }
+        };
+
 
         const CARD_TYPES = { DUKE: 'Duke', ASSASSIN: 'Assassin', CAPTAIN: 'Captain', AMBASSADOR: 'Ambassador', CONTESSA: 'Contessa' };
         const CARD_TRANSLATIONS = {
@@ -475,25 +430,27 @@
             [CARD_TYPES.CAPTAIN]: 'القبطان', [CARD_TYPES.AMBASSADOR]: 'السفير',
             [CARD_TYPES.CONTESSA]: 'الكونتيسا'
         };
-
+        const ACTION_TRANSLATIONS = {
+            'Income': 'دخل', 'Foreign Aid': 'هز زوز', 'Tax': 'هز 3',
+            'Coup': 'انقلاب', 'Assassinate': 'اغتيال', 'Steal': 'سرقة', 'Exchange': 'بدل لورق'
+        };
         const CARD_IMAGES = {
-            [CARD_TYPES.DUKE]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020278/duke_nsvvuc.webp',
-            [CARD_TYPES.CONTESSA]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020277/contessa_luhbsn.webp',
-            [CARD_TYPES.ASSASSIN]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020272/assasin_muhtsm.webp',
-            [CARD_TYPES.CAPTAIN]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020277/captain_xqmeav.webp',
-            [CARD_TYPES.AMBASSADOR]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020278/ambassador_k44ipg.webp',
-            BACK: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020272/back_i5ar84.webp'
+             [CARD_TYPES.DUKE]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020278/duke_nsvvuc.webp',
+             [CARD_TYPES.CONTESSA]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020277/contessa_luhbsn.webp',
+             [CARD_TYPES.ASSASSIN]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020272/assasin_muhtsm.webp',
+             [CARD_TYPES.CAPTAIN]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020277/captain_xqmeav.webp',
+             [CARD_TYPES.AMBASSADOR]: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020278/ambassador_k44ipg.webp',
+             BACK: 'https://res.cloudinary.com/do9agtdqi/image/upload/v1754020272/back_i5ar84.webp'
         };
 
         let currentUserId = null, currentGameId = null, gameUnsubscribe = null;
-        let scene, camera, renderer, clock;
+        let scene, camera, renderer, clock, dustParticles;
         let playerObjects = {};
         let cardTextures = {};
         let textureLoader = new THREE.TextureLoader();
         let texturesPreloaded = false;
         let turnTimerInterval = null;
-        const TURN_DURATION = 40; 
-        
+        const TURN_DURATION = 40;
         let tableMesh = null;
         let layoutConfig = {};
         let lastKnownGameState = null;
@@ -507,7 +464,8 @@
             facialHairs: ['none','M 35 70 Q 55 75 75 70','M 45 75 C 50 85, 60 85, 65 75 Z','M 35 70 Q 55 75 75 70 V 85 H 35 Z','M 30 65 C 35 80, 45 90, 55 90 C 65 90, 75 80, 80 65 H 70 C 65 75, 55 75, 60 65 Z']
         };
         let currentAvatar = { skinTone: 0, shirtColor: 0, hairColor: 0, hairStyle: 1, eyes: 0, facialHair: 0 };
-
+        
+        // --- DOM Elements ---
         const loadingOverlay = document.getElementById('loading-overlay');
         const lobbyEl = document.getElementById('lobby');
         const gameIdInput = document.getElementById('game-id-input');
@@ -518,11 +476,49 @@
         const lobbyError = document.getElementById('lobby-error');
         const lobbyPlayersList = document.getElementById('lobby-players-list');
         const gameIdDisplay = document.getElementById('game-id-display');
-        const gameIdIngame = document.getElementById('game-id-ingame');
         const playAgainBtn = document.getElementById('play-again-btn');
         const turnTimerEl = document.getElementById('turn-timer');
         const avatarPreview = document.getElementById('avatar-preview');
         
+        // --- Initialization ---
+        window.addEventListener('load', () => {
+             document.body.addEventListener('click', () => {
+                if (Tone.context.state !== 'running') {
+                    Tone.start().then(() => {
+                        console.log("Audio context started");
+                        audioManager.init();
+                    });
+                }
+            }, { once: true });
+        });
+        
+        // Load player data from localStorage
+        function loadPlayerData() {
+            const savedName = localStorage.getItem('contessaPlayerName');
+            const savedAvatar = localStorage.getItem('contessaPlayerAvatar');
+            if (savedName) {
+                playerNameInput.value = savedName;
+            }
+            if (savedAvatar) {
+                currentAvatar = JSON.parse(savedAvatar);
+            }
+        }
+
+        // Save player data to localStorage
+        function savePlayerData() {
+            localStorage.setItem('contessaPlayerName', playerNameInput.value.trim());
+            localStorage.setItem('contessaPlayerAvatar', JSON.stringify(currentAvatar));
+        }
+
+        loadPlayerData();
+        updateAvatarPreview();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const gameIdFromUrl = urlParams.get('gameId');
+        if (gameIdFromUrl) {
+            gameIdInput.value = gameIdFromUrl.toUpperCase();
+        }
+
         function generateAvatarSVG({ skinTone, shirtColor, hairColor, hairStyle, eyes, facialHair }) {
             const skin = avatarOptions.skinTones[skinTone]; const shirt = avatarOptions.shirtColors[shirtColor];
             const hairC = avatarOptions.hairColors[hairColor]; const hairS = avatarOptions.hairStyles[hairStyle];
@@ -530,108 +526,183 @@
             return `<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg"><path d="M 20 100 V 55 C 20 40, 30 40, 45 40 H 65 C 80 40, 90 40, 90 55 V 100 Z" fill="${shirt}" /><circle cx="55" cy="50" r="30" fill="${skin}" />${hairS !== 'none' ? `<path d="${hairS}" fill="${hairC}" stroke="${hairC}" stroke-width="2" />` : ''}<path d="${eyeS}" stroke="black" stroke-width="4" fill="none" stroke-linecap="round" />${facialH !== 'none' ? `<path d="${facialH}" fill="${hairC}" />` : ''}</svg>`;
         }
         function updateAvatarPreview() { avatarPreview.innerHTML = generateAvatarSVG(currentAvatar); }
-        document.getElementById('next-skin-btn').onclick = () => { currentAvatar.skinTone = (currentAvatar.skinTone + 1) % avatarOptions.skinTones.length; updateAvatarPreview(); };
-        document.getElementById('prev-skin-btn').onclick = () => { currentAvatar.skinTone = (currentAvatar.skinTone - 1 + avatarOptions.skinTones.length) % avatarOptions.skinTones.length; updateAvatarPreview(); };
-        document.getElementById('next-shirt-color-btn').onclick = () => { currentAvatar.shirtColor = (currentAvatar.shirtColor + 1) % avatarOptions.shirtColors.length; updateAvatarPreview(); };
-        document.getElementById('prev-shirt-color-btn').onclick = () => { currentAvatar.shirtColor = (currentAvatar.shirtColor - 1 + avatarOptions.shirtColors.length) % avatarOptions.shirtColors.length; updateAvatarPreview(); };
-        document.getElementById('next-hair-style-btn').onclick = () => { currentAvatar.hairStyle = (currentAvatar.hairStyle + 1) % avatarOptions.hairStyles.length; updateAvatarPreview(); };
-        document.getElementById('prev-hair-style-btn').onclick = () => { currentAvatar.hairStyle = (currentAvatar.hairStyle - 1 + avatarOptions.hairStyles.length) % avatarOptions.hairStyles.length; updateAvatarPreview(); };
-        document.getElementById('next-hair-color-btn').onclick = () => { currentAvatar.hairColor = (currentAvatar.hairColor + 1) % avatarOptions.hairColors.length; updateAvatarPreview(); };
-        document.getElementById('prev-hair-color-btn').onclick = () => { currentAvatar.hairColor = (currentAvatar.hairColor - 1 + avatarOptions.hairColors.length) % avatarOptions.hairColors.length; updateAvatarPreview(); };
-        document.getElementById('next-eyes-btn').onclick = () => { currentAvatar.eyes = (currentAvatar.eyes + 1) % avatarOptions.eyes.length; updateAvatarPreview(); };
-        document.getElementById('prev-eyes-btn').onclick = () => { currentAvatar.eyes = (currentAvatar.eyes - 1 + avatarOptions.eyes.length) % avatarOptions.eyes.length; updateAvatarPreview(); };
-        document.getElementById('next-facial-hair-btn').onclick = () => { currentAvatar.facialHair = (currentAvatar.facialHair + 1) % avatarOptions.facialHairs.length; updateAvatarPreview(); };
-        document.getElementById('prev-facial-hair-btn').onclick = () => { currentAvatar.facialHair = (currentAvatar.facialHair - 1 + avatarOptions.facialHairs.length) % avatarOptions.facialHairs.length; updateAvatarPreview(); };
-        updateAvatarPreview();
+        document.getElementById('next-skin-btn').onclick = () => { currentAvatar.skinTone = (currentAvatar.skinTone + 1) % avatarOptions.skinTones.length; updateAvatarPreview(); audioManager.play('click'); };
+        document.getElementById('prev-skin-btn').onclick = () => { currentAvatar.skinTone = (currentAvatar.skinTone - 1 + avatarOptions.skinTones.length) % avatarOptions.skinTones.length; updateAvatarPreview(); audioManager.play('click'); };
+        document.getElementById('next-shirt-color-btn').onclick = () => { currentAvatar.shirtColor = (currentAvatar.shirtColor + 1) % avatarOptions.shirtColors.length; updateAvatarPreview(); audioManager.play('click'); };
+        document.getElementById('prev-shirt-color-btn').onclick = () => { currentAvatar.shirtColor = (currentAvatar.shirtColor - 1 + avatarOptions.shirtColors.length) % avatarOptions.shirtColors.length; updateAvatarPreview(); audioManager.play('click'); };
+        document.getElementById('next-hair-style-btn').onclick = () => { currentAvatar.hairStyle = (currentAvatar.hairStyle + 1) % avatarOptions.hairStyles.length; updateAvatarPreview(); audioManager.play('click'); };
+        document.getElementById('prev-hair-style-btn').onclick = () => { currentAvatar.hairStyle = (currentAvatar.hairStyle - 1 + avatarOptions.hairStyles.length) % avatarOptions.hairStyles.length; updateAvatarPreview(); audioManager.play('click'); };
+        document.getElementById('next-hair-color-btn').onclick = () => { currentAvatar.hairColor = (currentAvatar.hairColor + 1) % avatarOptions.hairColors.length; updateAvatarPreview(); audioManager.play('click'); };
+        document.getElementById('prev-hair-color-btn').onclick = () => { currentAvatar.hairColor = (currentAvatar.hairColor - 1 + avatarOptions.hairColors.length) % avatarOptions.hairColors.length; updateAvatarPreview(); audioManager.play('click'); };
+        document.getElementById('next-eyes-btn').onclick = () => { currentAvatar.eyes = (currentAvatar.eyes + 1) % avatarOptions.eyes.length; updateAvatarPreview(); audioManager.play('click'); };
+        document.getElementById('prev-eyes-btn').onclick = () => { currentAvatar.eyes = (currentAvatar.eyes - 1 + avatarOptions.eyes.length) % avatarOptions.eyes.length; updateAvatarPreview(); audioManager.play('click'); };
+        document.getElementById('next-facial-hair-btn').onclick = () => { currentAvatar.facialHair = (currentAvatar.facialHair + 1) % avatarOptions.facialHairs.length; updateAvatarPreview(); audioManager.play('click'); };
+        document.getElementById('prev-facial-hair-btn').onclick = () => { currentAvatar.facialHair = (currentAvatar.facialHair - 1 + avatarOptions.facialHairs.length) % avatarOptions.facialHairs.length; updateAvatarPreview(); audioManager.play('click'); };
+        
+        // --- Modal Logic ---
+        const howToPlayModal = document.getElementById('how-to-play-modal');
+        document.getElementById('how-to-play-btn-lobby').onclick = () => { howToPlayModal.style.display = 'flex'; audioManager.play('click'); };
+        document.getElementById('how-to-play-btn-ingame').onclick = () => { howToPlayModal.style.display = 'flex'; audioManager.play('click'); };
+        document.getElementById('close-how-to-play-btn').onclick = () => { howToPlayModal.style.display = 'none'; audioManager.play('click'); };
+
+        // --- Audio Controls ---
+        document.getElementById('sfx-btn').onclick = () => audioManager.toggleSfx();
+        document.getElementById('music-btn').onclick = () => audioManager.toggleMusic();
 
         window.addEventListener('resize', onWindowResize, false);
         onAuthStateChanged(auth, user => {
-            if (user) { currentUserId = user.uid; if (texturesPreloaded) loadingOverlay.classList.add('hidden'); } 
-            else { signInAnonymously(auth).catch(() => {}); }
+            if (user) { 
+                currentUserId = user.uid; 
+                checkForReconnect();
+                if (texturesPreloaded) loadingOverlay.classList.add('hidden'); 
+            } else { signInAnonymously(auth).catch(() => {}); }
         });
         preloadTextures(() => {
             texturesPreloaded = true; if (currentUserId) loadingOverlay.classList.add('hidden');
         });
-
-        createGameBtn.addEventListener('click', async () => { if (!validateLobbyInput()) return; const newGameId = doc(collection(db, 'games')).id.substring(0, 5).toUpperCase(); await joinGame(newGameId, true); });
-        joinGameBtn.addEventListener('click', async () => { if (!validateLobbyInput()) return; const gameId = gameIdInput.value.trim().toUpperCase(); if (!gameId) { lobbyError.textContent = "الرجاء إدخال رمز اللعبة."; return; } await joinGame(gameId, false); });
-        startGameBtn.addEventListener('click', async () => { if(currentGameId) await startGame(currentGameId); });
-        playAgainBtn.addEventListener('click', () => { window.location.reload(); });
-        function validateLobbyInput() { if (!currentUserId) { lobbyError.textContent = "جاري المصادقة..."; return false; } if (!playerNameInput.value.trim()) { lobbyError.textContent = "الرجاء إدخال اسمك."; return false; } lobbyError.textContent = ''; return true; }
-        async function joinGame(gameId, isCreating) { const gameRef = doc(db, 'games', gameId); const playerName = playerNameInput.value.trim(); try { await runTransaction(db, async (transaction) => { const gameSnap = await transaction.get(gameRef); const playerInitialData = { name: playerName, coins: 2, cards: [], isAlive: true, revealedCards: [], avatar: currentAvatar }; if (isCreating) { if (gameSnap.exists()) throw new Error("Game ID already exists."); const initialDeck = []; Object.values(CARD_TYPES).forEach(type => { for (let i = 0; i < 3; i++) initialDeck.push(type); }); const newGameData = { players: { [currentUserId]: playerInitialData }, deck: shuffle(initialDeck), gameState: 'waiting', currentPlayerIndex: 0, turnOrder: [currentUserId], log: [`اللعبة ${gameId} تم إنشاؤها.`, `${playerName} انضم للعبة.`], createdAt: serverTimestamp(), creatorId: currentUserId, pendingAction: null, playerUpdates: {}, turnStartTime: null, justUsedForeignAid: null, }; transaction.set(gameRef, newGameData); } else { const gameData = gameSnap.data(); if (!gameSnap.exists()) throw new Error("اللعبة غير موجودة."); if (Object.keys(gameData.players).length >= 6 && !gameData.players[currentUserId]) throw new Error("هذه اللعبة ممتلئة."); if (gameData.gameState !== 'waiting' && !gameData.players[currentUserId]) throw new Error("لا يمكن الانضمام، اللعبة بدأت بالفعل."); if (!gameData.players[currentUserId]) { transaction.update(gameRef, { [`players.${currentUserId}`]: playerInitialData, turnOrder: arrayUnion(currentUserId), log: arrayUnion(`${playerName} انضم للعبة.`) }); } } }); currentGameId = gameId; listenToLobbyUpdates(gameId); } catch (error) { lobbyError.textContent = error.message; } }
-        function listenToLobbyUpdates(gameId) { const gameRef = doc(db, 'games', gameId); if (gameUnsubscribe) gameUnsubscribe(); gameIdDisplay.textContent = `(${gameId})`; gameIdIngame.textContent = gameId; gameUnsubscribe = onSnapshot(gameRef, (docSnap) => { if (!docSnap.exists()) return; const gameData = docSnap.data(); if (gameData.gameState === 'waiting') { lobbyPlayersList.innerHTML = ''; gameData.turnOrder.forEach(pid => { const player = gameData.players[pid]; if (player) { const li = document.createElement('li'); li.textContent = player.name + (pid === gameData.creatorId ? ' (المضيف)' : ''); lobbyPlayersList.appendChild(li); } }); if (currentUserId === gameData.creatorId && gameData.turnOrder.length >= 2) { startGameBtn.style.display = 'block'; } else { startGameBtn.style.display = 'none'; } } else if (gameData.gameState === 'active' || gameData.gameState === 'finished') { if (lobbyEl.style.display !== 'none') { lobbyEl.style.display = 'none'; document.getElementById('ui-overlay').style.display = 'flex'; initThreeJS(); listenToGameUpdates(gameId); } } }); }
-        async function startGame(gameId) { const gameRef = doc(db, 'games', gameId); await runTransaction(db, async (transaction) => { const gameSnap = await transaction.get(gameRef); if (!gameSnap.exists()) throw new Error("Game not found"); let gameData = gameSnap.data(); if (gameData.gameState !== 'waiting') return; let { deck, players, turnOrder } = gameData; turnOrder.forEach(pid => { players[pid].cards.push(deck.pop()); players[pid].cards.push(deck.pop()); }); transaction.update(gameRef, { players, deck, gameState: 'active', turnStartTime: serverTimestamp(), log: arrayUnion("<strong>بدأت اللعبة! تم توزيع البطاقات.</strong>") }); }); }
         
-        function listenToGameUpdates(gameId) { const gameRef = doc(db, 'games', gameId); if (gameUnsubscribe) gameUnsubscribe(); gameUnsubscribe = onSnapshot(gameRef, (docSnap) => { if (docSnap.exists()) { const gameData = docSnap.data(); lastKnownGameState = gameData; if (!scene) return; renderGameState(gameData); const myPlayerData = gameData.players[currentUserId]; const myUpdate = gameData.playerUpdates ? gameData.playerUpdates[currentUserId] : null; if (!myPlayerData || !myPlayerData.isAlive) { hideAllModals(); checkGameOver(gameData); return; } if (myUpdate) { handlePlayerUpdate(gameData, myUpdate); } else if (gameData.pendingAction) { handlePendingAction(gameData); } else { hideAllModals(); } checkGameOver(gameData); } else { if (gameUnsubscribe) gameUnsubscribe(); showGameOverScreen("انتهت اللعبة", "تم حذف بيانات اللعبة من الخادم."); deleteGameData(currentGameId); } }); }
+        async function checkForReconnect() {
+            const reconnectGameId = sessionStorage.getItem('currentGameId');
+            if (reconnectGameId && currentUserId) {
+                const gameRef = doc(db, 'games', reconnectGameId);
+                const gameSnap = await getDoc(gameRef);
+                if (gameSnap.exists()) {
+                    const gameData = gameSnap.data();
+                    if (gameData.players[currentUserId] && (gameData.gameState === 'active' || gameData.gameState === 'waiting')) {
+                        currentGameId = reconnectGameId;
+                        if (gameData.gameState === 'waiting') {
+                            listenToLobbyUpdates(reconnectGameId);
+                        } else {
+                            lobbyEl.style.display = 'none';
+                            document.getElementById('ui-overlay').style.display = 'flex';
+                            initThreeJS();
+                            listenToGameUpdates(reconnectGameId);
+                        }
+                        return;
+                    }
+                }
+                sessionStorage.removeItem('currentGameId');
+            }
+        }
 
-        // --- 3D SCENE (NEW & IMPROVED) ---
+        createGameBtn.addEventListener('click', async () => { if (!validateLobbyInput()) return; audioManager.play('click'); const newGameId = doc(collection(db, 'games')).id.substring(0, 5).toUpperCase(); await joinGame(newGameId, true); });
+        joinGameBtn.addEventListener('click', async () => { if (!validateLobbyInput()) return; audioManager.play('click'); const gameId = gameIdInput.value.trim().toUpperCase(); if (!gameId) { lobbyError.textContent = "لازم تكتب كود اللعبة."; return; } await joinGame(gameId, false); });
+        startGameBtn.addEventListener('click', async () => { if(currentGameId) { audioManager.play('challenge'); await startGame(currentGameId); }});
+        playAgainBtn.addEventListener('click', () => { 
+            audioManager.play('click');
+            sessionStorage.removeItem('currentGameId');
+            window.location.href = window.location.pathname;
+        });
+
+        function validateLobbyInput() { if (!currentUserId) { lobbyError.textContent = "اصبر دقيقة..."; return false; } if (!playerNameInput.value.trim()) { lobbyError.textContent = "لازم تكتب اسمك."; return false; } lobbyError.textContent = ''; return true; }
+        
+        async function joinGame(gameId, isCreating) { 
+            savePlayerData();
+            const gameRef = doc(db, 'games', gameId); const playerName = playerNameInput.value.trim(); try { await runTransaction(db, async (transaction) => { const gameSnap = await transaction.get(gameRef); const playerInitialData = { name: playerName, coins: 2, cards: [], isAlive: true, revealedCards: [], avatar: currentAvatar }; if (isCreating) { if (gameSnap.exists()) throw new Error("كود اللعبة هذا كاين ديجا."); const initialDeck = []; Object.values(CARD_TYPES).forEach(type => { for (let i = 0; i < 3; i++) initialDeck.push(type); }); const newGameData = { players: { [currentUserId]: playerInitialData }, deck: shuffle(initialDeck), gameState: 'waiting', currentPlayerIndex: 0, turnOrder: [currentUserId], log: [`اللعبة ${gameId} تبنات.`, `${playerName} دخل للعبة.`], createdAt: serverTimestamp(), creatorId: currentUserId, pendingAction: null, playerUpdates: {}, turnStartTime: null, justUsedForeignAid: null, }; transaction.set(gameRef, newGameData); } else { const gameData = gameSnap.data(); if (!gameSnap.exists()) throw new Error("اللعبة هذي ماكانش."); if (Object.keys(gameData.players).length >= 6 && !gameData.players[currentUserId]) throw new Error("اللعبة معمرة."); if (gameData.gameState !== 'waiting' && !gameData.players[currentUserId]) throw new Error("ما تقدرش تدخل، اللعبة بدات ديجا."); if (!gameData.players[currentUserId]) { transaction.update(gameRef, { [`players.${currentUserId}`]: playerInitialData, turnOrder: arrayUnion(currentUserId), log: arrayUnion(`${playerName} دخل للعبة.`) }); } } }); currentGameId = gameId; sessionStorage.setItem('currentGameId', gameId); listenToLobbyUpdates(gameId); } catch (error) { lobbyError.textContent = error.message; } }
+        
+        function listenToLobbyUpdates(gameId) { const gameRef = doc(db, 'games', gameId); if (gameUnsubscribe) gameUnsubscribe(); gameIdDisplay.textContent = `(${gameId})`; 
+            const shareInfo = document.getElementById('share-info');
+            const shareLinkInput = document.getElementById('share-link-input');
+            const qrCanvas = document.getElementById('qr-code-canvas');
+            const gameLink = `${window.location.origin}${window.location.pathname}?gameId=${gameId}`;
+            shareLinkInput.value = gameLink;
+            QRCode.toCanvas(qrCanvas, gameLink, { width: 140 }, function (error) {
+                if (error) console.error(error)
+            });
+            shareInfo.style.display = 'block';
+
+            gameUnsubscribe = onSnapshot(gameRef, (docSnap) => { if (!docSnap.exists()) return; const gameData = docSnap.data(); if (gameData.gameState === 'waiting') { lobbyPlayersList.innerHTML = ''; gameData.turnOrder.forEach(pid => { const player = gameData.players[pid]; if (player) { const li = document.createElement('li'); li.textContent = player.name + (pid === gameData.creatorId ? ' (المضيف)' : ''); lobbyPlayersList.appendChild(li); } }); if (currentUserId === gameData.creatorId && gameData.turnOrder.length >= 2) { startGameBtn.style.display = 'block'; } else { startGameBtn.style.display = 'none'; } } else if (gameData.gameState === 'active' || gameData.gameState === 'finished') { if (lobbyEl.style.display !== 'none') { lobbyEl.style.display = 'none'; document.getElementById('ui-overlay').style.display = 'flex'; initThreeJS(); listenToGameUpdates(gameId); } } }); 
+        }
+        
+        async function startGame(gameId) { const gameRef = doc(db, 'games', gameId); await runTransaction(db, async (transaction) => { const gameSnap = await transaction.get(gameRef); if (!gameSnap.exists()) throw new Error("Game not found"); let gameData = gameSnap.data(); if (gameData.gameState !== 'waiting') return; let { deck, players, turnOrder } = gameData; turnOrder.forEach(pid => { players[pid].cards.push(deck.pop()); players[pid].cards.push(deck.pop()); }); transaction.update(gameRef, { players, deck, gameState: 'active', turnStartTime: serverTimestamp(), log: arrayUnion("<strong>بدات اللعبة! كل واحد دا زوج ورقات.</strong>") }); }); }
+        
+        function listenToGameUpdates(gameId) { const gameRef = doc(db, 'games', gameId); if (gameUnsubscribe) gameUnsubscribe(); gameUnsubscribe = onSnapshot(gameRef, (docSnap) => { if (docSnap.exists()) { const gameData = docSnap.data(); const oldState = lastKnownGameState; lastKnownGameState = gameData; if (!scene) return; renderGameState(gameData); const myPlayerData = gameData.players[currentUserId]; const myUpdate = gameData.playerUpdates ? gameData.playerUpdates[currentUserId] : null; if (!myPlayerData || !myPlayerData.isAlive) { hideAllModals(); checkGameOver(gameData); return; } if (myUpdate) { handlePlayerUpdate(gameData, myUpdate); } else if (gameData.pendingAction) { handlePendingAction(gameData); } else { hideAllModals(); } checkGameOver(gameData); } else { if (gameUnsubscribe) gameUnsubscribe(); showGameOverScreen("خلصت اللعبة", "بيانات اللعبة تمسحت من السيرفر."); deleteGameData(currentGameId); } }); }
+
+        // --- 3D SCENE ---
         function initThreeJS() {
             if (scene) return;
             const container = document.getElementById('game-container');
             clock = new THREE.Clock();
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a1a1a);
-            scene.fog = new THREE.Fog(0x1a1a1a, 35, 60);
+            scene.background = new THREE.Color(0x111118);
+            scene.fog = new THREE.FogExp2(0x111118, 0.025);
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             container.appendChild(renderer.domElement);
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
             scene.add(ambientLight);
-            const pointLight = new THREE.PointLight(0xffffff, 0.9, 100);
-            pointLight.position.set(0, 15, 10);
-            pointLight.castShadow = true;
-            scene.add(pointLight);
-            const tableGeometry = new THREE.CylinderGeometry(8, 8.5, 0.5, 64);
-            const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x3d291a });
-            tableMesh = new THREE.Mesh(tableGeometry, tableMaterial);
+            
+            const spotLight = new THREE.SpotLight(0xfff5e0, 1.5, 100, Math.PI / 4, 0.5, 2);
+            spotLight.position.set(0, 20, 0);
+            spotLight.castShadow = true;
+            spotLight.shadow.mapSize.width = 2048;
+            spotLight.shadow.mapSize.height = 2048;
+            scene.add(spotLight);
+            
+            // Ornate Table
+            const tableGeom = new THREE.CylinderGeometry(8, 8.5, 0.5, 64);
+            const tableMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.7, metalness: 0.2 });
+            tableMesh = new THREE.Mesh(tableGeom, tableMat);
             tableMesh.position.y = -0.25;
             tableMesh.receiveShadow = true;
             scene.add(tableMesh);
-            updateLayout(2); // Initial layout with default player count
+            
+            const edgeGeom = new THREE.TorusGeometry(8.25, 0.2, 16, 100);
+            const edgeMat = new THREE.MeshStandardMaterial({color: 0xb8860b, roughness: 0.4, metalness: 0.8 });
+            const tableEdge = new THREE.Mesh(edgeGeom, edgeMat);
+            tableEdge.rotation.x = Math.PI / 2;
+            tableEdge.position.y = -0.25;
+            scene.add(tableEdge);
+            
+            // Dust Particles
+            const particlesGeom = new THREE.BufferGeometry();
+            const particlesCnt = 5000;
+            const posArray = new Float32Array(particlesCnt * 3);
+            for(let i = 0; i < particlesCnt * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 50;
+            }
+            particlesGeom.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const particlesMat = new THREE.PointsMaterial({ size: 0.015, color: 0xeeeeee, transparent: true, opacity: 0.5 });
+            dustParticles = new THREE.Points(particlesGeom, particlesMat);
+            scene.add(dustParticles);
+
+            updateLayout(2);
             animate();
         }
 
-        // MODIFIED: This function now adapts to player count
         function updateLayout(playerCount) {
             if (!camera || !renderer || !tableMesh) return;
             const aspect = window.innerWidth / window.innerHeight;
 
-            if (aspect < 1) { // Portrait View (Mobile)
-                const cameraY = 24;
-                const cameraZ = 19;
-                let radius = 9, uiYOffset = 3.8, selfCardY = 3.0;
-
-                // Dynamic adjustments based on player count
-                if (playerCount <= 2) { radius = 8; selfCardY = 2.0; } 
-                else if (playerCount === 3) { radius = 8.5; } 
-                else if (playerCount === 4) { radius = 9; } 
-                else if (playerCount === 5) { radius = 9.5; uiYOffset = 3.6; } 
-                else { radius = 10; uiYOffset = 3.4; } // 6+ players
-
-                layoutConfig = {
-                    isPortrait: true, radius: radius, selfCardZOffset: 4, selfCardY: selfCardY,
-                    otherPlayerY: 1.5, uiYOffset: uiYOffset,
-                };
+            if (aspect < 1) { // Portrait
+                let radius = 9, uiYOffset = 3.8, selfCardY = 3.0, cameraY = 24, cameraZ = 19;
+                if (playerCount > 4) { radius = 10; cameraY = 28; cameraZ = 22; }
+                layoutConfig = { isPortrait: true, radius: radius, selfCardZOffset: 4, selfCardY: selfCardY, otherPlayerY: 1.5, uiYOffset: uiYOffset, };
                 camera.position.set(0, cameraY, cameraZ);
                 camera.lookAt(0, 0, 0);
-                tableMesh.scale.set(0.8, 1, 0.8);
-            } else { // Landscape & Desktop View
-                layoutConfig = {
-                    isPortrait: false, radiusX: 14, radiusZ: 9, selfCardZOffset: 3,
-                    selfCardY: 3.5, otherPlayerY: 1.5, uiYOffset: 4.2
-                };
+                tableMesh.parent?.scale.set(0.8, 1, 0.8);
+            } else { // Landscape
+                layoutConfig = { isPortrait: false, radiusX: 14, radiusZ: 9, selfCardZOffset: 3, selfCardY: 3.5, otherPlayerY: 1.5, uiYOffset: 4.2 };
                 camera.position.set(0, 20, 25);
                 camera.lookAt(0, 0, 0);
-                tableMesh.scale.set(1.5, 1, 1);
+                tableMesh.parent?.scale.set(1.5, 1, 1);
             }
         }
-
+        
         function preloadTextures(callback) { const keys = Object.keys(CARD_IMAGES); let loaded = 0; const total = keys.length; if (total === 0) { if(callback) callback(); return; } const onAssetLoaded = () => { if (++loaded === total) if(callback) callback(); }; keys.forEach(key => { textureLoader.load(CARD_IMAGES[key], (texture) => { cardTextures[key] = texture; onAssetLoaded(); }, undefined, onAssetLoaded); }); }
         function createCardMesh(cardType, isFaceUp = false) { const cardGeometry = new THREE.BoxGeometry(3.0, 4.15, 0.1); const materials = [ new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ color: 0x111111 }), new THREE.MeshStandardMaterial({ map: isFaceUp && cardTextures[cardType] ? cardTextures[cardType] : cardTextures.BACK }), new THREE.MeshStandardMaterial({ map: cardTextures.BACK }) ]; const cardMesh = new THREE.Mesh(cardGeometry, materials); cardMesh.castShadow = true; cardMesh.userData = { type: cardType, isFaceUp: isFaceUp }; return cardMesh; }
-        function animate() { requestAnimationFrame(animate); if(renderer) renderer.render(scene, camera); }
+        
+        function animate() { 
+            requestAnimationFrame(animate); 
+            const delta = clock.getDelta();
+            if(dustParticles) dustParticles.rotation.y += delta * 0.05;
+            if(renderer) renderer.render(scene, camera); 
+        }
 
         function onWindowResize() {
             if (!camera || !renderer) return;
@@ -642,10 +713,9 @@
             if (lastKnownGameState) { renderGameState(lastKnownGameState); }
         }
         
-        // MODIFIED: Calls updateLayout at the start
         function renderGameState(gameData) {
             if (!scene) return;
-            updateLayout(gameData.turnOrder.length); // IMPORTANT: Set layout for current player count
+            updateLayout(gameData.turnOrder.length);
 
             const { players, turnOrder, currentPlayerIndex } = gameData;
             const myIndex = turnOrder.indexOf(currentUserId);
@@ -680,34 +750,94 @@
             updateActionButtons(gameData); updateTurnTimer(gameData);
         }
         
-        function updateCardGroup(meshArray, dataArray, pid, cardGroupType, basePos, angle, isMe) { while (meshArray.length > dataArray.length) scene.remove(meshArray.pop()); while (meshArray.length < dataArray.length) { const newMesh = createCardMesh(null, cardGroupType === 'revealed'); newMesh.position.set(basePos.x, basePos.y, basePos.z); scene.add(newMesh); meshArray.push(newMesh); } dataArray.forEach((cardType, i) => { const cardMesh = meshArray[i]; const isFaceUp = (isMe && cardGroupType === 'active') || cardGroupType === 'revealed'; if (cardMesh.userData.type !== cardType || cardMesh.userData.isFaceUp !== isFaceUp) { cardMesh.material[4].map = isFaceUp ? cardTextures[cardType] : cardTextures.BACK; cardMesh.material[4].needsUpdate = true; cardMesh.userData.type = cardType; cardMesh.userData.isFaceUp = isFaceUp; } let targetPos, targetRot; const cardOffsetMultiplier = 3.5; const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier; if (cardGroupType === 'active') { if (isMe) { targetPos = new THREE.Vector3(cardOffset, basePos.y, basePos.z + layoutConfig.selfCardZOffset); targetRot = new THREE.Euler(-Math.PI / 8, 0, 0); } else { targetPos = new THREE.Vector3(basePos.x, basePos.y, basePos.z); const tempLookAt = cardMesh.clone(); tempLookAt.position.copy(targetPos); tempLookAt.lookAt(camera.position); targetRot = tempLookAt.rotation.clone(); const offsetAngle = angle - Math.PI / 2; targetPos.x += Math.sin(offsetAngle) * cardOffset * 0.3; targetPos.z += Math.cos(offsetAngle) * cardOffset * 0.3; } } else { const tableRadiusGeom = 8; const tableRadiusX = tableRadiusGeom * tableMesh.scale.x * 0.7; const tableRadiusZ = tableRadiusGeom * tableMesh.scale.z * 0.7; const tablePos = new THREE.Vector3(Math.sin(angle) * tableRadiusX, 0.2, Math.cos(angle) * tableRadiusZ); const perpendicularAngle = angle - Math.PI / 2; const offsetVec = new THREE.Vector3(Math.sin(perpendicularAngle), 0, Math.cos(perpendicularAngle)).multiplyScalar(cardOffset * 0.5); targetPos = tablePos.add(offsetVec); targetPos.y = 0.3; targetRot = new THREE.Euler(-Math.PI / 2.3, 0, -angle); } gsap.to(cardMesh.position, { duration: 0.5, x: targetPos.x, y: targetPos.y, z: targetPos.z }); gsap.to(cardMesh.rotation, { duration: 0.5, x: targetRot.x, y: targetRot.y, z: targetRot.z }); }); }
-        function updateActionButtons(gameData) { const actionsContainer = document.getElementById('action-buttons'); const myTurn = gameData.turnOrder[gameData.currentPlayerIndex] === currentUserId; const me = gameData.players[currentUserId]; const shouldShow = gameData.gameState === 'active' && myTurn && me?.isAlive && !gameData.pendingAction && (!gameData.playerUpdates || !gameData.playerUpdates[currentUserId]); if (!shouldShow) { actionsContainer.innerHTML = ''; if(myTurn && (gameData.pendingAction || (gameData.playerUpdates && gameData.playerUpdates[currentUserId]))) { actionsContainer.innerHTML = `<p class="text-gray-400 animate-pulse">في انتظار ردود اللاعبين...</p>`; } return; } actionsContainer.innerHTML = ''; const myCoins = me.coins; const justUsedFA = gameData.justUsedForeignAid === currentUserId; if (myCoins >= 10) { addActionBtn('انقلاب (إجباري)', () => showTargetSelection('Coup')); return; } addActionBtn('دخل (1💰)', () => initiateAction('Income')); addActionBtn('مساعدة أجنبية (2💰)', () => initiateAction('Foreign Aid'), justUsedFA); if (myCoins >= 7) addActionBtn('انقلاب (7💰)', () => showTargetSelection('Coup')); addActionBtn('اغتيال (3💰)', () => showTargetSelection('Assassinate'), myCoins < 3); addActionBtn('ضرائب (الدوق)', () => initiateAction('Tax')); addActionBtn('سرقة (القبطان)', () => showTargetSelection('Steal')); addActionBtn('تبديل (السفير)', () => initiateAction('Exchange')); }
+        function updateCardGroup(meshArray, dataArray, pid, cardGroupType, basePos, angle, isMe) { 
+            const wasDeal = meshArray.length === 0 && dataArray.length > 0;
+            while (meshArray.length > dataArray.length) scene.remove(meshArray.pop()); 
+            while (meshArray.length < dataArray.length) { 
+                const newMesh = createCardMesh(null, cardGroupType === 'revealed'); 
+                // Start cards at center deck position for animation
+                newMesh.position.set(0, 5, 0); 
+                newMesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                scene.add(newMesh); 
+                meshArray.push(newMesh); 
+            } 
+            dataArray.forEach((cardType, i) => { 
+                const cardMesh = meshArray[i]; 
+                const isFaceUp = (isMe && cardGroupType === 'active') || cardGroupType === 'revealed'; 
+                if (cardMesh.userData.type !== cardType || cardMesh.userData.isFaceUp !== isFaceUp) { 
+                    cardMesh.material[4].map = isFaceUp ? cardTextures[cardType] : cardTextures.BACK; 
+                    cardMesh.material[4].needsUpdate = true; 
+                    cardMesh.userData.type = cardType; 
+                    cardMesh.userData.isFaceUp = isFaceUp; 
+                } 
+                let targetPos, targetRot; 
+                const cardOffsetMultiplier = 3.5; 
+                const cardOffset = (i - (dataArray.length - 1) / 2) * cardOffsetMultiplier; 
+                if (cardGroupType === 'active') { 
+                    if (isMe) { 
+                        targetPos = new THREE.Vector3(cardOffset, basePos.y, basePos.z + layoutConfig.selfCardZOffset); 
+                        targetRot = new THREE.Euler(-Math.PI / 8, 0, 0); 
+                    } else { 
+                        targetPos = new THREE.Vector3(basePos.x, basePos.y, basePos.z); 
+                        const tempLookAt = cardMesh.clone(); 
+                        tempLookAt.position.copy(targetPos); 
+                        tempLookAt.lookAt(camera.position); 
+                        targetRot = tempLookAt.rotation.clone(); 
+                        const offsetAngle = angle - Math.PI / 2; 
+                        targetPos.x += Math.sin(offsetAngle) * cardOffset * 0.3; 
+                        targetPos.z += Math.cos(offsetAngle) * cardOffset * 0.3; 
+                    } 
+                } else { 
+                    const tableRadiusGeom = 8; 
+                    const tableRadiusX = tableRadiusGeom * tableMesh.scale.x * 0.7; 
+                    const tableRadiusZ = tableRadiusGeom * tableMesh.scale.z * 0.7; 
+                    const tablePos = new THREE.Vector3(Math.sin(angle) * tableRadiusX, 0.2, Math.cos(angle) * tableRadiusZ); 
+                    const perpendicularAngle = angle - Math.PI / 2; 
+                    const offsetVec = new THREE.Vector3(Math.sin(perpendicularAngle), 0, Math.cos(perpendicularAngle)).multiplyScalar(cardOffset * 0.5); 
+                    targetPos = tablePos.add(offsetVec); 
+                    targetPos.y = 0.3; 
+                    targetRot = new THREE.Euler(-Math.PI / 2, 0, -angle); 
+                } 
+                gsap.to(cardMesh.position, { duration: 0.8, x: targetPos.x, y: targetPos.y, z: targetPos.z, ease: 'power3.out', delay: wasDeal ? i * 0.2 : 0 }); 
+                gsap.to(cardMesh.rotation, { duration: 0.8, x: targetRot.x, y: targetRot.y, z: targetRot.z, ease: 'power3.out', delay: wasDeal ? i * 0.2 : 0 }); 
+            }); 
+            if (wasDeal) audioManager.play('deal');
+        }
         
-        // --- Remaining Game Logic Handlers (Unchanged) ---
-        async function forceEndTurn() { const gameRef = doc(db, 'games', currentGameId); await runTransaction(db, async (transaction) => { const gameSnap = await transaction.get(gameRef); if (!gameSnap.exists()) return; const gameData = gameSnap.data(); if (gameData.turnOrder[gameData.currentPlayerIndex] !== currentUserId || gameData.pendingAction) return; const updates = {}; updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins + 1; updates.log = arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> نفذ الوقت وأخذ 'دخل' تلقائيًا.`); updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); updates.justUsedForeignAid = null; transaction.update(gameRef, updates); }); }
+        function updateActionButtons(gameData) { const actionsContainer = document.getElementById('action-buttons'); const myTurn = gameData.turnOrder[gameData.currentPlayerIndex] === currentUserId; const me = gameData.players[currentUserId]; const shouldShow = gameData.gameState === 'active' && myTurn && me?.isAlive && !gameData.pendingAction && (!gameData.playerUpdates || !gameData.playerUpdates[currentUserId]); if (!shouldShow) { actionsContainer.innerHTML = ''; if(myTurn && (gameData.pendingAction || (gameData.playerUpdates && gameData.playerUpdates[currentUserId]))) { actionsContainer.innerHTML = `<p class="text-gray-400 animate-pulse">اصبر تشوف رد اللاعبين...</p>`; } return; } actionsContainer.innerHTML = ''; const myCoins = me.coins; const justUsedFA = gameData.justUsedForeignAid === currentUserId; if (myCoins >= 10) { addActionBtn('انقلاب (إجباري)', () => showTargetSelection('Coup')); return; } addActionBtn('دخل (1💰)', () => initiateAction('Income')); addActionBtn('هز زوز (2💰)', () => initiateAction('Foreign Aid'), justUsedFA); if (myCoins >= 7) addActionBtn('انقلاب (7💰)', () => showTargetSelection('Coup')); addActionBtn('اغتيال (3💰)', () => showTargetSelection('Assassinate'), myCoins < 3); addActionBtn('هز 3 (دوق)', () => initiateAction('Tax')); addActionBtn('سرقة (قبطان)', () => showTargetSelection('Steal')); addActionBtn('بدل لورق (سفير)', () => initiateAction('Exchange')); }
+        
+        async function forceEndTurn() { const gameRef = doc(db, 'games', currentGameId); await runTransaction(db, async (transaction) => { const gameSnap = await transaction.get(gameRef); if (!gameSnap.exists()) return; const gameData = gameSnap.data(); if (gameData.turnOrder[gameData.currentPlayerIndex] !== currentUserId || gameData.pendingAction) return; const updates = {}; updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins + 1; updates.log = arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> فاته الوقت و دا 'دخل' بالسيف.`); updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); updates.justUsedForeignAid = null; transaction.update(gameRef, updates); }); }
         function updateTurnTimer(gameData) { if (turnTimerInterval) clearInterval(turnTimerInterval); const isMyTurn = gameData.turnOrder[gameData.currentPlayerIndex] === currentUserId; const noPendingActions = !gameData.pendingAction && (!gameData.playerUpdates || !gameData.playerUpdates[currentUserId]); if (gameData.gameState === 'active' && isMyTurn && noPendingActions && gameData.turnStartTime) { turnTimerEl.style.display = 'block'; const startTime = gameData.turnStartTime.toDate(); turnTimerInterval = setInterval(() => { const elapsed = Math.floor((new Date() - startTime) / 1000); const remaining = TURN_DURATION - elapsed; if (remaining <= 0) { turnTimerEl.textContent = '0'; clearInterval(turnTimerInterval); forceEndTurn(); } else { turnTimerEl.textContent = remaining; } }, 1000); } else { turnTimerEl.style.display = 'none'; } }
-        async function initiateAction(actionType, targetId = null) { const gameRef = doc(db, 'games', currentGameId); const gameSnap = await getDoc(gameRef); if (!gameSnap.exists()) return; const gameData = gameSnap.data(); const actorName = gameData.players[currentUserId].name; let logMessage = `<strong>${actorName}</strong> ينوي القيام بـ: <strong>${actionType}</strong>`; if (targetId) logMessage += ` ضد <strong>${gameData.players[targetId].name}</strong>.`; const updates = { log: arrayUnion(logMessage), justUsedForeignAid: null }; const unchallengable = ['Income', 'Coup']; if (unchallengable.includes(actionType)) { if (actionType === 'Coup') { const target = gameData.players[targetId]; if (target.cards.length > 1 && gameData.players[currentUserId].coins >= 10) { updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7; updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' }; } else if (target.cards.length === 1 && gameData.players[currentUserId].coins >= 10) { updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7; updates[`players.${targetId}`].coins = 0; updates.log = arrayUnion(`<strong>${actorName}</strong> انقلب على <strong>${target.name}</strong>، الذي خسر كل عملاته بدلاً من نفوذه الأخير.`); updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); await updateDoc(gameRef, updates); return; } else { updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7; updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' }; } } Object.assign(updates, getActionEffects(gameData, { actorId: currentUserId, actionType, targetId })); if (actionType !== 'Coup') { updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } } else { updates.pendingAction = { type: 'ACTION', actorId: currentUserId, actionType: actionType, targetId: targetId, responses: {}, }; } await updateDoc(gameRef, updates); }
+        
+        async function initiateAction(actionType, targetId = null) { 
+            audioManager.play('click');
+            const gameRef = doc(db, 'games', currentGameId); const gameSnap = await getDoc(gameRef); if (!gameSnap.exists()) return; const gameData = gameSnap.data(); const actorName = gameData.players[currentUserId].name; let logMessage = `<strong>${actorName}</strong> راح يدير: <strong>${ACTION_TRANSLATIONS[actionType] || actionType}</strong>`; if (targetId) logMessage += ` ضد <strong>${gameData.players[targetId].name}</strong>.`; const updates = { log: arrayUnion(logMessage), justUsedForeignAid: null }; const unchallengable = ['Income', 'Coup']; if (unchallengable.includes(actionType)) { if (actionType === 'Coup') { const target = gameData.players[targetId]; if (target.cards.length > 1 && gameData.players[currentUserId].coins >= 10) { updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7; updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'دارولك انقلاب!' }; } else if (target.cards.length === 1 && gameData.players[currentUserId].coins >= 10) { updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7; updates[`players.${targetId}`].coins = 0; updates.log = arrayUnion(`<strong>${actorName}</strong> دار انقلاب على <strong>${target.name}</strong>، اللي خسر دراهمه كامل بلاصة ما يخسر ورقته اللخرة.`); updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); await updateDoc(gameRef, updates); return; } else { updates[`players.${currentUserId}.coins`] = gameData.players[currentUserId].coins - 7; updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'دارولك انقلاب!' }; } } Object.assign(updates, getActionEffects(gameData, { actorId: currentUserId, actionType, targetId })); if (actionType !== 'Coup') { updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } } else { updates.pendingAction = { type: 'ACTION', actorId: currentUserId, actionType: actionType, targetId: targetId, responses: {}, }; } await updateDoc(gameRef, updates); 
+        }
+        
         function hideModal(modalId) { const modal = document.getElementById(modalId); if(modal) modal.style.display = 'none'; }
         function hideAllModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
         function getNextPlayerIndex(gameData) { let nextIndex = gameData.currentPlayerIndex; let count = 0; do { nextIndex = (nextIndex + 1) % gameData.turnOrder.length; count++; } while(!gameData.players[gameData.turnOrder[nextIndex]].isAlive && count < gameData.turnOrder.length * 2); return nextIndex; }
-        async function checkGameOver(gameData) { if (gameData.gameState !== 'active') return; const alivePlayers = gameData.turnOrder.filter(pid => gameData.players[pid]?.isAlive); if (alivePlayers.length <= 1) { if (gameUnsubscribe) gameUnsubscribe(); gameUnsubscribe = null; if (turnTimerInterval) clearInterval(turnTimerInterval); const winnerId = alivePlayers.length === 1 ? alivePlayers[0] : null; const winnerName = winnerId ? gameData.players[winnerId].name : "لا أحد"; await updateDoc(doc(db, 'games', currentGameId), { gameState: 'finished', log: arrayUnion(`انتهت اللعبة! الفائز هو <strong>${winnerName}</strong>.`) }); showGameOverScreen(`الفائز هو ${winnerName}!`, "سيتم حذف بيانات هذه اللعبة الآن."); deleteGameData(currentGameId); } }
-        function showGameOverScreen(winnerText, cleanupText) { document.getElementById('winner-text').textContent = winnerText; document.getElementById('cleanup-text').textContent = cleanupText; document.getElementById('game-over-screen').style.display = 'flex'; }
-        async function deleteGameData(gameId) { if (!gameId) return; try { const gameRef = doc(db, 'games', gameId); const gameSnap = await getDoc(gameRef); if (gameSnap.exists() && gameSnap.data().creatorId === currentUserId) { await deleteDoc(gameRef); } } catch (error) {} }
+        
+        async function checkGameOver(gameData) { if (gameData.gameState !== 'active') return; const alivePlayers = gameData.turnOrder.filter(pid => gameData.players[pid]?.isAlive); if (alivePlayers.length <= 1) { if (gameUnsubscribe) gameUnsubscribe(); gameUnsubscribe = null; if (turnTimerInterval) clearInterval(turnTimerInterval); const winnerId = alivePlayers.length === 1 ? alivePlayers[0] : null; const winnerName = winnerId ? gameData.players[winnerId].name : "حتى واحد"; await updateDoc(doc(db, 'games', currentGameId), { gameState: 'finished', log: arrayUnion(`كملت اللعبة! الرابح هو <strong>${winnerName}</strong>.`) }); showGameOverScreen(`الرابح هو ${winnerName}!`); if (winnerId === currentUserId) audioManager.play('win'); else audioManager.play('lose'); deleteGameData(currentGameId); } }
+        function showGameOverScreen(winnerText) { document.getElementById('winner-text').textContent = winnerText; document.getElementById('game-over-screen').style.display = 'flex'; }
+        async function deleteGameData(gameId) { if (!gameId) return; try { const gameRef = doc(db, 'games', gameId); const gameSnap = await getDoc(gameRef); if (gameSnap.exists() && gameSnap.data().creatorId === currentUserId) { setTimeout(() => deleteDoc(gameRef), 30000); } } catch (error) {} }
         function shuffle(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
         function toScreenPosition(vector, camera) { const width = window.innerWidth, height = window.innerHeight; const widthHalf = width / 2, heightHalf = height / 2; vector.project(camera); vector.x = (vector.x * widthHalf) + widthHalf; vector.y = -(vector.y * heightHalf) + heightHalf; return { x: vector.x, y: vector.y }; }
-        var handlePendingAction = function(gameData) { const { pendingAction, players } = gameData; if (!pendingAction) { hideModal('interaction-modal'); return; } const me = players[currentUserId]; const modal = document.getElementById('interaction-modal'); const buttonsContainer = document.getElementById('modal-buttons'); buttonsContainer.innerHTML = ''; if (pendingAction.type === 'ACTION' && pendingAction.actorId !== currentUserId && me.isAlive && !pendingAction.responses[currentUserId]) { const actorName = players[pendingAction.actorId].name; document.getElementById('modal-title').textContent = `حركة من ${actorName}!`; document.getElementById('modal-text').textContent = `${actorName} يقوم بـ ${CARD_TRANSLATIONS[pendingAction.actionType] || pendingAction.actionType}.`; buttonsContainer.appendChild(createModalBtn('تحدي!', () => respondToAction('challenge'))); const amITarget = pendingAction.targetId === currentUserId; if (pendingAction.actionType === 'Foreign Aid') buttonsContainer.appendChild(createModalBtn('أمنع (بالدوق)', () => respondToAction('block', 'BlockForeignAid'))); if (amITarget && pendingAction.actionType === 'Steal') { buttonsContainer.appendChild(createModalBtn('أمنع (بالقبطان)', () => respondToAction('block', 'BlockStealCaptain'))); buttonsContainer.appendChild(createModalBtn('أمنع (بالسفير)', () => respondToAction('block', 'BlockStealAmbassador'))); } if (amITarget && pendingAction.actionType === 'Assassinate') buttonsContainer.appendChild(createModalBtn('أمنع (بالكونتيسا)', () => respondToAction('block', 'BlockAssassination'))); buttonsContainer.appendChild(createModalBtn('تجاهل', () => respondToAction('pass'))); modal.style.display = 'flex'; return; } if (pendingAction.type === 'BLOCK' && pendingAction.actorId === currentUserId && me.isAlive && !pendingAction.responses[currentUserId]) { const blockerName = players[pendingAction.blockerId].name; document.getElementById('modal-title').textContent = `${blockerName} يمنع حركتك!`; document.getElementById('modal-text').textContent = `${blockerName} يدعي أن لديه ${CARD_TRANSLATIONS[pendingAction.blockCard]} لمنع ${CARD_TRANSLATIONS[pendingAction.actionType] || pendingAction.actionType}.`; buttonsContainer.appendChild(createModalBtn('تحدى المنع!', () => respondToAction('challenge_block'))); buttonsContainer.appendChild(createModalBtn('اقبل المنع', () => respondToAction('pass_block'))); modal.style.display = 'flex'; return; } hideModal('interaction-modal'); }
-        var respondToAction = async function(responseType, blockType = null) { hideModal('interaction-modal'); const gameRef = doc(db, 'games', currentGameId); await runTransaction(db, async (transaction) => { const gameSnap = await transaction.get(gameRef); if (!gameSnap.exists()) return; const gameData = gameSnap.data(); let { pendingAction, players, turnOrder } = gameData; if (!pendingAction) return; const updates = {}; const me = players[currentUserId]; if (pendingAction.type === 'ACTION') { if (responseType === 'pass') { updates[`pendingAction.responses.${currentUserId}`] = 'pass'; const aliveOpponents = turnOrder.filter(pid => players[pid].isAlive && pid !== pendingAction.actorId); const allPassed = aliveOpponents.every(pid => (pendingAction.responses[pid] === 'pass' || pid === currentUserId)); if (allPassed) { updates.log = arrayUnion(`الجميع تجاهل. <strong>${players[pendingAction.actorId].name}</strong> نجح في حركة <strong>${CARD_TRANSLATIONS[pendingAction.actionType] || pendingAction.actionType}</strong>.`); Object.assign(updates, getActionEffects(gameData, pendingAction)); if (pendingAction.actionType === 'Foreign Aid') { updates.log = arrayUnion(`<strong>${players[pendingAction.actorId].name}</strong> يلعب مرة أخرى.`); updates.turnStartTime = serverTimestamp(); updates.justUsedForeignAid = pendingAction.actorId; } else if (pendingAction.actionType !== 'Exchange' && pendingAction.actionType !== 'Assassinate') { updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } updates.pendingAction = null; } } else if (responseType === 'challenge') { await resolveChallenge(transaction, gameData, pendingAction, currentUserId); return; } else if (responseType === 'block') { const blockCardMap = { 'BlockForeignAid': CARD_TYPES.DUKE, 'BlockAssassination': CARD_TYPES.CONTESSA, 'BlockStealCaptain': CARD_TYPES.CAPTAIN, 'BlockStealAmbassador': CARD_TYPES.AMBASSADOR }; updates.pendingAction = { type: 'BLOCK', actorId: pendingAction.actorId, actionType: pendingAction.actionType, targetId: pendingAction.targetId, blockerId: currentUserId, blockCard: blockCardMap[blockType], responses: {} }; updates.log = arrayUnion(`<strong>${me.name}</strong> يمنع الحركة!`); } } else if (pendingAction.type === 'BLOCK') { if (responseType === 'challenge_block') { await resolveBlockChallenge(transaction, gameData, pendingAction, currentUserId); return; } else if (responseType === 'pass_block') { updates.log = arrayUnion(`<strong>${me.name}</strong> قبل المنع. الحركة فشلت.`); updates.pendingAction = null; updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } } transaction.update(gameRef, updates); }); }
-        var resolveChallenge = async function(transaction, gameData, action, challengerId) { const { players, deck } = gameData; const actor = players[action.actorId]; const challenger = players[challengerId]; const updates = {}; const claimCard = { 'Tax': CARD_TYPES.DUKE, 'Assassinate': CARD_TYPES.ASSASSIN, 'Steal': CARD_TYPES.CAPTAIN, 'Exchange': CARD_TYPES.AMBASSADOR }[action.actionType]; if (actor.cards.includes(claimCard)) { updates.log = arrayUnion(`تحدي فاشل! <strong>${actor.name}</strong> كان صادقًا. <strong>${challenger.name}</strong> يخسر نفوذًا.`); updates[`playerUpdates.${challengerId}`] = { type: 'mustReveal', reason: 'خسرت التحدي.' }; const newDeck = [...deck]; const cardIndex = actor.cards.indexOf(claimCard); const revealedCard = actor.cards.splice(cardIndex, 1)[0]; actor.cards.push(newDeck.pop()); newDeck.push(revealedCard); updates[`players.${action.actorId}.cards`] = actor.cards; updates.deck = shuffle(newDeck); updates.log = arrayUnion(`${actor.name} أظهر بطاقة ${CARD_TRANSLATIONS[revealedCard]} وسحب واحدة جديدة.`); Object.assign(updates, getActionEffects({ ...gameData, deck: newDeck, players }, action)); updates.pendingAction = null; } else { updates.log = arrayUnion(`تحدي ناجح! <strong>${actor.name}</strong> كان يكذب ويخسر نفوذًا.`); updates[`playerUpdates.${action.actorId}`] = { type: 'mustReveal', reason: 'تم كشف كذبتك.' }; updates.pendingAction = null; updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } transaction.update(doc(db, 'games', currentGameId), updates); }
-        var resolveBlockChallenge = async function(transaction, gameData, action, challengerId) { const { players, deck } = gameData; const blocker = players[action.blockerId]; const challenger = players[challengerId]; const updates = {}; const blockClaim = action.blockCard; if (blocker.cards.includes(blockClaim)) { updates.log = arrayUnion(`تحدي فاشل! <strong>${blocker.name}</strong> كان صادقًا. <strong>${challenger.name}</strong> يخسر نفوذًا.`); updates[`playerUpdates.${challengerId}`] = { type: 'mustReveal', reason: 'خسرت تحدي المنع.' }; const newDeck = [...deck]; const cardIndex = blocker.cards.indexOf(blockClaim); const revealedCard = blocker.cards.splice(cardIndex, 1)[0]; blocker.cards.push(newDeck.pop()); newDeck.push(revealedCard); updates[`players.${action.blockerId}.cards`] = blocker.cards; updates.deck = shuffle(newDeck); updates.log = arrayUnion(`${blocker.name} أظهر بطاقة ${CARD_TRANSLATIONS[revealedCard]} وسحب واحدة جديدة.`); updates.pendingAction = null; updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } else { updates.log = arrayUnion(`تحدي ناجح! <strong>${blocker.name}</strong> كان يكذب ويخسر نفوذًا.`); updates[`playerUpdates.${action.blockerId}`] = { type: 'mustReveal', reason: 'تم كشف كذبة المنع.' }; Object.assign(updates, getActionEffects(gameData, action)); updates.pendingAction = null; } transaction.update(doc(db, 'games', currentGameId), updates); }
-        var getActionEffects = function(gameData, action) { const { actorId, actionType, targetId } = action; const updates = {}; const actorCoins = gameData.players[actorId].coins; switch (actionType) { case 'Income': updates[`players.${actorId}.coins`] = actorCoins + 1; break; case 'Foreign Aid': updates[`players.${actorId}.coins`] = actorCoins + 2; break; case 'Tax': updates[`players.${actorId}.coins`] = actorCoins + 3; break; case 'Coup': updates[`players.${actorId}.coins`] = actorCoins - 7; updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم الانقلاب عليك!' }; break; case 'Steal': const targetCoins = gameData.players[targetId].coins; const stolenAmount = Math.min(2, targetCoins); updates[`players.${actorId}.coins`] = actorCoins + stolenAmount; updates[`players.${targetId}.coins`] = targetCoins - stolenAmount; break; case 'Assassinate': updates[`players.${actorId}.coins`] = actorCoins - 3; updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'تم اغتيالك!' }; break; case 'Exchange': const newDeck = [...gameData.deck]; const drawnCards = [newDeck.pop(), newDeck.pop()]; updates[`playerUpdates.${actorId}`] = { type: 'exchange', cards: drawnCards }; updates.deck = newDeck; break; } return updates; }
+        
+        // --- Game Logic Handlers ---
+        var handlePendingAction = function(gameData) { const { pendingAction, players } = gameData; if (!pendingAction) { hideModal('interaction-modal'); return; } const me = players[currentUserId]; const modal = document.getElementById('interaction-modal'); const buttonsContainer = document.getElementById('modal-buttons'); buttonsContainer.innerHTML = ''; if (pendingAction.type === 'ACTION' && pendingAction.actorId !== currentUserId && me.isAlive && !pendingAction.responses[currentUserId]) { const actorName = players[pendingAction.actorId].name; document.getElementById('modal-title').textContent = `حركة من عند ${actorName}!`; document.getElementById('modal-text').textContent = `${actorName} راه يدير ${ACTION_TRANSLATIONS[pendingAction.actionType] || pendingAction.actionType}.`; buttonsContainer.appendChild(createModalBtn('نتحداه!', () => respondToAction('challenge'))); const amITarget = pendingAction.targetId === currentUserId; if (pendingAction.actionType === 'Foreign Aid') buttonsContainer.appendChild(createModalBtn('نحبس (بالدوق)', () => respondToAction('block', 'BlockForeignAid'))); if (amITarget && pendingAction.actionType === 'Steal') { buttonsContainer.appendChild(createModalBtn('نحبس (بالقبطان)', () => respondToAction('block', 'BlockStealCaptain'))); buttonsContainer.appendChild(createModalBtn('نحبس (بالسفير)', () => respondToAction('block', 'BlockStealAmbassador'))); } if (amITarget && pendingAction.actionType === 'Assassinate') buttonsContainer.appendChild(createModalBtn('نحبس (بالكونتيسا)', () => respondToAction('block', 'BlockAssassination'))); buttonsContainer.appendChild(createModalBtn('نفوّت', () => respondToAction('pass'))); modal.style.display = 'flex'; return; } if (pendingAction.type === 'BLOCK' && pendingAction.actorId === currentUserId && me.isAlive && !pendingAction.responses[currentUserId]) { const blockerName = players[pendingAction.blockerId].name; document.getElementById('modal-title').textContent = `${blockerName} حبسلك الحركة تاعك!`; document.getElementById('modal-text').textContent = `${blockerName} قال بلي عنده ${CARD_TRANSLATIONS[pendingAction.blockCard]} باش يحبس ${ACTION_TRANSLATIONS[pendingAction.actionType] || pendingAction.actionType}.`; buttonsContainer.appendChild(createModalBtn('نتحداه!', () => respondToAction('challenge_block'))); buttonsContainer.appendChild(createModalBtn('نقبل', () => respondToAction('pass_block'))); modal.style.display = 'flex'; return; } hideModal('interaction-modal'); }
+        var respondToAction = async function(responseType, blockType = null) { hideModal('interaction-modal'); audioManager.play('click'); const gameRef = doc(db, 'games', currentGameId); await runTransaction(db, async (transaction) => { const gameSnap = await transaction.get(gameRef); if (!gameSnap.exists()) return; const gameData = gameSnap.data(); let { pendingAction, players, turnOrder } = gameData; if (!pendingAction) return; const updates = {}; const me = players[currentUserId]; if (pendingAction.type === 'ACTION') { if (responseType === 'pass') { updates[`pendingAction.responses.${currentUserId}`] = 'pass'; const aliveOpponents = turnOrder.filter(pid => players[pid].isAlive && pid !== pendingAction.actorId); const allPassed = aliveOpponents.every(pid => (pendingAction.responses[pid] === 'pass' || pid === currentUserId)); if (allPassed) { updates.log = arrayUnion(`كامل فوتو. <strong>${players[pendingAction.actorId].name}</strong> نجح فالحركة تاع <strong>${ACTION_TRANSLATIONS[pendingAction.actionType] || pendingAction.actionType}</strong>.`); Object.assign(updates, getActionEffects(gameData, pendingAction));  const actionTriggersPlayerUpdate = ['Assassinate', 'Exchange'].includes(pendingAction.actionType); if (pendingAction.actionType === 'Foreign Aid') { updates.log = arrayUnion(`<strong>${players[pendingAction.actorId].name}</strong> يلعب مرة خلاف.`); updates.turnStartTime = serverTimestamp(); updates.justUsedForeignAid = pendingAction.actorId; } else if (!actionTriggersPlayerUpdate) { updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } updates.pendingAction = null; } } else if (responseType === 'challenge') { await resolveChallenge(transaction, gameData, pendingAction, currentUserId); return; } else if (responseType === 'block') { const blockCardMap = { 'BlockForeignAid': CARD_TYPES.DUKE, 'BlockAssassination': CARD_TYPES.CONTESSA, 'BlockStealCaptain': CARD_TYPES.CAPTAIN, 'BlockStealAmbassador': CARD_TYPES.AMBASSADOR }; updates.pendingAction = { type: 'BLOCK', actorId: pendingAction.actorId, actionType: pendingAction.actionType, targetId: pendingAction.targetId, blockerId: currentUserId, blockCard: blockCardMap[blockType], responses: {} }; updates.log = arrayUnion(`<strong>${me.name}</strong> حبس الحركة!`); } } else if (pendingAction.type === 'BLOCK') { if (responseType === 'challenge_block') { await resolveBlockChallenge(transaction, gameData, pendingAction, currentUserId); return; } else if (responseType === 'pass_block') { updates.log = arrayUnion(`<strong>${me.name}</strong> قبل الحبس. الحركة فشلت.`); updates.pendingAction = null; updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } } transaction.update(gameRef, updates); }); }
+        var resolveChallenge = async function(transaction, gameData, action, challengerId) { audioManager.play('challenge'); const { players, deck } = gameData; const actor = players[action.actorId]; const challenger = players[challengerId]; const updates = {}; const claimCard = { 'Tax': CARD_TYPES.DUKE, 'Assassinate': CARD_TYPES.ASSASSIN, 'Steal': CARD_TYPES.CAPTAIN, 'Exchange': CARD_TYPES.AMBASSADOR }[action.actionType]; if (actor.cards.includes(claimCard)) { updates.log = arrayUnion(`التحدي خاسر! <strong>${actor.name}</strong> عندو الصح. <strong>${challenger.name}</strong> يخسر ورقة.`); updates[`playerUpdates.${challengerId}`] = { type: 'mustReveal', reason: 'خسرت التحدي.' }; const newDeck = [...deck]; const cardIndex = actor.cards.indexOf(claimCard); const revealedCard = actor.cards.splice(cardIndex, 1)[0]; actor.cards.push(newDeck.pop()); newDeck.push(revealedCard); updates[`players.${action.actorId}.cards`] = actor.cards; updates.deck = shuffle(newDeck); updates.log = arrayUnion(`${actor.name} ورّالهم ${CARD_TRANSLATIONS[revealedCard]} و جبد ورقة جديدة.`); Object.assign(updates, getActionEffects({ ...gameData, deck: newDeck, players }, action)); updates.pendingAction = null; } else { updates.log = arrayUnion(`تحدي ناجح! <strong>${actor.name}</strong> كان يكذب و يخسر ورقة.`); updates[`playerUpdates.${action.actorId}`] = { type: 'mustReveal', reason: 'حكموك تكذب.' }; updates.pendingAction = null; updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } transaction.update(doc(db, 'games', currentGameId), updates); }
+        var resolveBlockChallenge = async function(transaction, gameData, action, challengerId) { audioManager.play('challenge'); const { players, deck } = gameData; const blocker = players[action.blockerId]; const challenger = players[challengerId]; const updates = {}; const blockClaim = action.blockCard; if (blocker.cards.includes(blockClaim)) { updates.log = arrayUnion(`التحدي خاسر! <strong>${blocker.name}</strong> عندو الصح. <strong>${challenger.name}</strong> يخسر ورقة.`); updates[`playerUpdates.${challengerId}`] = { type: 'mustReveal', reason: 'خسرت تحدي الحبس.' }; const newDeck = [...deck]; const cardIndex = blocker.cards.indexOf(blockClaim); const revealedCard = blocker.cards.splice(cardIndex, 1)[0]; blocker.cards.push(newDeck.pop()); newDeck.push(revealedCard); updates[`players.${action.blockerId}.cards`] = blocker.cards; updates.deck = shuffle(newDeck); updates.log = arrayUnion(`${blocker.name} ورّالهم ${CARD_TRANSLATIONS[revealedCard]} و جبد ورقة جديدة.`); updates.pendingAction = null; updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } else { updates.log = arrayUnion(`تحدي ناجح! <strong>${blocker.name}</strong> كان يكذب و يخسر ورقة.`); updates[`playerUpdates.${action.blockerId}`] = { type: 'mustReveal', reason: 'حكموك تكذب فالحبس.' }; Object.assign(updates, getActionEffects(gameData, action)); updates.pendingAction = null; } transaction.update(doc(db, 'games', currentGameId), updates); }
+        var getActionEffects = function(gameData, action) { const { actorId, actionType, targetId } = action; const updates = {}; const actorCoins = gameData.players[actorId].coins; switch (actionType) { case 'Income': updates[`players.${actorId}.coins`] = actorCoins + 1; audioManager.play('coin'); break; case 'Foreign Aid': updates[`players.${actorId}.coins`] = actorCoins + 2; audioManager.play('coin'); break; case 'Tax': updates[`players.${actorId}.coins`] = actorCoins + 3; audioManager.play('coin'); break; case 'Coup': updates[`players.${actorId}.coins`] = actorCoins - 7; updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'دارولك انقلاب!' }; break; case 'Steal': const targetCoins = gameData.players[targetId].coins; const stolenAmount = Math.min(2, targetCoins); updates[`players.${actorId}.coins`] = actorCoins + stolenAmount; updates[`players.${targetId}.coins`] = targetCoins - stolenAmount; audioManager.play('coin'); break; case 'Assassinate': updates[`players.${actorId}.coins`] = actorCoins - 3; updates[`playerUpdates.${targetId}`] = { type: 'mustReveal', reason: 'اغتالوك!' }; break; case 'Exchange': const newDeck = [...gameData.deck]; const drawnCards = [newDeck.pop(), newDeck.pop()]; updates[`playerUpdates.${actorId}`] = { type: 'exchange', cards: drawnCards }; updates.deck = newDeck; break; } return updates; }
         var handlePlayerUpdate = function(gameData, update) { hideAllModals(); if (update.type === 'mustReveal') { showRevealCardModal(gameData, update.reason); } else if (update.type === 'exchange') { showExchangeModal(gameData, update.cards); } }
-        var revealCard = async function(cardIndex) { hideModal('reveal-card-modal'); await runTransaction(db, async (transaction) => { const gameRef = doc(db, 'games', currentGameId); const gameSnap = await transaction.get(gameRef); const gameData = gameSnap.data(); const player = gameData.players[currentUserId]; const cardToReveal = player.cards.splice(cardIndex, 1)[0]; player.revealedCards.push(cardToReveal); const updates = {}; let logMessage = `<strong>${player.name}</strong> يكشف ويخسر <strong>${CARD_TRANSLATIONS[cardToReveal]}</strong>.`; if (player.cards.length === 0) { player.isAlive = false; logMessage += ` <strong>${player.name}</strong> تم إقصاؤه!`; } updates[`players.${currentUserId}`] = player; updates[`playerUpdates.${currentUserId}`] = null; const updateCausedByChallenge = gameData.playerUpdates[currentUserId] && gameData.playerUpdates[currentUserId].reason; if (!updateCausedByChallenge) { updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } updates.log = arrayUnion(logMessage); transaction.update(gameRef, updates); }); }
-        var confirmExchange = async function(keptCards, returnedCards) { hideModal('exchange-modal'); await runTransaction(db, async (transaction) => { const gameRef = doc(db, 'games', currentGameId); const gameData = await transaction.get(gameRef).then(snap => snap.data()); const updates = { [`players.${currentUserId}.cards`]: keptCards, [`playerUpdates.${currentUserId}`]: null, deck: shuffle([...gameData.deck, ...returnedCards]), log: arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> قام بتبديل بطاقاته.`), currentPlayerIndex: getNextPlayerIndex(gameData), turnStartTime: serverTimestamp() }; transaction.update(gameRef, updates); }); }
+        var revealCard = async function(cardIndex) { hideModal('reveal-card-modal'); audioManager.play('lose'); await runTransaction(db, async (transaction) => { const gameRef = doc(db, 'games', currentGameId); const gameSnap = await transaction.get(gameRef); const gameData = gameSnap.data(); const player = gameData.players[currentUserId]; const cardToReveal = player.cards.splice(cardIndex, 1)[0]; player.revealedCards.push(cardToReveal); const updates = {}; let logMessage = `<strong>${player.name}</strong> ورّى و خسر <strong>${CARD_TRANSLATIONS[cardToReveal]}</strong>.`; if (player.cards.length === 0) { player.isAlive = false; logMessage += ` <strong>${player.name}</strong> خرج من اللعبة!`; } updates[`players.${currentUserId}`] = player; updates[`playerUpdates.${currentUserId}`] = null; const updateCausedByChallenge = gameData.playerUpdates[currentUserId] && gameData.playerUpdates[currentUserId].reason.includes('تحدي'); if (!updateCausedByChallenge) { updates.currentPlayerIndex = getNextPlayerIndex(gameData); updates.turnStartTime = serverTimestamp(); } updates.log = arrayUnion(logMessage); transaction.update(gameRef, updates); }); }
+        var confirmExchange = async function(keptCards, returnedCards) { hideModal('exchange-modal'); audioManager.play('deal'); await runTransaction(db, async (transaction) => { const gameRef = doc(db, 'games', currentGameId); const gameData = await transaction.get(gameRef).then(snap => snap.data()); const updates = { [`players.${currentUserId}.cards`]: keptCards, [`playerUpdates.${currentUserId}`]: null, deck: shuffle([...gameData.deck, ...returnedCards]), log: arrayUnion(`<strong>${gameData.players[currentUserId].name}</strong> بدل الورق تاعو.`), currentPlayerIndex: getNextPlayerIndex(gameData), turnStartTime: serverTimestamp() }; transaction.update(gameRef, updates); }); }
         var showRevealCardModal = function(gameData, reason) { const modal = document.getElementById('reveal-card-modal'); const container = document.getElementById('reveal-cards-container'); const myData = gameData.players[currentUserId]; document.getElementById('reveal-title').textContent = reason; container.innerHTML = ''; myData.cards.forEach((cardType, index) => { const img = document.createElement('img'); img.src = CARD_IMAGES[cardType]; img.onclick = () => revealCard(index); container.appendChild(img); }); modal.style.display = 'flex'; }
-        var showExchangeModal = function(gameData, drawnCards) { const modal = document.getElementById('exchange-modal'); const container = document.getElementById('exchange-cards-container'); const myData = gameData.players[currentUserId]; const confirmBtn = document.getElementById('confirm-exchange-btn'); const allCards = [...myData.cards, ...drawnCards]; let selectedImages = []; container.innerHTML = ''; const numToKeep = myData.cards.length; document.getElementById('exchange-text').textContent = `لديك ${allCards.length} بطاقات. اختر ${numToKeep} للاحتفاظ بها.`; allCards.forEach((cardType) => { const img = document.createElement('img'); img.src = CARD_IMAGES[cardType]; img.dataset.cardType = cardType; img.onclick = () => { if (img.classList.contains('selected')) { img.classList.remove('selected'); selectedImages.splice(selectedImages.indexOf(img), 1); } else if (selectedImages.length < numToKeep) { img.classList.add('selected'); selectedImages.push(img); } confirmBtn.disabled = selectedImages.length !== numToKeep; }; container.appendChild(img); }); confirmBtn.onclick = () => { const keptCards = selectedImages.map(img => img.dataset.cardType); const returnedCards = [...allCards]; keptCards.forEach(keptType => { const indexToRemove = returnedCards.indexOf(keptType); if (indexToRemove > -1) returnedCards.splice(indexToRemove, 1); }); confirmExchange(keptCards, returnedCards); }; modal.style.display = 'flex'; }
+        var showExchangeModal = function(gameData, drawnCards) { const modal = document.getElementById('exchange-modal'); const container = document.getElementById('exchange-cards-container'); const myData = gameData.players[currentUserId]; const confirmBtn = document.getElementById('confirm-exchange-btn'); const allCards = [...myData.cards, ...drawnCards]; let selectedImages = []; container.innerHTML = ''; const numToKeep = myData.cards.length; document.getElementById('exchange-text').textContent = `عندك ${allCards.length} ورقات. خير ${numToKeep} باش تخليهم.`; allCards.forEach((cardType) => { const img = document.createElement('img'); img.src = CARD_IMAGES[cardType]; img.dataset.cardType = cardType; img.onclick = () => { if (img.classList.contains('selected')) { img.classList.remove('selected'); selectedImages.splice(selectedImages.indexOf(img), 1); } else if (selectedImages.length < numToKeep) { img.classList.add('selected'); selectedImages.push(img); } confirmBtn.disabled = selectedImages.length !== numToKeep; audioManager.play('click'); }; container.appendChild(img); }); confirmBtn.onclick = () => { const keptCards = selectedImages.map(img => img.dataset.cardType); const returnedCards = [...allCards]; keptCards.forEach(keptType => { const indexToRemove = returnedCards.indexOf(keptType); if (indexToRemove > -1) returnedCards.splice(indexToRemove, 1); }); confirmExchange(keptCards, returnedCards); }; modal.style.display = 'flex'; }
         var addActionBtn = function(text, onClick, disabled = false) { const btn = document.createElement('button'); btn.className = 'action-btn'; btn.textContent = text; btn.disabled = disabled; btn.onclick = onClick; document.getElementById('action-buttons').appendChild(btn); }
         var createModalBtn = function(text, onClick) { const btn = document.createElement('button'); btn.className = 'action-btn'; btn.textContent = text; btn.onclick = onClick; return btn; }
-        var showTargetSelection = function(actionType) { const modal = document.getElementById('target-selection-modal'); const list = document.getElementById('target-player-list'); list.innerHTML = ''; getDoc(doc(db, 'games', currentGameId)).then(docSnap => { const gameData = docSnap.data(); gameData.turnOrder.forEach(pid => { if (pid !== currentUserId && gameData.players[pid].isAlive) { const btn = createModalBtn(gameData.players[pid].name, () => { hideModal('target-selection-modal'); initiateAction(actionType, pid); }); list.appendChild(btn); } }); modal.style.display = 'flex'; }); document.getElementById('cancel-target-btn').onclick = () => hideModal('target-selection-modal'); }
+        var showTargetSelection = function(actionType) { const modal = document.getElementById('target-selection-modal'); const list = document.getElementById('target-player-list'); list.innerHTML = ''; getDoc(doc(db, 'games', currentGameId)).then(docSnap => { const gameData = docSnap.data(); gameData.turnOrder.forEach(pid => { if (pid !== currentUserId && gameData.players[pid].isAlive) { const btn = createModalBtn(gameData.players[pid].name, () => { hideModal('target-selection-modal'); initiateAction(actionType, pid); }); list.appendChild(btn); } }); modal.style.display = 'flex'; }); document.getElementById('cancel-target-btn').onclick = () => { hideModal('target-selection-modal'); audioManager.play('click'); }; }
 
     </script>
 </body>
